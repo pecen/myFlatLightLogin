@@ -1,0 +1,1 @@
+This folder should be the build output folder, which is set for instance in Visual Studio, and here is where the Debug or Release builds go, or whatever other build configuration is set up. 

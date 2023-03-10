@@ -1,0 +1,1 @@
+Here documents concerning the project/solution is placed, documents that describe the project/solution, i.e. any document that contribute in any way to the project/solution should be placed here. 

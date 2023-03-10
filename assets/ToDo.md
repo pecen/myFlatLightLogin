@@ -1,0 +1,1 @@
+This folder should hold assets like .jpg-files (or other picture formats used), fonts, icons (.ico-files), sql-scripts used etc.

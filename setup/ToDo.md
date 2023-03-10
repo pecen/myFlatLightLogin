@@ -1,0 +1,1 @@
+When the solution is ready for any kind of release, here is where you put all the necessary files. Either it's a setup application, or just the *.exe including all the necessary libraries etc that are needed. You normally create subfolders for every release you intend to create. 
