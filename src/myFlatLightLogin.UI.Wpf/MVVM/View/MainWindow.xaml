@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:myFlatLightLogin.UI.Wpf.MVVM.ViewModel"
     Width="1024"
     Height="720"
     AllowsTransparency="True"
@@ -13,6 +14,10 @@
     WindowStartupLocation="CenterScreen"
     WindowStyle="None"
     mc:Ignorable="d">
+    <Window.DataContext>
+        <vm:MainWindowViewModel />
+    </Window.DataContext>
+
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
@@ -29,12 +34,14 @@
             Background="White"
             BorderBrush="#e2e9e9"
             BorderThickness="0,0,0,2"
-            CornerRadius="5 5 0 0"
-            MouseDown="Border_MouseDown"
-            MouseLeftButtonDown="Border_MouseLeftButtonDown">
+            CornerRadius="5 5 0 0">
+            <Border.InputBindings>
+                <MouseBinding Command="{Binding MoveWindowCommand}" MouseAction="LeftClick" />
+                <MouseBinding Command="{Binding ResizeWindowCommand}" MouseAction="LeftDoubleClick" />
+            </Border.InputBindings>
             <Grid>
                 <Button HorizontalAlignment="Left" Style="{StaticResource topButton}">
-                    <icon:PackIconMaterial Kind="Menu" Style="{StaticResource topButtonIcon}" />
+                    <icon:PackIconMaterial Kind="Magnify" Style="{StaticResource topButtonIcon}" />
                 </Button>
 
                 <icon:PackIconMaterial
@@ -45,8 +52,8 @@
                     Foreground="#ff131e"
                     Kind="Microsoft" />
 
-                <Button HorizontalAlignment="Right" Style="{StaticResource topButton}">
-                    <icon:PackIconMaterial Kind="Magnify" Style="{StaticResource topButtonIcon}" />
+                <Button HorizontalAlignment="Right" Style="{StaticResource topButton}" Command="{Binding ShutdownWindowCommand}">
+                    <icon:PackIconMaterial Kind="ExitToApp" Style="{StaticResource topButtonIcon}" />
                 </Button>
             </Grid>
         </Border>

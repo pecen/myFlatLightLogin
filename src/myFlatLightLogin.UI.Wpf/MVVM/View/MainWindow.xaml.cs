@@ -14,13 +14,13 @@ namespace FlatLightLogin
             InitializeComponent();
         }
 
-        private void Border_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Left)
-            {
-                DragMove();
-            }
-        }
+        //private void Border_MouseDown(object sender, MouseButtonEventArgs e)
+        //{
+        //    if (e.ChangedButton == MouseButton.Left)
+        //    {
+        //        DragMove();
+        //    }
+        //}
 
         private bool IsMaximize = false;
         private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
