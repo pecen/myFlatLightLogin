@@ -2,7 +2,11 @@
     x:Class="FlatLightLogin.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behavior="clr-namespace:myFlatLightLogin.UI.Wpf.Behavior"
+    xmlns:converter="clr-namespace:myFlatLightLogin.UI.Wpf.Converter"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:extension="clr-namespace:myFlatLightLogin.UI.Wpf.Extension"
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:myFlatLightLogin.UI.Wpf.MVVM.ViewModel"
@@ -20,6 +24,7 @@
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <converter:BoolToVisibilityPwdText x:Key="BoolToVisPwd" />
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -44,15 +49,30 @@
                     <icon:PackIconMaterial Kind="Magnify" Style="{StaticResource topButtonIcon}" />
                 </Button>
 
-                <icon:PackIconMaterial
+                <!--<icon:PackIconMaterial
                     Width="22"
                     Height="22"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Foreground="#ff131e"
-                    Kind="Microsoft" />
+                    Kind="Microsoft" />-->
 
-                <Button HorizontalAlignment="Right" Style="{StaticResource topButton}" Command="{Binding ShutdownWindowCommand}">
+                <Button
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Command="{Binding ResizeWindowCommand}"
+                    Style="{StaticResource topButton}">
+                    <icon:PackIconMaterial
+                        Width="22"
+                        Height="22"
+                        Kind="Microsoft"
+                        Style="{StaticResource topButtonIcon}" />
+                </Button>
+
+                <Button
+                    HorizontalAlignment="Right"
+                    Command="{Binding ShutdownWindowCommand}"
+                    Style="{StaticResource topButton}">
                     <icon:PackIconMaterial Kind="ExitToApp" Style="{StaticResource topButtonIcon}" />
                 </Button>
             </Grid>
@@ -99,6 +119,7 @@
                             Text="Enter Email"
                             Visibility="{Binding ElementName=txtEmail, Path=Text.IsEmpty, Converter={StaticResource BoolToVis}}" />
                         <TextBox x:Name="txtEmail" />
+
                         <icon:PackIconMaterial
                             Width="15"
                             Margin="10,0,0,0"
@@ -109,6 +130,42 @@
 
                     <!--  Password TextBox  -->
                     <Grid>
+                        <!--  This is the original TextBlock for the password  -->
+                        <!--<TextBlock
+                            Margin="35,0,5,0"
+                            VerticalAlignment="Center"
+                            Panel.ZIndex="1"
+                            Foreground="#bdbdbd"
+                            IsHitTestVisible="False"
+                            Visibility="{Binding ElementName=txtPassword, Path=Text.IsEmpty, Converter={StaticResource BoolToVis}}"
+                            Text="Enter Password" />-->
+
+                        <!--  This is for sending the whole control to the converter  -->
+                        <!--<TextBlock
+                            Margin="35,0,5,0"
+                            VerticalAlignment="Center"
+                            Panel.ZIndex="1"
+                            Foreground="#bdbdbd"
+                            IsHitTestVisible="False"
+                            Text="Enter Password">
+                            <TextBlock.Visibility>
+                                <MultiBinding Converter="{StaticResource BoolToVisPwd}">
+                                    <Binding ElementName="txtPassword" Path="." />
+                                </MultiBinding>
+                            </TextBlock.Visibility>
+                        </TextBlock>-->
+
+                        <!--  This is for use with a Behavior class or EventTrigger  -->
+                        <!--<TextBlock
+                            Margin="35,0,5,0"
+                            VerticalAlignment="Center"
+                            Panel.ZIndex="1"
+                            Foreground="#bdbdbd"
+                            IsHitTestVisible="False"
+                            Text="Enter Password"
+                            Visibility="{Binding PwdIsEmpty, Converter={StaticResource BoolToVis}}" />-->
+
+                        <!--  This is for use with the ExtensionMethod class  -->
                         <TextBlock
                             Margin="35,0,5,0"
                             VerticalAlignment="Center"
@@ -116,8 +173,24 @@
                             Foreground="#bdbdbd"
                             IsHitTestVisible="False"
                             Text="Enter Password"
-                            Visibility="{Binding ElementName=txtPassword, Path=Text.IsEmpty, Converter={StaticResource BoolToVis}}" />
-                        <TextBox x:Name="txtPassword" />
+                            Visibility="{Binding ElementName=txtPassword, Path=(extension:PasswordBoxExtensions.IsPasswordEmpty), Converter={StaticResource BoolToVis}}" />
+
+                        <PasswordBox x:Name="txtPassword" extension:PasswordBoxExtensions.IsActive="True">
+
+                            <!--  The Behavior way of implementing the PasswordBox  -->
+                            <!--<i:Interaction.Behaviors>
+                                <behavior:PasswordBoxBehavior />
+                            </i:Interaction.Behaviors>-->
+
+                            <!--  The EventTrigger way of implementing the PasswordBox  -->
+                            <!--<i:Interaction.Triggers>
+                                <i:EventTrigger EventName="PasswordChanged">
+                                    <i:InvokeCommandAction Command="{Binding SetPwdStatusCommand}" CommandParameter="{Binding ElementName=txtPassword, Path=Password}" />
+                                </i:EventTrigger>
+                            </i:Interaction.Triggers>-->
+
+                        </PasswordBox>
+
                         <icon:PackIconMaterial
                             Width="15"
                             Margin="10,0,0,0"
