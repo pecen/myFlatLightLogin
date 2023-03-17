@@ -156,16 +156,6 @@
                         </TextBlock>-->
 
                         <!--  This is for use with a Behavior class or EventTrigger  -->
-                        <!--<TextBlock
-                            Margin="35,0,5,0"
-                            VerticalAlignment="Center"
-                            Panel.ZIndex="1"
-                            Foreground="#bdbdbd"
-                            IsHitTestVisible="False"
-                            Text="Enter Password"
-                            Visibility="{Binding PwdIsEmpty, Converter={StaticResource BoolToVis}}" />-->
-
-                        <!--  This is for use with the ExtensionMethod class  -->
                         <TextBlock
                             Margin="35,0,5,0"
                             VerticalAlignment="Center"
@@ -173,14 +163,27 @@
                             Foreground="#bdbdbd"
                             IsHitTestVisible="False"
                             Text="Enter Password"
-                            Visibility="{Binding ElementName=txtPassword, Path=(extension:PasswordBoxExtensions.IsPasswordEmpty), Converter={StaticResource BoolToVis}}" />
+                            Visibility="{Binding PwdIsEmpty, Converter={StaticResource BoolToVis}}" />
 
-                        <PasswordBox x:Name="txtPassword" extension:PasswordBoxExtensions.IsActive="True">
+                        <!--  This is for use with the ExtensionMethod class  -->
+                        <!--<TextBlock
+                            Margin="35,0,5,0"
+                            VerticalAlignment="Center"
+                            Panel.ZIndex="1"
+                            Foreground="#bdbdbd"
+                            IsHitTestVisible="False"
+                            Text="Enter Password"
+                            Visibility="{Binding ElementName=txtPassword, Path=(extension:PasswordBoxExtensions.IsPasswordEmpty), Converter={StaticResource BoolToVis}}" />-->
+
+                        <!--  The Extension Method way of implementing the PasswordBox  -->
+                        <!--<PasswordBox x:Name="txtPassword" extension:PasswordBoxExtensions.IsActive="True">-->
+
+                        <PasswordBox x:Name="txtPassword">
 
                             <!--  The Behavior way of implementing the PasswordBox  -->
-                            <!--<i:Interaction.Behaviors>
+                            <i:Interaction.Behaviors>
                                 <behavior:PasswordBoxBehavior />
-                            </i:Interaction.Behaviors>-->
+                            </i:Interaction.Behaviors>
 
                             <!--  The EventTrigger way of implementing the PasswordBox  -->
                             <!--<i:Interaction.Triggers>

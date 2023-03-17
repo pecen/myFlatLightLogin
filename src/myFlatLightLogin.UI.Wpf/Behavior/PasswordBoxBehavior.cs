@@ -11,74 +11,39 @@ using myFlatLightLogin.UI.Wpf.MVVM.ViewModel;
 
 namespace myFlatLightLogin.UI.Wpf.Behavior
 {
-    public sealed class PasswordBoxBehavior : Behavior<UIElement>
+    public sealed class PasswordBoxBehavior : Behavior<PasswordBox>
     {
         private static int pwdLength = 0;
 
         protected override void OnAttached()
         {
             base.OnAttached();
-            //AssociatedObject.LostKeyboardFocus += AssociatedObjectLostKeyboardFocus;
-            AssociatedObject.KeyDown += AssociatedObjectKeyDown;
-            AssociatedObject.KeyUp += AssociatedObjectKeyUp;
+            AssociatedObject.PasswordChanged += AssociatedObjectPasswordChanged;
         }
 
-        private void AssociatedObjectKeyUp(object sender, KeyEventArgs e)
+        private void AssociatedObjectPasswordChanged(object sender, RoutedEventArgs e)
         {
-            var associatedPasswordBox = AssociatedObject as PasswordBox;
-            if (associatedPasswordBox != null)
+            if (AssociatedObject is PasswordBox associatedPasswordBox)
             {
-                if (e.Key == Key.Back && pwdLength > 0) //Keyboard.IsKeyDown(Key.Back))
-                {
-                    pwdLength--;
-                }
-                else
-                {
-                    return;
-                }
-
                 var vm = (MainWindowViewModel)associatedPasswordBox.DataContext;
-                if (pwdLength == 0 && associatedPasswordBox.Password.Length == 0) 
+                if (vm != null)
                 {
-                    vm.PwdIsEmpty = true;
-                }
-                else if(pwdLength != associatedPasswordBox.Password.Length)
-                {
-                    pwdLength = associatedPasswordBox.Password.Length;
-                }
-            }
-        }
-
-        private void AssociatedObjectKeyDown(object sender, KeyEventArgs e)
-        {
-            var associatedPasswordBox = AssociatedObject as PasswordBox;
-            if (associatedPasswordBox != null)
-            {
-                pwdLength++;
-
-                var vm = (MainWindowViewModel)associatedPasswordBox.DataContext;
-                if (pwdLength > 0) 
-                {
-                    vm.PwdIsEmpty = false;
+                    if (associatedPasswordBox.SecurePassword.Length > 0)
+                    {
+                        vm.PwdIsEmpty = false;
+                    }
+                    else
+                    {
+                        vm.PwdIsEmpty = true;
+                    }
                 }
             }
         }
 
         protected override void OnDetaching()
         {
-            //AssociatedObject.LostKeyboardFocus -= AssociatedObjectLostKeyboardFocus;
-            AssociatedObject.KeyDown -= AssociatedObjectKeyDown;
+            AssociatedObject.PasswordChanged -= AssociatedObjectPasswordChanged;
             base.OnDetaching();
         }
-
-        //void AssociatedObjectLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
-        //{
-        //    var associatedPasswordBox = AssociatedObject as PasswordBox;
-        //    if (associatedPasswordBox != null)
-        //    {
-        //        // Set your view-model's Password property here
-
-        //    }
-        //}
     }
 }
