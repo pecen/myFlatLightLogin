@@ -20,7 +20,7 @@ Also, this is an ongoing development so the look will probably change over time 
 	
 **Note:** With the change to a PasswordBox I had to do a few modifications to get the same behavior as the TextBox, since a PasswordBox differs a lot from a TextBox. For instance the propterty Text's equivalence in a PasswordBox is the properties Password or SecurePassword, which are not DependencyProperties and thus we cannot use Bindings here and you won't get any change notification for them. According to Microsoft this is because of security reasons. 
 
-One workaround is that you can either add an Extension Method where you implement a few DP's to enable binding, or you can add a Behavior class and use Microsoft.Interactive.Behaviors. For simplicity I added an ExtensionMethod class, PasswordBoxExtensions.cs, but I have also included a Behavior class just to demonstrate. A third option could be to use an EventTrigger. I'm sure there are other ways as well to go here. 
+One workaround is that you can either add an Extension Method where you implement a few DP's to enable binding, or you can add a Behavior class and use Microsoft.Interactive.Behaviors. A third option could be to use an EventTrigger which calls a SetPasswordStatus command in the ViewModel. In my case I added a Behavior class, PasswordBoxBehavior.cs, but I have also implemented the ExtensionMethod approach, and the EventTrigger approach just to demonstrate, although they are commented out in favor for the Behavior approach. I'm sure there are other ways as well to go here. 
 
 Information for the above suggested PasswordBox implementations was found here:
 
