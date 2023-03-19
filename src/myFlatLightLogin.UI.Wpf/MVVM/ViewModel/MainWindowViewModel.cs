@@ -1,6 +1,8 @@
 ﻿using myFlatLightLogin.UI.Wpf.Core;
-using System;
 using System.Windows;
+
+// Enable if EventTrigger is to be used
+//using System.Windows.Controls;
 
 namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
@@ -19,7 +21,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             get { return _pwdIsEmpty; }
             set { SetProperty(ref _pwdIsEmpty, value); }
         }
-        public string Password { get; set; }   
+        public string Password { get; set; }
         public MainWindowViewModel()
         {
             MoveWindowCommand = new RelayCommand(o => { Application.Current.MainWindow.DragMove(); });
@@ -41,16 +43,19 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         }
 
         // Used if EventTrigger is used
-        private void SetStatus(object pwd)
-        {
-                if (pwd is string password && password.Length > 0)
-            {
-                PwdIsEmpty = false;
-            }
-            else
-            {
-                PwdIsEmpty = true;
-            }
-        }
+        //private void SetStatus(object pwdBox)
+        //{
+        //    if (pwdBox is PasswordBox pwd)
+        //    {
+        //        if (pwd.SecurePassword.Length > 0)
+        //        {
+        //            PwdIsEmpty = false;
+        //        }
+        //        else
+        //        {
+        //            PwdIsEmpty = true;
+        //        }
+        //    }
+        //}
     }
 }

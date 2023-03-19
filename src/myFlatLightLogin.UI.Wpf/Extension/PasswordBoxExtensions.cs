@@ -17,8 +17,7 @@ namespace myFlatLightLogin.UI.Wpf.Extension
 
         private static void OnIsActiveChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var passwordBox = d as PasswordBox;
-            if (passwordBox == null) return;
+            if (d is not PasswordBox passwordBox) return;
 
             passwordBox.PasswordChanged -= OnPasswordChanged;
             if ((bool)e.NewValue)
