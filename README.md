@@ -1,7 +1,7 @@
 # myFlatLightLogin
 This is a continued project from the YouTube tutorial "How to Design a Flat Light Login Page in C#" with my add-ons. 
 
-I created this project initially in the Tutorials repository. The following is the description from the ReadMe there:
+I created this project initially in my Tutorials repository. The following is the description from the ReadMe there:
 
 8. C# Wpf UI | How to Design a Flat Light Login Page in C# - Added 230301, from YouTube: https://www.youtube.com/watch?v=6_qRkGo2sOI&t=1s 
 	- Folder: FlatLightLoginPage
