@@ -11,8 +11,8 @@ namespace myFlatLightLogin.Dal
     {
         UserDto Fetch(int id);
         //List<UserDto> Fetch();
-        int Insert(UserDto user);
-        int Update(UserDto user);
-        int Delete(int id);
+        bool Insert(UserDto user);
+        bool Update(UserDto user);
+        bool Delete(int id);
     }
 }

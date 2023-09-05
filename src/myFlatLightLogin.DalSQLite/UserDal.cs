@@ -1,5 +1,6 @@
 ﻿using myFlatLightLogin.Dal;
 using myFlatLightLogin.Dal.Dto;
+using myFlatLightLogin.DalSQLite.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,22 +11,30 @@ namespace myFlatLightLogin.DalSQLite
 {
     public class UserDal : IUserDal
     {
-        public int Delete(int id)
+        public bool Delete(int id)
         {
             throw new NotImplementedException();
         }
 
         public UserDto Fetch(int id)
         {
-            throw new NotImplementedException();
+            List<UserDto> items = DbCore.Fetch<UserDto>();
+
+            return items.FirstOrDefault(i => i.Id == id);
         }
 
-        public int Insert(UserDto user)
+        public bool Insert(UserDto user)
         {
-            throw new NotImplementedException();
+            return DbCore.Insert(new User
+            {
+                Name = user.Name,
+                Lastname = user.Lastname,
+                Username = user.Username,
+                Password = user.Password
+            });
         }
 
-        public int Update(UserDto user)
+        public bool Update(UserDto user)
         {
             throw new NotImplementedException();
         }
