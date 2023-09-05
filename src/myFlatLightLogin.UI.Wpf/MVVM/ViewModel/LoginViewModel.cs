@@ -1,9 +1,5 @@
 ﻿using myFlatLightLogin.UI.Wpf.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using myFlatLightLogin.UI.Wpf.Services;
 
 namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
@@ -12,6 +8,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         // Enable if EventTrigger is to be used
         //public RelayCommand<object> SetPwdStatusCommand { get; set; }
 
+        public RelayCommand NavigateToRegisterUserCommand { get; set; }
+
         private bool _pwdIsEmpty = true;
         public bool PwdIsEmpty
         {
@@ -19,10 +17,14 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             set { SetProperty(ref _pwdIsEmpty, value); }
         }
 
-        public LoginViewModel()
+        public LoginViewModel(INavigationService navigationService)
         {
             // Enable if EventTrigger is to be used
             //SetPwdStatusCommand = new RelayCommand<object>(SetStatus);
+
+            Navigation = navigationService;
+
+            NavigateToRegisterUserCommand = new RelayCommand(o => { Navigation.NavigateTo<RegisterUserViewModel>(); }, o => true);
         }
 
         // Used if EventTrigger is used

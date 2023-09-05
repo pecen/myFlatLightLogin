@@ -1,27 +1,34 @@
-﻿using System.ComponentModel;
+﻿using myFlatLightLogin.UI.Wpf.MVVM.ViewModel;
+using myFlatLightLogin.UI.Wpf.Services;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace myFlatLightLogin.UI.Wpf.Core
 {
-    public class ViewModelBase : INotifyPropertyChanged
+    public class ViewModelBase : BindableBase
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
+        //public RelayCommand ShowLoginView { get; set; }
+        //public RelayCommand ShowRegisterUserView { get; set; }
 
-        protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string propertyName = null)
+
+        //private object _currentView;
+        //public object CurrentView
+        //{
+        //    get { return _currentView; }
+        //    set { SetProperty(ref _currentView, value); }
+        //}
+
+        //public ViewModelBase()
+        //{
+        //ShowLoginView = new RelayCommand(o => CurrentView = LoginVM, o => true);
+        //ShowRegisterUserView = new RelayCommand(o => CurrentView = RegisterUserVM);
+        //}
+
+        private INavigationService _navigation;
+        public INavigationService Navigation
         {
-            if (Equals(storage, value))
-            {
-                return false;
-            }
-
-            storage = value;
-            this.OnPropertyChanged(propertyName);
-            return true;
-        }
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            get => _navigation;
+            set { SetProperty(ref _navigation, value); }
         }
     }
 }

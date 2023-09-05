@@ -18,9 +18,9 @@
     WindowStartupLocation="CenterScreen"
     WindowStyle="None"
     mc:Ignorable="d">
-    <Window.DataContext>
+    <!--<Window.DataContext>
         <vm:MainWindowViewModel />
-    </Window.DataContext>
+    </Window.DataContext>-->
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
@@ -92,7 +92,7 @@
         </Grid>
 
         <!--  Input Form  -->
-        <ContentPresenter Grid.Row="1" Content="{Binding CurrentView}" />
+        <ContentPresenter Grid.Row="1" Content="{Binding Navigation.CurrentView}" />
 
         <!--  Bottom Section  -->
         <Border
@@ -123,7 +123,7 @@
                     <Button Content="Videos" Style="{StaticResource bottomButton}" />
                     <Button Content="About" Style="{StaticResource bottomButton}" />
                     <Button
-                        Command="{Binding ShowLoginView}"
+                        Command="{Binding NavigateToLoginCommand}"
                         Content="Login"
                         Foreground="#ff131e"
                         Style="{StaticResource bottomButton}" />
