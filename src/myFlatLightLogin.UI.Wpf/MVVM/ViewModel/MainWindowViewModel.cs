@@ -11,19 +11,24 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public RelayCommand ShutdownWindowCommand { get; set; }
         public RelayCommand MoveWindowCommand { get; set; }
         public RelayCommand ResizeWindowCommand { get; set; }
+        public RelayCommand ShowLoginView {  get; set; }
 
-        // Enable if EventTrigger is to be used
-        //public RelayCommand<object> SetPwdStatusCommand { get; set; }
+        // The ViewModels
+        public LoginViewModel LoginVM { get; set; }
 
-        private bool _pwdIsEmpty = true;
-        public bool PwdIsEmpty
+        private object _currentView;
+        public object CurrentView
         {
-            get { return _pwdIsEmpty; }
-            set { SetProperty(ref _pwdIsEmpty, value); }
+            get { return _currentView; }
+            set { SetProperty(ref _currentView, value); }
         }
-        public string Password { get; set; }
+
         public MainWindowViewModel()
         {
+            LoginVM = new LoginViewModel();
+
+            _currentView =  LoginVM;
+
             MoveWindowCommand = new RelayCommand(o => { Application.Current.MainWindow.DragMove(); });
             ShutdownWindowCommand = new RelayCommand(o => { Application.Current.Shutdown(); });
             ResizeWindowCommand = new RelayCommand(o =>
@@ -38,24 +43,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 }
             });
 
-            // Enable if EventTrigger is to be used
-            //SetPwdStatusCommand = new RelayCommand<object>(SetStatus);
+            ShowLoginView = new RelayCommand(o => CurrentView = LoginVM); 
         }
-
-        // Used if EventTrigger is used
-        //private void SetStatus(object pwdBox)
-        //{
-        //    if (pwdBox is PasswordBox pwd)
-        //    {
-        //        if (pwd.SecurePassword.Length > 0)
-        //        {
-        //            PwdIsEmpty = false;
-        //        }
-        //        else
-        //        {
-        //            PwdIsEmpty = true;
-        //        }
-        //    }
-        //}
     }
 }

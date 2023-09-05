@@ -89,175 +89,10 @@
                     <ImageBrush ImageSource="/Assets/Images/Ionion_Cyprus.jpg" Opacity="0.5" />
                 </Grid.Background>
             </Grid>
-
-            <!--  Input Form  -->
-            <Border
-                Width="300"
-                Padding="30"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Background="White"
-                BorderBrush="#e2e9e9"
-                BorderThickness="2"
-                CornerRadius="10">
-                <StackPanel>
-                    <TextBlock
-                        Margin="0,0,0,10"
-                        FontSize="16"
-                        FontWeight="SemiBold"
-                        Foreground="#5a5a5a"
-                        Text="Login or Register" />
-
-                    <!--  Email TextBox  -->
-                    <Grid>
-                        <TextBlock
-                            Margin="35,0,5,0"
-                            VerticalAlignment="Center"
-                            Panel.ZIndex="1"
-                            Foreground="#bdbdbd"
-                            IsHitTestVisible="False"
-                            Text="Enter Email"
-                            Visibility="{Binding ElementName=txtEmail, Path=Text.IsEmpty, Converter={StaticResource BoolToVis}}" />
-                        <TextBox x:Name="txtEmail" />
-
-                        <icon:PackIconMaterial
-                            Width="15"
-                            Margin="10,0,0,0"
-                            VerticalAlignment="Center"
-                            Foreground="#c7c7c7"
-                            Kind="EmailVariant" />
-                    </Grid>
-
-                    <!--  Password TextBox  -->
-                    <Grid>
-                        <!--  This is the original TextBlock for the password  -->
-                        <!--<TextBlock
-                            Margin="35,0,5,0"
-                            VerticalAlignment="Center"
-                            Panel.ZIndex="1"
-                            Foreground="#bdbdbd"
-                            IsHitTestVisible="False"
-                            Visibility="{Binding ElementName=txtPassword, Path=Text.IsEmpty, Converter={StaticResource BoolToVis}}"
-                            Text="Enter Password" />-->
-
-                        <!--  This is for sending the whole control to the converter  -->
-                        <!--<TextBlock
-                            Margin="35,0,5,0"
-                            VerticalAlignment="Center"
-                            Panel.ZIndex="1"
-                            Foreground="#bdbdbd"
-                            IsHitTestVisible="False"
-                            Text="Enter Password">
-                            <TextBlock.Visibility>
-                                <MultiBinding Converter="{StaticResource BoolToVisPwd}">
-                                    <Binding ElementName="txtPassword" Path="." />
-                                </MultiBinding>
-                            </TextBlock.Visibility>
-                        </TextBlock>-->
-
-                        <!--  This is for use with the Behavior class or EventTrigger class approach  -->
-                        <TextBlock
-                            Margin="35,0,5,0"
-                            VerticalAlignment="Center"
-                            Panel.ZIndex="1"
-                            Foreground="#bdbdbd"
-                            IsHitTestVisible="False"
-                            Text="Enter Password"
-                            Visibility="{Binding PwdIsEmpty, Converter={StaticResource BoolToVis}}" />
-
-                        <!--  This is for use with the ExtensionMethod class approach  -->
-                        <!--<TextBlock
-                            Margin="35,0,5,0"
-                            VerticalAlignment="Center"
-                            Panel.ZIndex="1"
-                            Foreground="#bdbdbd"
-                            IsHitTestVisible="False"
-                            Text="Enter Password"
-                            Visibility="{Binding ElementName=txtPassword, Path=(extension:PasswordBoxExtensions.IsPasswordEmpty), Converter={StaticResource BoolToVis}}" />-->
-
-                        <!--  The Extension Method way of implementing the PasswordBox  -->
-                        <!--<PasswordBox x:Name="txtPassword" extension:PasswordBoxExtensions.IsActive="True">-->
-
-                        <PasswordBox x:Name="txtPassword">
-
-                            <!--  The Behavior way of implementing the PasswordBox  -->
-                            <i:Interaction.Behaviors>
-                                <behavior:PasswordBoxBehavior />
-                            </i:Interaction.Behaviors>
-
-                            <!--
-                                The EventTrigger way of implementing the PasswordBox. Have in mind though that using this approach breaks
-                                the MVVM way of doing things by sending the whole PasswordBox control as the CommandParameter because the
-                                ViewModel layer now references a View-specific object.
-                            -->
-                            <!--<i:Interaction.Triggers>
-                                <i:EventTrigger EventName="PasswordChanged">
-                                    <i:InvokeCommandAction Command="{Binding SetPwdStatusCommand}" CommandParameter="{Binding ElementName=txtPassword, Path=.}" />-->
-                            <!--  The following row accomplishes the same as the row above  -->
-                            <!--<i:InvokeCommandAction Command="{Binding SetPwdStatusCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=PasswordBox}}" />-->
-                            <!--</i:EventTrigger>
-                            </i:Interaction.Triggers>-->
-
-                        </PasswordBox>
-
-                        <icon:PackIconMaterial
-                            Width="15"
-                            Margin="10,0,0,0"
-                            VerticalAlignment="Center"
-                            Foreground="#c7c7c7"
-                            Kind="LockOutline" />
-                    </Grid>
-
-                    <CheckBox
-                        Margin="0,10,0,5"
-                        Content="Remember Me"
-                        IsChecked="True"
-                        Style="{DynamicResource CheckBoxStyle1}" />
-
-                    <!--  Buttons  -->
-                    <Grid Margin="0,10,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <Button
-                            Margin="0,0,5,0"
-                            Background="#ff131e"
-                            BorderBrush="#ff131e"
-                            Content="Sign in"
-                            Foreground="#ffffff"
-                            Style="{StaticResource mainButton}" />
-                        <Button
-                            Grid.Column="1"
-                            Margin="5,0,0,0"
-                            Content="Register"
-                            Style="{StaticResource mainButton}" />
-                    </Grid>
-
-                    <!--  Or Text  -->
-                    <Grid Margin="0,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <Separator Background="#dfdfdf" />
-                        <TextBlock
-                            Grid.Column="1"
-                            Margin="5,0,5,2"
-                            Foreground="#5a5a5a"
-                            Text="or" />
-                        <Separator Grid.Column="2" Background="#dfdfdf" />
-                    </Grid>
-
-                    <!--  Long Button  -->
-                    <Button Content="Login as Guest" Style="{StaticResource mainButtonLong}" />
-
-                </StackPanel>
-            </Border>
         </Grid>
+
+        <!--  Input Form  -->
+        <ContentPresenter Grid.Row="1" Content="{Binding CurrentView}" />
 
         <!--  Bottom Section  -->
         <Border
@@ -288,6 +123,7 @@
                     <Button Content="Videos" Style="{StaticResource bottomButton}" />
                     <Button Content="About" Style="{StaticResource bottomButton}" />
                     <Button
+                        Command="{Binding ShowLoginView}"
                         Content="Login"
                         Foreground="#ff131e"
                         Style="{StaticResource bottomButton}" />

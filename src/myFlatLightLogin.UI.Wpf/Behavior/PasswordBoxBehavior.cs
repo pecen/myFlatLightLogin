@@ -17,7 +17,7 @@ namespace myFlatLightLogin.UI.Wpf.Behavior
         {
             if (AssociatedObject is PasswordBox associatedPasswordBox)
             {
-                var vm = (MainWindowViewModel)associatedPasswordBox.DataContext;
+                var vm = (LoginViewModel)associatedPasswordBox.DataContext;
                 if (vm != null)
                 {
                     if (associatedPasswordBox.SecurePassword.Length > 0)
