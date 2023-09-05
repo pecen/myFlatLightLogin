@@ -7,8 +7,6 @@ namespace myFlatLightLogin.UI.Wpf.Behavior
 {
     public sealed class PasswordBoxBehavior : Behavior<PasswordBox>
     {
-        private static int pwdLength = 0;
-
         protected override void OnAttached()
         {
             base.OnAttached();
