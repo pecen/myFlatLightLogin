@@ -4,12 +4,15 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:view="clr-namespace:myFlatLightLogin.UI.Wpf.MVVM.View"
     xmlns:vm="clr-namespace:myFlatLightLogin.UI.Wpf.MVVM.ViewModel"
-    xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks"
-    StartupUri="MVVM/View/MainWindow.xaml">
+    xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks">
     <Application.Resources>
 
-        <DataTemplate DataType="{x:Type vm:LoginViewModel}">
+        <DataTemplate DataType="{x:Type TypeName=vm:LoginViewModel}">
             <view:Login />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type TypeName=vm:RegisterUserViewModel}">
+            <view:RegisterUser />
         </DataTemplate>
 
         <Style x:Key="topButton" TargetType="Button">
