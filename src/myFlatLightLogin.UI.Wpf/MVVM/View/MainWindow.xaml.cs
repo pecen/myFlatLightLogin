@@ -2,7 +2,7 @@
 using System.Windows;
 using System.Windows.Input;
 
-namespace FlatLightLogin
+namespace myFlatLightLogin.UI.Wpf.MVVM.View
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

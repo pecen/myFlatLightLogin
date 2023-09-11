@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace myFlatLightLogin.UI.Wpf.Core
+namespace myFlatLightLogin.Core.MVVM
 {
     public class BindableBase : INotifyPropertyChanged
     {

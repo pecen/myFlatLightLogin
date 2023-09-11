@@ -1,7 +1,7 @@
-﻿using myFlatLightLogin.UI.Wpf.Core;
+﻿using myFlatLightLogin.Core.MVVM;
 using System;
 
-namespace myFlatLightLogin.UI.Wpf.Services
+namespace myFlatLightLogin.Core.Services
 {
     public class NavigationService : BindableBase, INavigationService
     {

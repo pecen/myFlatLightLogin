@@ -11,16 +11,6 @@ namespace myFlatLightLogin.UI.Wpf.Converter
 {
     public class BoolToVisibilityPwdText : IValueConverter
     {
-        //public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
-        //{
-        //    var v = values;
-        //    return true;
-        //}
-
-        //public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-        //{
-        //    throw new NotImplementedException();
-        //}
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             //var v = value;// as string;

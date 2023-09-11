@@ -1,8 +1,37 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace myFlatLightLogin.UI.Wpf.Core
+namespace myFlatLightLogin.Core.MVVM
 {
+    public class RelayCommand2 : ICommand
+    {
+        public RelayCommand2(Action<object> execute = null, Predicate<object> canExecute = null)
+        {
+            this.CanExecuteDelegate = canExecute;
+            this.ExecuteDelegate = execute;
+        }
+
+        public Predicate<object> CanExecuteDelegate { get; set; }
+        public Action<object> ExecuteDelegate { get; set; }
+
+        public bool CanExecute(object parameter)
+        {
+            var canExecute = this.CanExecuteDelegate;
+            return canExecute == null || canExecute(parameter);
+        }
+
+        public event EventHandler CanExecuteChanged
+        {
+            add => CommandManager.RequerySuggested += value;
+            remove => CommandManager.RequerySuggested -= value;
+        }
+
+        public void Execute(object parameter)
+        {
+            this.ExecuteDelegate?.Invoke(parameter);
+        }
+    }
+
     public class RelayCommand : ICommand
     {
         private Action<object> _execute;
@@ -14,7 +43,7 @@ namespace myFlatLightLogin.UI.Wpf.Core
             remove { CommandManager.RequerySuggested -= value; }
         }
 
-        public RelayCommand(Action<object> execute, Func<object, bool> canExecute = null)
+        public RelayCommand(Action<object> execute = null, Func<object, bool> canExecute = null)
         {
             _execute = execute;
             _canExecute = canExecute;
