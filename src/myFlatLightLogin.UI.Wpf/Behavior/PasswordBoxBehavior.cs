@@ -1,4 +1,6 @@
 ﻿using Microsoft.Xaml.Behaviors;
+using myFlatLightLogin.Core.Enums;
+using myFlatLightLogin.Core.Extensions;
 using myFlatLightLogin.UI.Wpf.MVVM.ViewModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,17 +18,37 @@ namespace myFlatLightLogin.UI.Wpf.Behavior
         private void AssociatedObjectPasswordChanged(object sender, RoutedEventArgs e)
         {
             if (AssociatedObject is PasswordBox associatedPasswordBox)
-            {
-                var vm = (LoginViewModel)associatedPasswordBox.DataContext;
-                if (vm != null)
+            {                
+                if (associatedPasswordBox.Name == TextBoxNames.Password.GetDescription())
                 {
-                    if (associatedPasswordBox.SecurePassword.Length > 0)
+                    var vm = (IAuthenticateUser)associatedPasswordBox.DataContext;
+
+                    if (vm != null)
                     {
-                        vm.PwdIsEmpty = false;
+                        if (associatedPasswordBox.SecurePassword.Length > 0)
+                        {
+                            vm.PwdIsEmpty = false;
+                        }
+                        else
+                        {
+                            vm.PwdIsEmpty = true;
+                        }
                     }
-                    else
+                }
+                else if (associatedPasswordBox.Name == TextBoxNames.ConfirmPassword.GetDescription())
+                {
+                    var vm = (IAuthenticateConfirmUser)associatedPasswordBox.DataContext;
+
+                    if (vm != null)
                     {
-                        vm.PwdIsEmpty = true;
+                        if (associatedPasswordBox.SecurePassword.Length > 0)
+                        {
+                            vm.ConfirmPwdIsEmpty = false;
+                        }
+                        else
+                        {
+                            vm.ConfirmPwdIsEmpty = true;
+                        }
                     }
                 }
             }

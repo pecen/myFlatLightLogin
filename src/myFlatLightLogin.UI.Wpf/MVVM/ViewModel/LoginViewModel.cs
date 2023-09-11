@@ -1,14 +1,16 @@
-﻿using myFlatLightLogin.UI.Wpf.Core;
-using myFlatLightLogin.UI.Wpf.Services;
+﻿using myFlatLightLogin.Core.MVVM;
+using myFlatLightLogin.Core.Services;
+using System;
 
 namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
-    public class LoginViewModel : ViewModelBase
+    public class LoginViewModel : ViewModelBase, IAuthenticateUser
     {
         // Enable if EventTrigger is to be used
         //public RelayCommand<object> SetPwdStatusCommand { get; set; }
 
         public RelayCommand NavigateToRegisterUserCommand { get; set; }
+        public RelayCommand LoginCommand { get; set; }
 
         private bool _pwdIsEmpty = true;
         public bool PwdIsEmpty
@@ -16,6 +18,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             get { return _pwdIsEmpty; }
             set { SetProperty(ref _pwdIsEmpty, value); }
         }
+
+        public bool IsAuthenticated => throw new NotImplementedException();
 
         public LoginViewModel(INavigationService navigationService)
         {
@@ -25,7 +29,14 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             Navigation = navigationService;
 
             NavigateToRegisterUserCommand = new RelayCommand(o => { Navigation.NavigateTo<RegisterUserViewModel>(); }, o => true);
+            LoginCommand = new RelayCommand(Login);
         }
+
+        private void Login(object obj)
+        {
+
+        }
+
 
         // Used if EventTrigger is used
         //private void SetStatus(object pwdBox)

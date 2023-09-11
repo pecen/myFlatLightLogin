@@ -1,7 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using myFlatLightLogin.UI.Wpf.Core;
+using myFlatLightLogin.Core.MVVM;
+using myFlatLightLogin.Core.Services;
+using myFlatLightLogin.UI.Wpf.MVVM.View;
 using myFlatLightLogin.UI.Wpf.MVVM.ViewModel;
-using myFlatLightLogin.UI.Wpf.Services;
 using System;
 using System.Windows;
 

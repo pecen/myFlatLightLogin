@@ -1,9 +1,6 @@
-﻿using myFlatLightLogin.UI.Wpf.MVVM.ViewModel;
-using myFlatLightLogin.UI.Wpf.Services;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+﻿using myFlatLightLogin.Core.Services;
 
-namespace myFlatLightLogin.UI.Wpf.Core
+namespace myFlatLightLogin.Core.MVVM
 {
     public class ViewModelBase : BindableBase
     {

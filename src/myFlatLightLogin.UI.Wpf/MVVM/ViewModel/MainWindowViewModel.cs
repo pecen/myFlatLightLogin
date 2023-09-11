@@ -1,5 +1,5 @@
-﻿using myFlatLightLogin.UI.Wpf.Core;
-using myFlatLightLogin.UI.Wpf.Services;
+﻿using myFlatLightLogin.Core.MVVM;
+using myFlatLightLogin.Core.Services;
 using System.Windows;
 
 // Enable if EventTrigger is to be used
