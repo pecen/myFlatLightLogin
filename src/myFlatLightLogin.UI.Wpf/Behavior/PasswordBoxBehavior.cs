@@ -19,7 +19,7 @@ namespace myFlatLightLogin.UI.Wpf.Behavior
         {
             if (AssociatedObject is PasswordBox associatedPasswordBox)
             {                
-                if (associatedPasswordBox.Name == TextBoxNames.Password.GetDescription())
+                if (associatedPasswordBox.Name == TextBoxNames.txtPassword.ToString())
                 {
                     var vm = (IAuthenticateUser)associatedPasswordBox.DataContext;
 
@@ -35,7 +35,7 @@ namespace myFlatLightLogin.UI.Wpf.Behavior
                         }
                     }
                 }
-                else if (associatedPasswordBox.Name == TextBoxNames.ConfirmPassword.GetDescription())
+                else if (associatedPasswordBox.Name == TextBoxNames.txtConfirmPassword.ToString())
                 {
                     var vm = (IAuthenticateConfirmUser)associatedPasswordBox.DataContext;
 

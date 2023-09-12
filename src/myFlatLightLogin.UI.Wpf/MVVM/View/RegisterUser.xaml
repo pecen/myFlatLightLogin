@@ -4,15 +4,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:behavior="clr-namespace:myFlatLightLogin.UI.Wpf.Behavior"
     xmlns:converter="clr-namespace:myFlatLightLogin.UI.Wpf.Converter"
-    xmlns:enums="clr-namespace:myFlatLightLogin.Core.Enums;assembly=myFlatLightLogin.Core"
-    xmlns:extensions="clr-namespace:myFlatLightLogin.Core.Extensions;assembly=myFlatLightLogin.Core"
     xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-    xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks"
-    xmlns:vm="clr-namespace:myFlatLightLogin.UI.Wpf.MVVM.ViewModel">
+    xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <converter:BoolToVisibilityPwdText x:Key="BoolToVisPwd" />
-        <converter:EnumToDescriptionConverter x:Key="EnumToDescription" />
     </UserControl.Resources>
     <Border
         Width="300"
@@ -41,7 +37,7 @@
                     IsHitTestVisible="False"
                     Text="Enter Email"
                     Visibility="{Binding ElementName=txtEmail, Path=Text.IsEmpty, Converter={StaticResource BoolToVis}}" />
-                <TextBox x:Name="txtEmail" Tag="{Binding Source={extensions:EnumBindingSourceExtension {x:Type enums:TextBoxNames}}}" />
+                <TextBox x:Name="txtEmail" />
 
                 <icon:PackIconMaterial
                     Width="15"

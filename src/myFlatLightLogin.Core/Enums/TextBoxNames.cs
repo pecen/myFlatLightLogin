@@ -4,11 +4,11 @@ namespace myFlatLightLogin.Core.Enums
 {
     public enum TextBoxNames
     {
-        [Description("txtEmail")]
-        Email,
-        [Description("txtPassword")]
-        Password,
-        [Description("txtConfirmPassword")]
-        ConfirmPassword
+        [Description("The E-mail Textbox")]
+        txtEmail,
+        [Description("The Password Textbox")]
+        txtPassword,
+        [Description("The Confirm Password Textbox")]
+        txtConfirmPassword
     }
 }
