@@ -9,5 +9,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
     public interface IAuthenticateConfirmUser : IAuthenticateUser
     {
         bool ConfirmPwdIsEmpty { get; set; }
+        public string ConfirmPassword { get; set; }
     }
 }

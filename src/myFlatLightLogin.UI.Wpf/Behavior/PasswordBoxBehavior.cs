@@ -28,6 +28,7 @@ namespace myFlatLightLogin.UI.Wpf.Behavior
                         if (associatedPasswordBox.SecurePassword.Length > 0)
                         {
                             vm.PwdIsEmpty = false;
+                            vm.Password = associatedPasswordBox.Password;
                         }
                         else
                         {
@@ -44,6 +45,7 @@ namespace myFlatLightLogin.UI.Wpf.Behavior
                         if (associatedPasswordBox.SecurePassword.Length > 0)
                         {
                             vm.ConfirmPwdIsEmpty = false;
+                            vm.ConfirmPassword = associatedPasswordBox.Password;
                         }
                         else
                         {

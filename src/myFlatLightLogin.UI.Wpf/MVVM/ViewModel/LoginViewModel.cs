@@ -12,6 +12,9 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public RelayCommand NavigateToRegisterUserCommand { get; set; }
         public RelayCommand LoginCommand { get; set; }
 
+        public string UserId { get; set; }
+        public string Password { get; set; }
+
         private bool _pwdIsEmpty = true;
         public bool PwdIsEmpty
         {
@@ -28,7 +31,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
             Navigation = navigationService;
 
-            NavigateToRegisterUserCommand = new RelayCommand(o => { Navigation.NavigateTo<RegisterUserViewModel>(); }, o => true);
+            NavigateToRegisterUserCommand = new RelayCommand(o => { Navigation.NavigateTo<RegisterUserViewModel>(o => { var test = o; }); }, o => true);
             LoginCommand = new RelayCommand(Login);
         }
 

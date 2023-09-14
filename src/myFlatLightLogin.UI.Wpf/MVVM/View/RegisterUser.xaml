@@ -37,7 +37,7 @@
                     IsHitTestVisible="False"
                     Text="Enter Email"
                     Visibility="{Binding ElementName=txtEmail, Path=Text.IsEmpty, Converter={StaticResource BoolToVis}}" />
-                <TextBox x:Name="txtEmail" />
+                <TextBox x:Name="txtEmail" Text="{Binding UserId}" />
 
                 <icon:PackIconMaterial
                     Width="15"
@@ -124,9 +124,9 @@
                     Margin="5,0,0,0"
                     Background="#ff131e"
                     BorderBrush="#ff131e"
-                    Command="{Binding RegisterUserCommand}"
+                    Command="{Binding RegisterUserCommand}" 
                     Content="Register"
-                    Foreground="#ffffff"
+                    Foreground="#ffffff" IsEnabled="{Binding IsEnabled}"
                     Style="{StaticResource mainButton}" />
             </Grid>
 

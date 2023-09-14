@@ -1,5 +1,6 @@
 ﻿using myFlatLightLogin.Core.MVVM;
 using myFlatLightLogin.Core.Services;
+using System;
 using System.Windows;
 
 // Enable if EventTrigger is to be used
@@ -18,7 +19,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public MainWindowViewModel(INavigationService navigationService)
         {
             Navigation = navigationService;
-            Navigation.NavigateTo<LoginViewModel>();
+            Navigation.NavigateTo<LoginViewModel>(o => { var test = o; });
 
             MoveWindowCommand = new RelayCommand(o => { Application.Current.MainWindow.DragMove(); });
             ShutdownWindowCommand = new RelayCommand(o => { Application.Current.Shutdown(); });
@@ -34,7 +35,15 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 }
             });
 
-            NavigateToLoginCommand = new RelayCommand(o => { Navigation.NavigateTo<LoginViewModel>(); }, o => true);
+            NavigateToLoginCommand = new RelayCommand(Navigate, o => true);
+        }
+
+        private void Navigate(object obj)
+        {
+            Navigation.NavigateTo<LoginViewModel>(o =>
+            {
+                var test = o;
+            });
         }
     }
 }

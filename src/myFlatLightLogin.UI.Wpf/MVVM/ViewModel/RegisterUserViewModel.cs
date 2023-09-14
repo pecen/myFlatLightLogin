@@ -1,5 +1,7 @@
 ﻿using myFlatLightLogin.Core.MVVM;
 using myFlatLightLogin.Core.Services;
+using System;
+using System.Windows;
 
 namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
@@ -7,6 +9,21 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
     {
         public RelayCommand NavigateToLoginCommand { get; set; }
         public RelayCommand RegisterUserCommand { get; set; }
+
+        public string UserId { get; set; }
+        public string Password { get; set; }
+        public string ConfirmPassword { get; set; }
+
+        public string IsEnabled
+        {
+            get 
+            { 
+                var color = CanRegister(null) ? "#ffffff" : "#808080"; 
+                OnPropertyChanged(color);
+                return color;
+            }
+        }
+
 
         private bool _pwdIsEmpty = true;
         public bool PwdIsEmpty
@@ -28,14 +45,25 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         {
             Navigation = navigationService;
 
-            NavigateToLoginCommand = new RelayCommand(o => { Navigation.NavigateTo<LoginViewModel>(); }, o => true);
+            NavigateToLoginCommand = new RelayCommand(o => { Navigation.NavigateTo<LoginViewModel>(o => { var test = o; }); }, o => true);
 
-            RegisterUserCommand = new RelayCommand(RegisterUser);
+            RegisterUserCommand = new RelayCommand(RegisterUser, CanRegister);
+        }
+
+        private bool CanRegister(object arg)
+        {
+            return (!string.IsNullOrEmpty(ConfirmPassword) && ConfirmPassword == Password);
         }
 
         private void RegisterUser(object obj)
         {
+            //if(ConfirmPassword != Password)
+            //{
+            //    MessageBox.Show("Passwords do not match!", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning); 
+            //    return;
+            //}
 
+            //MessageBox.Show("User registered", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

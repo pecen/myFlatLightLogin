@@ -1,4 +1,5 @@
 ﻿using myFlatLightLogin.Core.MVVM;
+using System;
 
 namespace myFlatLightLogin.Core.Services
 {
@@ -6,6 +7,6 @@ namespace myFlatLightLogin.Core.Services
     {
         ViewModelBase CurrentView { get; }
 
-        void NavigateTo<T>() where T : ViewModelBase;
+        void NavigateTo<T>(Action<string> callback) where T : ViewModelBase;
     }
 }
