@@ -15,7 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "myFlatLightLogin.Dal", "myF
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "myFlatLightLogin.DalSQLite", "myFlatLightLogin.DalSQLite\myFlatLightLogin.DalSQLite.csproj", "{069DF3FD-58F4-4D38-BA0D-D3EFFFB2CE6A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "myFlatLightLogin.Core", "myFlatLightLogin.Core\myFlatLightLogin.Core.csproj", "{61F7749D-55CA-449B-99D4-07176F6F2CC4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "myFlatLightLogin.Core", "myFlatLightLogin.Core\myFlatLightLogin.Core.csproj", "{61F7749D-55CA-449B-99D4-07176F6F2CC4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "myFlatLightLogin.Library", "myFlatLightLogin.Library\myFlatLightLogin.Library.csproj", "{9E80EDD4-84A0-42A3-9992-84D7B22CE603}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{61F7749D-55CA-449B-99D4-07176F6F2CC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{61F7749D-55CA-449B-99D4-07176F6F2CC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{61F7749D-55CA-449B-99D4-07176F6F2CC4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E80EDD4-84A0-42A3-9992-84D7B22CE603}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E80EDD4-84A0-42A3-9992-84D7B22CE603}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E80EDD4-84A0-42A3-9992-84D7B22CE603}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E80EDD4-84A0-42A3-9992-84D7B22CE603}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

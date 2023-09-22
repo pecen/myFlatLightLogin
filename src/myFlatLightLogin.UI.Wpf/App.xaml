@@ -2,9 +2,9 @@
     x:Class="FlatLightLogin.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:view="clr-namespace:myFlatLightLogin.UI.Wpf.MVVM.View"
-    xmlns:vm="clr-namespace:myFlatLightLogin.UI.Wpf.MVVM.ViewModel"
-    xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks">
+    xmlns:vm="clr-namespace:myFlatLightLogin.UI.Wpf.MVVM.ViewModel">
     <Application.Resources>
 
         <DataTemplate DataType="{x:Type TypeName=vm:LoginViewModel}">

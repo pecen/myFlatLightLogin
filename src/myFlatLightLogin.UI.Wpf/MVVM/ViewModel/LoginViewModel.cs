@@ -4,7 +4,7 @@ using System;
 
 namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
-    public class LoginViewModel : ViewModelBase, IAuthenticateUser
+    public class LoginViewModel : ViewModelBase, IAuthenticatePassword
     {
         // Enable if EventTrigger is to be used
         //public RelayCommand<object> SetPwdStatusCommand { get; set; }
@@ -22,7 +22,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             set { SetProperty(ref _pwdIsEmpty, value); }
         }
 
-        public bool IsAuthenticated => throw new NotImplementedException();
+        public bool IsAuthenticated { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public LoginViewModel(INavigationService navigationService)
         {

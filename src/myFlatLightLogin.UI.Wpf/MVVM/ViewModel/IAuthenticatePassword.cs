@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
-    public interface IAuthenticateConfirmUser : IAuthenticateUser
+    public interface IAuthenticatePassword : IAuthenticateUser
     {
-        bool ConfirmPwdIsEmpty { get; set; }
-        public string ConfirmPassword { get; set; }
+        bool PwdIsEmpty { get; set; }
     }
 }

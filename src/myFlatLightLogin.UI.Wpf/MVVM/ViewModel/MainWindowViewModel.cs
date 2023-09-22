@@ -8,13 +8,22 @@ using System.Windows;
 
 namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
-    public class MainWindowViewModel : ViewModelBase
+    public class MainWindowViewModel : ViewModelBase, IAuthenticateUser
     {
         public RelayCommand ShutdownWindowCommand { get; set; }
         public RelayCommand MoveWindowCommand { get; set; }
         public RelayCommand ResizeWindowCommand { get; set; }
         public RelayCommand NavigateToLoginCommand { get; set; }
-        public RelayCommand NavigateToRegisterUserCommand { get; set; }
+
+        private bool _isAuthenticated = false;
+        public bool IsAuthenticated
+        {
+            get => _isAuthenticated;
+            set
+            {
+                SetProperty(ref _isAuthenticated, value);
+            }
+        }
 
         public MainWindowViewModel(INavigationService navigationService)
         {

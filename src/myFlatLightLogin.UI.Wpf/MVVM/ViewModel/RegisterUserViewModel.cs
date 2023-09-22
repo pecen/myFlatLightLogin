@@ -5,7 +5,7 @@ using System.Windows;
 
 namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
-    public class RegisterUserViewModel : ViewModelBase, IAuthenticateConfirmUser
+    public class RegisterUserViewModel : ViewModelBase, IAuthenticateConfirmPwd
     {
         public RelayCommand NavigateToLoginCommand { get; set; }
         public RelayCommand RegisterUserCommand { get; set; }
@@ -41,6 +41,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         public bool IsAuthenticated => throw new System.NotImplementedException();
 
+        bool IAuthenticateUser.IsAuthenticated { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+
         public RegisterUserViewModel(INavigationService navigationService)
         {
             Navigation = navigationService;
@@ -53,6 +55,11 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         private bool CanRegister(object arg)
         {
             return (!string.IsNullOrEmpty(ConfirmPassword) && ConfirmPassword == Password);
+        }
+
+        private void Navigate(object obj)
+        {
+            Navigation.NavigateTo<LoginViewModel>();
         }
 
         private void RegisterUser(object obj)
