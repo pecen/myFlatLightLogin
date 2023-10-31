@@ -22,7 +22,14 @@ namespace myFlatLightLogin.Core.Services
         public void NavigateTo<TViewModel>() where TViewModel : ViewModelBase
         {
             ViewModelBase viewModel = _viewModelFactory.Invoke(typeof(TViewModel));
-            CurrentView = viewModel;
+            if (viewModel == CurrentView)
+            {
+                CurrentView = null;
+            }
+            else
+            {
+                CurrentView = viewModel;
+            }
         }
     }
 }
