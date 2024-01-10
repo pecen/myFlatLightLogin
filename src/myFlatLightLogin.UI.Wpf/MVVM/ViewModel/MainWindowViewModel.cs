@@ -23,7 +23,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             MoveWindowCommand = new RelayCommand(o => { Application.Current.MainWindow.DragMove(); });
 
             // By using Application.Current.MainWindow.Close() instead of Application.Current.ShutDown()
-            // we can utilize the extra popup that shows and asks if we really want to quit. 
+            // we can utilize the extra MahApp popup that shows and asks if we really want to quit. 
             ShutdownWindowCommand = new RelayCommand(o => { Application.Current.MainWindow.Close(); });
 
             ResizeWindowCommand = new RelayCommand(o =>
