@@ -1,4 +1,4 @@
-﻿<Window
+﻿<mah:MetroWindow
     x:Class="myFlatLightLogin.UI.Wpf.MVVM.View.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -8,13 +8,20 @@
     xmlns:extension="clr-namespace:myFlatLightLogin.UI.Wpf.Extension"
     xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks"
+    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:myFlatLightLogin.UI.Wpf.MVVM.ViewModel"
     Width="1024"
     Height="720"
+    d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
     AllowsTransparency="True"
     Background="Transparent"
-    ResizeMode="CanMinimize"
+    Closing="MetroWindow_Closing"
+    ResizeMode="NoResize"
+    ShowMaxRestoreButton="False"
+    ShowMinButton="False"
+    ShowTitleBar="False"
+    ShowCloseButton="False"
     WindowStartupLocation="CenterScreen"
     WindowStyle="None"
     mc:Ignorable="d">
@@ -131,4 +138,4 @@
             </Grid>
         </Border>
     </Grid>
-</Window>
+</mah:MetroWindow>
