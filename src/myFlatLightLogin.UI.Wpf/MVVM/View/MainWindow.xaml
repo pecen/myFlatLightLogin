@@ -125,7 +125,7 @@
                     HorizontalAlignment="Right"
                     Orientation="Horizontal">
                     <Button Content="Home" Style="{StaticResource bottomButton}" />
-                    <Button Content="Features" Style="{StaticResource bottomButton}" />
+                    <Button Content="Contacts" Style="{StaticResource bottomButton}" />
                     <Button Content="Solutions" Style="{StaticResource bottomButton}" />
                     <Button Content="Videos" Style="{StaticResource bottomButton}" />
                     <Button Content="About" Style="{StaticResource bottomButton}" />
