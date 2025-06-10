@@ -26,7 +26,7 @@
                 FontSize="16"
                 FontWeight="SemiBold"
                 Foreground="#5a5a5a"
-                Text="Login or Register" />
+                Text="Sign in or Register" />
 
             <!--  Email TextBox  -->
             <Grid>
