@@ -10,10 +10,16 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
     public class MainWindowViewModel : ViewModelBase, IAuthenticateUser
     {
+        #region Commands
+
         public RelayCommand ShutdownWindowCommand { get; set; }
         public RelayCommand MoveWindowCommand { get; set; }
         public RelayCommand ResizeWindowCommand { get; set; }
         public RelayCommand NavigateToLoginCommand { get; set; }
+
+        #endregion
+
+        #region Properties
 
         private bool _isAuthenticated = false;
         public bool IsAuthenticated
@@ -24,6 +30,12 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 SetProperty(ref _isAuthenticated, value);
             }
         }
+
+        public bool PwdIsEmpty { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public string UserId { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public string Password { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        #endregion
 
         public MainWindowViewModel(INavigationService navigationService)
         {
