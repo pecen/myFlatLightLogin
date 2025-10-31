@@ -39,15 +39,16 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             set { SetProperty(ref _confirmPwdIsEmpty, value); }
         }
 
-        public bool IsAuthenticated => throw new System.NotImplementedException();
+        public bool IsAuthenticated { get; private set; } = false;
 
-        bool IAuthenticateUser.IsAuthenticated { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+        bool IAuthenticateUser.IsAuthenticated  => throw new System.NotImplementedException(); 
 
         public RegisterUserViewModel(INavigationService navigationService)
         {
             Navigation = navigationService;
 
-            NavigateToLoginCommand = new RelayCommand(o => { Navigation.NavigateTo<LoginViewModel>(o => { var test = o; }); }, o => true);
+            NavigateToLoginCommand = new RelayCommand(o => { Navigation.NavigateTo<LoginViewModel>(o => { var test = o; }); }, o => true); // IsAuthenticated);
+            //NavigateToLoginCommand = new RelayCommand(Navigate<LoginViewModel>, o => true);
 
             RegisterUserCommand = new RelayCommand(RegisterUser, CanRegister);
         }
@@ -57,9 +58,9 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             return (!string.IsNullOrEmpty(ConfirmPassword) && ConfirmPassword == Password);
         }
 
-        private void Navigate(object obj)
+        private void Navigate<T>(object obj) where T : ViewModelBase
         {
-            Navigation.NavigateTo<LoginViewModel>();
+            Navigation.NavigateTo<T>(s => obj.ToString() );
         }
 
         private void RegisterUser(object obj)
