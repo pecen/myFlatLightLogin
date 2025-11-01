@@ -20,6 +20,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\myFlatLightLogin.Core\myFlatLightLogin.Core.csproj" />
+    <ProjectReference Include="..\myFlatLightLogin.Dal\myFlatLightLogin.Dal.csproj" />
+    <ProjectReference Include="..\myFlatLightLogin.DalFirebase\myFlatLightLogin.DalFirebase.csproj" />
   </ItemGroup>
 
   <ItemGroup>

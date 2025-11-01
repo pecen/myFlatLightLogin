@@ -25,7 +25,47 @@
                 FontSize="16"
                 FontWeight="SemiBold"
                 Foreground="#5a5a5a"
-                Text="Login or Register" />
+                Text="Register New Account" />
+
+            <!--  Name TextBox  -->
+            <Grid>
+                <TextBlock
+                    Margin="35,0,5,0"
+                    VerticalAlignment="Center"
+                    Panel.ZIndex="1"
+                    Foreground="#bdbdbd"
+                    IsHitTestVisible="False"
+                    Text="Enter Name"
+                    Visibility="{Binding ElementName=txtName, Path=Text.IsEmpty, Converter={StaticResource BoolToVis}}" />
+                <TextBox x:Name="txtName" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+
+                <icon:PackIconMaterial
+                    Width="15"
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    Foreground="#c7c7c7"
+                    Kind="AccountOutline" />
+            </Grid>
+
+            <!--  Lastname TextBox  -->
+            <Grid>
+                <TextBlock
+                    Margin="35,0,5,0"
+                    VerticalAlignment="Center"
+                    Panel.ZIndex="1"
+                    Foreground="#bdbdbd"
+                    IsHitTestVisible="False"
+                    Text="Enter Lastname"
+                    Visibility="{Binding ElementName=txtLastname, Path=Text.IsEmpty, Converter={StaticResource BoolToVis}}" />
+                <TextBox x:Name="txtLastname" Text="{Binding Lastname, UpdateSourceTrigger=PropertyChanged}" />
+
+                <icon:PackIconMaterial
+                    Width="15"
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    Foreground="#c7c7c7"
+                    Kind="AccountOutline" />
+            </Grid>
 
             <!--  Email TextBox  -->
             <Grid>
@@ -37,7 +77,7 @@
                     IsHitTestVisible="False"
                     Text="Enter Email"
                     Visibility="{Binding ElementName=txtEmail, Path=Text.IsEmpty, Converter={StaticResource BoolToVis}}" />
-                <TextBox x:Name="txtEmail" />
+                <TextBox x:Name="txtEmail" Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" />
 
                 <icon:PackIconMaterial
                     Width="15"

@@ -38,7 +38,7 @@
                     IsHitTestVisible="False"
                     Text="Enter Email"
                     Visibility="{Binding ElementName=txtEmail, Path=Text.IsEmpty, Converter={StaticResource BoolToVis}}" />
-                <TextBox x:Name="txtEmail" />
+                <TextBox x:Name="txtEmail" Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" />
 
                 <icon:PackIconMaterial
                     Width="15"
