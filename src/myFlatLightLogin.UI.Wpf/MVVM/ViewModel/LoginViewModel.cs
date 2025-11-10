@@ -130,7 +130,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             {
                 IsLoading = true;
 
-                if (IsOnline)
+                // Check current connectivity status
+                bool wasOnlineAtStart = _connectivityService.IsOnline;
+
+                if (wasOnlineAtStart)
                 {
                     StatusMessage = "Signing in with Firebase...";
                 }
@@ -146,8 +149,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 {
                     IsAuthenticated = true;
 
-                    string loginMode = IsOnline ? "online" : "offline";
-                    StatusMessage = $"Welcome back, {user.Name ?? Email}! (Logged in {loginMode})";
+                    // Check connectivity AGAIN after authentication to get accurate status
+                    bool isCurrentlyOnline = _connectivityService.IsOnline;
+                    string loginMode = isCurrentlyOnline ? "online" : "offline";
+                    StatusMessage = $"Welcome back, {user.Name ?? user.Email}! (Logged in {loginMode})";
 
                     // Show success message
                     MessageBox.Show(
@@ -164,7 +169,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     IsAuthenticated = false;
                     StatusMessage = "Login failed. Please check your credentials.";
 
-                    string message = IsOnline
+                    string message = wasOnlineAtStart
                         ? "Invalid email or password."
                         : "Invalid email or password, or user not found in offline cache.";
 
