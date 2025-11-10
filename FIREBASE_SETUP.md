@@ -53,42 +53,75 @@ This guide will help you set up Firebase Authentication and Realtime Database fo
    - **Auth Domain** (authDomain)
    - **Database URL** (databaseURL)
 
-## Step 6: Configure Your Application
+## Step 6: Configure Your Application (Secure Method)
 
-1. Open the solution in Visual Studio
-2. Navigate to `src/myFlatLightLogin.DalFirebase/FirebaseConfig.cs`
-3. Replace the placeholder values with your actual Firebase configuration:
+Your Firebase credentials are now stored securely using configuration files that are NOT checked into Git. You have two options:
 
-```csharp
-public static class FirebaseConfig
+### Option A: Using appsettings.json (Recommended for most users)
+
+1. Navigate to `src/myFlatLightLogin.DalFirebase/` folder
+2. Copy `appsettings.template.json` to `appsettings.json`:
+   ```bash
+   # In the src/myFlatLightLogin.DalFirebase/ folder:
+   copy appsettings.template.json appsettings.json
+   ```
+3. Open `appsettings.json` and replace the placeholder values with your actual Firebase configuration:
+
+```json
 {
-    /// <summary>
-    /// Firebase Web API Key.
-    /// Get from: Firebase Console -> Project Settings -> General -> Web API Key
-    /// </summary>
-    public const string ApiKey = "YOUR_ACTUAL_API_KEY_HERE";
-
-    /// <summary>
-    /// Firebase Realtime Database URL.
-    /// Format: https://YOUR-PROJECT-ID.firebaseio.com/
-    /// Get from: Firebase Console -> Realtime Database -> Data tab (URL at top)
-    /// </summary>
-    public const string DatabaseUrl = "https://your-project-id.firebaseio.com/";
-
-    /// <summary>
-    /// Firebase Authentication domain.
-    /// Format: YOUR-PROJECT-ID.firebaseapp.com
-    /// </summary>
-    public const string AuthDomain = "your-project-id.firebaseapp.com";
+  "Firebase": {
+    "ApiKey": "YOUR_ACTUAL_API_KEY_HERE",
+    "DatabaseUrl": "https://YOUR-PROJECT-ID.firebaseio.com/",
+    "AuthDomain": "YOUR-PROJECT-ID.firebaseapp.com"
+  }
 }
 ```
 
 **Example with real values:**
-```csharp
-public const string ApiKey = "AIzaSyC1234567890abcdefghijklmnopqrstuv";
-public const string DatabaseUrl = "https://myflatlight-12345.firebaseio.com/";
-public const string AuthDomain = "myflatlight-12345.firebaseapp.com";
+```json
+{
+  "Firebase": {
+    "ApiKey": "AIzaSyC1234567890abcdefghijklmnopqrstuv",
+    "DatabaseUrl": "https://myflatlight-12345.europe-west1.firebasedatabase.app/",
+    "AuthDomain": "myflatlight-12345.firebaseapp.com"
+  }
+}
 ```
+
+**Important:** The `appsettings.json` file is automatically excluded from Git (via `.gitignore`), so your credentials will never be committed to source control.
+
+### Option B: Using User Secrets (Advanced - for developers)
+
+User Secrets are perfect for development as they're stored outside your project folder and never accidentally committed.
+
+1. **Right-click** on the `myFlatLightLogin.DalFirebase` project in Visual Studio
+2. Select **Manage User Secrets**
+3. Visual Studio will open a `secrets.json` file
+4. Add your Firebase configuration:
+
+```json
+{
+  "Firebase": {
+    "ApiKey": "YOUR_ACTUAL_API_KEY_HERE",
+    "DatabaseUrl": "https://YOUR-PROJECT-ID.firebaseio.com/",
+    "AuthDomain": "YOUR-PROJECT-ID.firebaseapp.com"
+  }
+}
+```
+
+**Or using the command line:**
+```bash
+cd src/myFlatLightLogin.DalFirebase
+
+dotnet user-secrets set "Firebase:ApiKey" "YOUR_ACTUAL_API_KEY_HERE"
+dotnet user-secrets set "Firebase:DatabaseUrl" "https://YOUR-PROJECT-ID.firebaseio.com/"
+dotnet user-secrets set "Firebase:AuthDomain" "YOUR-PROJECT-ID.firebaseapp.com"
+```
+
+**How it works:**
+- In **DEBUG** mode, User Secrets take priority over appsettings.json
+- In **RELEASE** mode, only appsettings.json is used
+- User Secrets are stored in: `%APPDATA%\Microsoft\UserSecrets\myFlatLightLogin-firebase-secrets\`
 
 ## Step 7: Build and Run
 
@@ -166,8 +199,9 @@ These rules ensure that:
 ### Key Components
 
 **FirebaseConfig.cs** (`myFlatLightLogin.DalFirebase/FirebaseConfig.cs:1`)
-- Contains Firebase configuration constants
-- **IMPORTANT**: Update this file with your actual Firebase credentials
+- Loads Firebase configuration from appsettings.json or User Secrets
+- Validates that configuration values are properly set
+- Automatically prevents placeholder values from being used
 
 **UserDal.cs** (`myFlatLightLogin.DalFirebase/UserDal.cs:1`)
 - Implements `IUserDal` interface
@@ -188,23 +222,36 @@ These rules ensure that:
 
 ### Build Errors
 
-**Error: FirebaseConfig values are invalid**
-- Solution: Make sure you replaced all placeholder values in `FirebaseConfig.cs`
-
 **Error: Package restore failed**
 - Solution: Right-click the solution → **Restore NuGet Packages**
 
+**Error: Configuration packages missing**
+- Solution: Make sure the following NuGet packages are installed in DalFirebase project:
+  - Microsoft.Extensions.Configuration
+  - Microsoft.Extensions.Configuration.Json
+  - Microsoft.Extensions.Configuration.UserSecrets
+
 ### Runtime Errors
 
+**Error: "Firebase configuration 'Firebase:ApiKey' is not set"**
+- This means your configuration file is missing or incomplete
+- Solution: Follow Step 6 to create `appsettings.json` with your Firebase credentials
+- Or use User Secrets (Option B in Step 6)
+
 **Error: "Firebase Authentication failed"**
-- Check your API Key in `FirebaseConfig.cs`
+- Check your API Key in `appsettings.json` or User Secrets
 - Ensure Email/Password authentication is enabled in Firebase Console
 - Check your internet connection
 
 **Error: "Database operation failed"**
-- Check your Database URL in `FirebaseConfig.cs`
+- Check your Database URL in `appsettings.json` or User Secrets
 - Ensure the Realtime Database exists in Firebase Console
 - Check database security rules
+
+**Error: "Permission denied"**
+- This happens when database security rules are enabled but requests aren't authenticated
+- Make sure you're on the latest version of the code (with FirebaseOptions authentication)
+- Check that your security rules in Firebase Console match Step 9
 
 **Error: "User already exists"**
 - This is expected if you try to register with an email that's already registered
@@ -222,21 +269,36 @@ These rules ensure that:
 
 ## Security Considerations
 
-1. **Never commit FirebaseConfig.cs with real credentials to public repositories**
-   - Consider using environment variables or a secure configuration service
-   - Add `FirebaseConfig.cs` to `.gitignore` if making the repo public
+1. **✅ Secure Configuration Storage**
+   - Firebase credentials are stored in `appsettings.json` which is **automatically excluded from Git**
+   - Never commit `appsettings.json` to version control (already protected via `.gitignore`)
+   - The `appsettings.template.json` file (which contains no secrets) is safe to commit
+   - For extra security during development, use User Secrets (Option B in Step 6)
 
-2. **Update Database Security Rules**
+2. **✅ Configuration Validation**
+   - The application automatically validates that configuration values are set
+   - Placeholder values like "YOUR_API_KEY_HERE" are automatically detected and rejected
+   - Clear error messages guide you to fix configuration issues
+
+3. **⚠️ Database Security Rules (Critical)**
    - The default test mode rules are NOT secure for production
-   - Follow Step 9 to configure proper security rules
+   - **You MUST follow Step 9** to configure proper security rules
+   - Without proper rules, anyone can read/write your database
 
-3. **HTTPS Only**
+4. **✅ HTTPS Only**
    - Firebase automatically uses HTTPS for all connections
+   - All data transmission is encrypted
    - Never disable SSL/TLS verification
 
-4. **Password Requirements**
+5. **⚠️ Password Requirements**
    - Firebase requires passwords to be at least 6 characters
    - Consider adding additional password strength requirements in your app
+   - Consider implementing password reset and email verification
+
+6. **✅ Source Control Safety**
+   - `.gitignore` is configured to exclude all `appsettings.json` files
+   - Only `appsettings.template.json` (without secrets) is tracked in Git
+   - User Secrets are stored outside the project folder and never committed
 
 ## Next Steps
 
