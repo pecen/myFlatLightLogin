@@ -2,6 +2,7 @@ using myFlatLightLogin.Core.MVVM;
 using myFlatLightLogin.Core.Services;
 using myFlatLightLogin.Dal;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -130,8 +131,13 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             {
                 IsLoading = true;
 
-                // Check current connectivity status
-                bool wasOnlineAtStart = _connectivityService.IsOnline;
+                Debug.WriteLine("========== LOGIN ATTEMPT STARTED ==========");
+                Debug.WriteLine($"[LoginViewModel] Email: {Email}");
+
+                // Check FRESH connectivity status (don't trust cached value)
+                bool wasOnlineAtStart = _connectivityService.CheckConnectivity();
+                Debug.WriteLine($"[LoginViewModel] Fresh connectivity check: {wasOnlineAtStart}");
+                Debug.WriteLine($"[LoginViewModel] Cached IsOnline property: {_connectivityService.IsOnline}");
 
                 if (wasOnlineAtStart)
                 {
@@ -145,21 +151,35 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 // Authenticate using HybridDAL (tries Firebase first, falls back to SQLite)
                 var user = await _hybridDal.SignInAsync(Email, Password);
 
+                Debug.WriteLine($"[LoginViewModel] Authentication result: {(user != null ? "SUCCESS" : "FAILED")}");
+
                 if (user != null)
                 {
+                    Debug.WriteLine($"[LoginViewModel] User.Email: '{user.Email}'");
+                    Debug.WriteLine($"[LoginViewModel] User.Name: '{user.Name}'");
+                    Debug.WriteLine($"[LoginViewModel] User.Username: '{user.Username}'");
+
                     IsAuthenticated = true;
 
-                    // Check connectivity AGAIN after authentication to get accurate status
-                    bool isCurrentlyOnline = _connectivityService.IsOnline;
+                    // Check connectivity AGAIN with fresh check (don't trust cached value)
+                    bool isCurrentlyOnline = _connectivityService.CheckConnectivity();
+                    Debug.WriteLine($"[LoginViewModel] Fresh connectivity check after auth: {isCurrentlyOnline}");
+
                     string loginMode = isCurrentlyOnline ? "online" : "offline";
-                    StatusMessage = $"Welcome back, {user.Name ?? user.Email}! (Logged in {loginMode})";
+                    string displayName = user.Name ?? user.Email ?? "Unknown User";
+                    StatusMessage = $"Welcome back, {displayName}! (Logged in {loginMode})";
+
+                    Debug.WriteLine($"[LoginViewModel] Display name: '{displayName}'");
+                    Debug.WriteLine($"[LoginViewModel] Login mode: {loginMode}");
 
                     // Show success message
                     MessageBox.Show(
-                        $"Successfully logged in as {user.Email}\n\nMode: {loginMode.ToUpper()}",
+                        $"Successfully logged in as {user.Email ?? "Unknown"}\n\nMode: {loginMode.ToUpper()}",
                         "Login Successful",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
+
+                    Debug.WriteLine("========== LOGIN ATTEMPT COMPLETED SUCCESSFULLY ==========");
 
                     // Navigate to main application or close login window
                     // TODO: Navigate to main window or implement your app's logic here
@@ -178,6 +198,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                         "Login Failed",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
+
+                    Debug.WriteLine("========== LOGIN ATTEMPT FAILED ==========");
                 }
             }
             catch (Exception ex)
@@ -185,11 +207,16 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 IsAuthenticated = false;
                 StatusMessage = $"Error: {ex.Message}";
 
+                Debug.WriteLine($"[LoginViewModel] EXCEPTION: {ex.Message}");
+                Debug.WriteLine($"[LoginViewModel] Stack trace: {ex.StackTrace}");
+
                 MessageBox.Show(
                     ex.Message,
                     "Login Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
+
+                Debug.WriteLine("========== LOGIN ATTEMPT FAILED WITH EXCEPTION ==========");
             }
             finally
             {

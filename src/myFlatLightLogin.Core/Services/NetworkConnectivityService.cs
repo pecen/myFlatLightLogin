@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 
@@ -19,7 +20,7 @@ namespace myFlatLightLogin.Core.Services
         public NetworkConnectivityService()
         {
             _isOnline = CheckConnectivity();
-            Console.WriteLine($"[NetworkConnectivityService] Initialized - IsOnline: {_isOnline}");
+            Debug.WriteLine($"[NetworkConnectivityService] Initialized - IsOnline: {_isOnline}");
 
             // Listen for network changes
             NetworkChange.NetworkAvailabilityChanged += OnNetworkAvailabilityChanged;
@@ -40,7 +41,7 @@ namespace myFlatLightLogin.Core.Services
             {
                 // First check if any network is available
                 bool basicCheck = NetworkInterface.GetIsNetworkAvailable();
-                Console.WriteLine($"[NetworkConnectivityService] Basic network available: {basicCheck}");
+                Debug.WriteLine($"[NetworkConnectivityService] Basic network available: {basicCheck}");
 
                 if (!basicCheck)
                     return false;
@@ -65,19 +66,19 @@ namespace myFlatLightLogin.Core.Services
                         // Check if interface has a gateway (indicates internet connectivity)
                         if (ipProps.GatewayAddresses.Count > 0)
                         {
-                            Console.WriteLine($"[NetworkConnectivityService] Active interface found: {ni.Name} ({ni.NetworkInterfaceType})");
+                            Debug.WriteLine($"[NetworkConnectivityService] Active interface found: {ni.Name} ({ni.NetworkInterfaceType})");
                             hasActiveInterface = true;
                             break;
                         }
                     }
                 }
 
-                Console.WriteLine($"[NetworkConnectivityService] Has active interface with gateway: {hasActiveInterface}");
+                Debug.WriteLine($"[NetworkConnectivityService] Has active interface with gateway: {hasActiveInterface}");
                 return hasActiveInterface;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[NetworkConnectivityService] CheckConnectivity error: {ex.Message}");
+                Debug.WriteLine($"[NetworkConnectivityService] CheckConnectivity error: {ex.Message}");
                 return false;
             }
         }
@@ -116,7 +117,7 @@ namespace myFlatLightLogin.Core.Services
         {
             if (_isOnline != isOnline)
             {
-                Console.WriteLine($"[NetworkConnectivityService] Connectivity changed: {_isOnline} -> {isOnline}");
+                Debug.WriteLine($"[NetworkConnectivityService] Connectivity changed: {_isOnline} -> {isOnline}");
                 _isOnline = isOnline;
                 ConnectivityChanged?.Invoke(this, _isOnline);
             }
