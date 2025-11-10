@@ -19,6 +19,7 @@ namespace myFlatLightLogin.Core.Services
         public NetworkConnectivityService()
         {
             _isOnline = CheckConnectivity();
+            Console.WriteLine($"[NetworkConnectivityService] Initialized - IsOnline: {_isOnline}");
 
             // Listen for network changes
             NetworkChange.NetworkAvailabilityChanged += OnNetworkAvailabilityChanged;
@@ -37,10 +38,13 @@ namespace myFlatLightLogin.Core.Services
         {
             try
             {
-                return NetworkInterface.GetIsNetworkAvailable();
+                bool available = NetworkInterface.GetIsNetworkAvailable();
+                Console.WriteLine($"[NetworkConnectivityService] CheckConnectivity: {available}");
+                return available;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"[NetworkConnectivityService] CheckConnectivity error: {ex.Message}");
                 return false;
             }
         }
@@ -79,6 +83,7 @@ namespace myFlatLightLogin.Core.Services
         {
             if (_isOnline != isOnline)
             {
+                Console.WriteLine($"[NetworkConnectivityService] Connectivity changed: {_isOnline} -> {isOnline}");
                 _isOnline = isOnline;
                 ConnectivityChanged?.Invoke(this, _isOnline);
             }

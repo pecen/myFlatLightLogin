@@ -136,56 +136,81 @@ namespace myFlatLightLogin.Core.Services
         /// </summary>
         public async Task<UserDto> SignInAsync(string email, string password)
         {
+            Console.WriteLine($"[HybridUserDal] SignInAsync called for: {email}");
+            Console.WriteLine($"[HybridUserDal] IsOnline: {_connectivityService.IsOnline}");
+
             UserDto user = null;
 
             // Try Firebase first if online
             if (_connectivityService.IsOnline)
             {
+                Console.WriteLine("[HybridUserDal] Attempting Firebase sign in...");
                 try
                 {
                     user = await _firebaseDal.SignInAsync(email, password);
 
                     if (user != null)
                     {
+                        Console.WriteLine("[HybridUserDal] Firebase sign in successful!");
+
                         // Success! Save/update in SQLite for offline use
                         var existingUser = _sqliteDal.FindByEmail(email);
 
                         if (existingUser == null)
                         {
+                            Console.WriteLine("[HybridUserDal] New user - caching to SQLite");
                             // New user - add to SQLite
                             user.Password = password; // Store for offline auth
                             _sqliteDal.Insert(user);
+                            Console.WriteLine("[HybridUserDal] User cached successfully");
                         }
                         else
                         {
+                            Console.WriteLine($"[HybridUserDal] Existing user (ID: {existingUser.Id}) - updating SQLite cache");
                             // Existing user - update SQLite
                             existingUser.Name = user.Name;
                             existingUser.Lastname = user.Lastname;
                             existingUser.FirebaseUid = user.FirebaseUid;
                             existingUser.Password = password; // Update password
                             _sqliteDal.Update(existingUser);
+                            Console.WriteLine("[HybridUserDal] Cache updated successfully");
                         }
 
                         return user;
+                    }
+                    else
+                    {
+                        Console.WriteLine("[HybridUserDal] Firebase returned null - authentication failed");
                     }
                 }
                 catch (Exception ex)
                 {
                     // Firebase failed - fall through to SQLite
-                    Console.WriteLine($"Firebase sign in failed: {ex.Message}. Trying SQLite...");
+                    Console.WriteLine($"[HybridUserDal] Firebase sign in failed: {ex.Message}. Trying SQLite...");
                 }
+            }
+            else
+            {
+                Console.WriteLine("[HybridUserDal] Offline mode detected - skipping Firebase");
             }
 
             // Firebase failed or offline - try SQLite
+            Console.WriteLine("[HybridUserDal] Attempting SQLite local sign in...");
             user = _sqliteDal.SignInLocally(email, password);
 
             if (user != null)
             {
+                Console.WriteLine("[HybridUserDal] SQLite sign in successful!");
                 // Offline authentication successful
                 return user;
             }
+            else
+            {
+                Console.WriteLine("[HybridUserDal] SQLite sign in failed - user not found or password mismatch");
+            }
 
             // Both failed
+            Console.WriteLine("[HybridUserDal] Both Firebase and SQLite authentication failed");
             return null;
         }
 

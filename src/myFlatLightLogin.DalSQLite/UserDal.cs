@@ -26,6 +26,9 @@ namespace myFlatLightLogin.DalSQLite
 
         public bool Insert(UserDto userDto)
         {
+            Console.WriteLine($"[SQLiteUserDal] Insert called for email: {userDto.Email}");
+            Console.WriteLine($"[SQLiteUserDal] Password provided: {!string.IsNullOrEmpty(userDto.Password)}");
+
             var user = new User
             {
                 Name = userDto.Name,
@@ -38,18 +41,26 @@ namespace myFlatLightLogin.DalSQLite
                 NeedsSync = true // Mark for sync to Firebase
             };
 
-            return DbCore.Insert(user);
+            bool result = DbCore.Insert(user);
+            Console.WriteLine($"[SQLiteUserDal] Insert result: {result}, User ID: {user.Id}");
+            return result;
         }
 
         public bool Update(UserDto userDto)
         {
+            Console.WriteLine($"[SQLiteUserDal] Update called for ID: {userDto.Id}, Email: {userDto.Email}");
+            Console.WriteLine($"[SQLiteUserDal] Password provided: {!string.IsNullOrEmpty(userDto.Password)}");
+
             using (var conn = new SQLiteConnection(dbFile))
             {
                 conn.CreateTable<User>();
 
                 var user = conn.Table<User>().FirstOrDefault(u => u.Id == userDto.Id);
                 if (user == null)
+                {
+                    Console.WriteLine($"[SQLiteUserDal] User with ID {userDto.Id} not found for update");
                     return false;
+                }
 
                 user.Name = userDto.Name;
                 user.Lastname = userDto.Lastname;
@@ -63,9 +74,12 @@ namespace myFlatLightLogin.DalSQLite
                 if (!string.IsNullOrEmpty(userDto.Password))
                 {
                     user.Password = HashPassword(userDto.Password);
+                    Console.WriteLine("[SQLiteUserDal] Password updated and hashed");
                 }
 
-                return conn.Update(user) > 0;
+                bool result = conn.Update(user) > 0;
+                Console.WriteLine($"[SQLiteUserDal] Update result: {result}");
+                return result;
             }
         }
 
@@ -88,17 +102,34 @@ namespace myFlatLightLogin.DalSQLite
         /// </summary>
         public UserDto SignInLocally(string email, string password)
         {
+            Console.WriteLine($"[SQLiteUserDal] SignInLocally called for: {email}");
+            Console.WriteLine($"[SQLiteUserDal] Database file: {dbFile}");
+
             using (var conn = new SQLiteConnection(dbFile))
             {
                 conn.CreateTable<User>();
+
+                var allUsers = conn.Table<User>().ToList();
+                Console.WriteLine($"[SQLiteUserDal] Total users in database: {allUsers.Count}");
+
                 var user = conn.Table<User>().FirstOrDefault(u => u.Email == email || u.Username == email);
 
                 if (user == null)
+                {
+                    Console.WriteLine($"[SQLiteUserDal] User not found for email: {email}");
                     return null;
+                }
+
+                Console.WriteLine($"[SQLiteUserDal] User found: ID={user.Id}, Email={user.Email}, HasPassword={!string.IsNullOrEmpty(user.Password)}");
 
                 // Verify password
                 if (!VerifyPassword(password, user.Password))
+                {
+                    Console.WriteLine("[SQLiteUserDal] Password verification failed");
                     return null;
+                }
+
+                Console.WriteLine("[SQLiteUserDal] Password verified successfully!");
 
                 return new UserDto
                 {
