@@ -1,10 +1,10 @@
 using myFlatLightLogin.Dal;
 using myFlatLightLogin.Dal.Dto;
 using myFlatLightLogin.DalSQLite.Model;
+using Serilog;
 using SQLite;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -17,6 +17,7 @@ namespace myFlatLightLogin.DalSQLite
     /// </summary>
     public class UserDal : IUserDal
     {
+        private static readonly ILogger _logger = Log.ForContext<UserDal>();
         private static string dbFile = Path.Combine(Environment.CurrentDirectory, "security.db3");
 
         public UserDto Fetch(int id)
@@ -27,8 +28,8 @@ namespace myFlatLightLogin.DalSQLite
 
         public bool Insert(UserDto userDto)
         {
-            Debug.WriteLine($"[SQLiteUserDal] Insert called for email: {userDto.Email}");
-            Debug.WriteLine($"[SQLiteUserDal] Password provided: {!string.IsNullOrEmpty(userDto.Password)}");
+            _logger.Information("Insert called for email: {Email}", userDto.Email);
+            _logger.Debug("Password provided: {PasswordProvided}", !string.IsNullOrEmpty(userDto.Password));
 
             var user = new User
             {
@@ -43,14 +44,14 @@ namespace myFlatLightLogin.DalSQLite
             };
 
             bool result = DbCore.Insert(user);
-            Debug.WriteLine($"[SQLiteUserDal] Insert result: {result}, User ID: {user.Id}");
+            _logger.Information("Insert result: {Result}, User ID: {UserId}", result, user.Id);
             return result;
         }
 
         public bool Update(UserDto userDto)
         {
-            Debug.WriteLine($"[SQLiteUserDal] Update called for ID: {userDto.Id}, Email: {userDto.Email}");
-            Debug.WriteLine($"[SQLiteUserDal] Password provided: {!string.IsNullOrEmpty(userDto.Password)}");
+            _logger.Information("Update called for ID: {UserId}, Email: {Email}", userDto.Id, userDto.Email);
+            _logger.Debug("Password provided: {PasswordProvided}", !string.IsNullOrEmpty(userDto.Password));
 
             using (var conn = new SQLiteConnection(dbFile))
             {
@@ -59,7 +60,7 @@ namespace myFlatLightLogin.DalSQLite
                 var user = conn.Table<User>().FirstOrDefault(u => u.Id == userDto.Id);
                 if (user == null)
                 {
-                    Debug.WriteLine($"[SQLiteUserDal] User with ID {userDto.Id} not found for update");
+                    _logger.Warning("User with ID {UserId} not found for update", userDto.Id);
                     return false;
                 }
 
@@ -75,11 +76,11 @@ namespace myFlatLightLogin.DalSQLite
                 if (!string.IsNullOrEmpty(userDto.Password))
                 {
                     user.Password = HashPassword(userDto.Password);
-                    Debug.WriteLine("[SQLiteUserDal] Password updated and hashed");
+                    _logger.Debug("Password updated and hashed");
                 }
 
                 bool result = conn.Update(user) > 0;
-                Debug.WriteLine($"[SQLiteUserDal] Update result: {result}");
+                _logger.Information("Update result: {Result}", result);
                 return result;
             }
         }
@@ -103,34 +104,35 @@ namespace myFlatLightLogin.DalSQLite
         /// </summary>
         public UserDto SignInLocally(string email, string password)
         {
-            Debug.WriteLine($"[SQLiteUserDal] SignInLocally called for: {email}");
-            Debug.WriteLine($"[SQLiteUserDal] Database file: {dbFile}");
+            _logger.Information("SignInLocally called for: {Email}", email);
+            _logger.Debug("Database file: {DatabaseFile}", dbFile);
 
             using (var conn = new SQLiteConnection(dbFile))
             {
                 conn.CreateTable<User>();
 
                 var allUsers = conn.Table<User>().ToList();
-                Debug.WriteLine($"[SQLiteUserDal] Total users in database: {allUsers.Count}");
+                _logger.Information("Total users in database: {UserCount}", allUsers.Count);
 
                 var user = conn.Table<User>().FirstOrDefault(u => u.Email == email || u.Username == email);
 
                 if (user == null)
                 {
-                    Debug.WriteLine($"[SQLiteUserDal] User not found for email: {email}");
+                    _logger.Warning("User not found for email: {Email}", email);
                     return null;
                 }
 
-                Debug.WriteLine($"[SQLiteUserDal] User found: ID={user.Id}, Email={user.Email}, HasPassword={!string.IsNullOrEmpty(user.Password)}");
+                _logger.Information("User found: ID={UserId}, Email={Email}, HasPassword={HasPassword}",
+                    user.Id, user.Email, !string.IsNullOrEmpty(user.Password));
 
                 // Verify password
                 if (!VerifyPassword(password, user.Password))
                 {
-                    Debug.WriteLine("[SQLiteUserDal] Password verification failed");
+                    _logger.Warning("Password verification failed for email: {Email}", email);
                     return null;
                 }
 
-                Debug.WriteLine("[SQLiteUserDal] Password verified successfully!");
+                _logger.Information("Password verified successfully for email: {Email}", email);
 
                 return new UserDto
                 {

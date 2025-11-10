@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Serilog" Version="4.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\myFlatLightLogin.Dal\myFlatLightLogin.Dal.csproj" />
     <ProjectReference Include="..\myFlatLightLogin.DalFirebase\myFlatLightLogin.DalFirebase.csproj" />
     <ProjectReference Include="..\myFlatLightLogin.DalSQLite\myFlatLightLogin.DalSQLite.csproj" />

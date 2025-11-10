@@ -1,7 +1,7 @@
 using myFlatLightLogin.Dal;
 using myFlatLightLogin.Dal.Dto;
+using Serilog;
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using FirebaseUserDal = myFlatLightLogin.DalFirebase.UserDal;
 using SQLiteUserDal = myFlatLightLogin.DalSQLite.UserDal;
@@ -14,6 +14,7 @@ namespace myFlatLightLogin.Core.Services
     /// </summary>
     public class HybridUserDal : IUserDal
     {
+        private static readonly ILogger _logger = Log.ForContext<HybridUserDal>();
         private readonly FirebaseUserDal _firebaseDal;
         private readonly SQLiteUserDal _sqliteDal;
         private readonly NetworkConnectivityService _connectivityService;
@@ -137,85 +138,85 @@ namespace myFlatLightLogin.Core.Services
         /// </summary>
         public async Task<UserDto> SignInAsync(string email, string password)
         {
-            Debug.WriteLine($"[HybridUserDal] SignInAsync called for: {email}");
-            Debug.WriteLine($"[HybridUserDal] IsOnline property: {_connectivityService.IsOnline}");
+            _logger.Information("SignInAsync called for: {Email}", email);
+            _logger.Debug("Cached IsOnline property: {IsOnline}", _connectivityService.IsOnline);
 
             // Get FRESH connectivity status
             bool isOnline = _connectivityService.CheckConnectivity();
-            Debug.WriteLine($"[HybridUserDal] Fresh connectivity check: {isOnline}");
+            _logger.Information("Fresh connectivity check: {IsOnline}", isOnline);
 
             UserDto user = null;
 
             // Try Firebase first if online
             if (isOnline)
             {
-                Debug.WriteLine("[HybridUserDal] Attempting Firebase sign in...");
+                _logger.Information("Attempting Firebase sign in...");
                 try
                 {
                     user = await _firebaseDal.SignInAsync(email, password);
 
                     if (user != null)
                     {
-                        Debug.WriteLine("[HybridUserDal] Firebase sign in successful!");
+                        _logger.Information("Firebase sign in successful for {Email}", email);
 
                         // Success! Save/update in SQLite for offline use
                         var existingUser = _sqliteDal.FindByEmail(email);
 
                         if (existingUser == null)
                         {
-                            Debug.WriteLine("[HybridUserDal] New user - caching to SQLite");
+                            _logger.Information("New user - caching to SQLite");
                             // New user - add to SQLite
                             user.Password = password; // Store for offline auth
                             _sqliteDal.Insert(user);
-                            Debug.WriteLine("[HybridUserDal] User cached successfully");
+                            _logger.Information("User cached successfully");
                         }
                         else
                         {
-                            Debug.WriteLine($"[HybridUserDal] Existing user (ID: {existingUser.Id}) - updating SQLite cache");
+                            _logger.Information("Existing user (ID: {UserId}) - updating SQLite cache", existingUser.Id);
                             // Existing user - update SQLite
                             existingUser.Name = user.Name;
                             existingUser.Lastname = user.Lastname;
                             existingUser.FirebaseUid = user.FirebaseUid;
                             existingUser.Password = password; // Update password
                             _sqliteDal.Update(existingUser);
-                            Debug.WriteLine("[HybridUserDal] Cache updated successfully");
+                            _logger.Information("Cache updated successfully");
                         }
 
                         return user;
                     }
                     else
                     {
-                        Debug.WriteLine("[HybridUserDal] Firebase returned null - authentication failed");
+                        _logger.Warning("Firebase returned null - authentication failed");
                     }
                 }
                 catch (Exception ex)
                 {
                     // Firebase failed - fall through to SQLite
-                    Debug.WriteLine($"[HybridUserDal] Firebase sign in failed: {ex.Message}. Trying SQLite...");
+                    _logger.Warning(ex, "Firebase sign in failed, trying SQLite fallback");
                 }
             }
             else
             {
-                Debug.WriteLine("[HybridUserDal] Offline mode detected - skipping Firebase");
+                _logger.Information("Offline mode detected - skipping Firebase");
             }
 
             // Firebase failed or offline - try SQLite
-            Debug.WriteLine("[HybridUserDal] Attempting SQLite local sign in...");
+            _logger.Information("Attempting SQLite local sign in...");
             user = _sqliteDal.SignInLocally(email, password);
 
             if (user != null)
             {
-                Debug.WriteLine("[HybridUserDal] SQLite sign in successful!");
+                _logger.Information("SQLite sign in successful for {Email}", email);
                 // Offline authentication successful
                 return user;
             }
             else
             {
-                Debug.WriteLine("[HybridUserDal] SQLite sign in failed - user not found or password mismatch");
+                _logger.Warning("SQLite sign in failed - user not found or password mismatch");
             }
 
             // Both failed
-            Debug.WriteLine("[HybridUserDal] Both Firebase and SQLite authentication failed");
+            _logger.Warning("Both Firebase and SQLite authentication failed for {Email}", email);
             return null;
         }
 
@@ -245,7 +246,7 @@ namespace myFlatLightLogin.Core.Services
                 catch (Exception ex)
                 {
                     // Firebase failed - fall through to offline registration
-                    Debug.WriteLine($"Firebase registration failed: {ex.Message}. Registering offline...");
+                    _logger.Warning(ex, "Firebase registration failed, registering offline");
                 }
             }
 
