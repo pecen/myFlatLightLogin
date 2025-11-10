@@ -142,7 +142,7 @@ namespace myFlatLightLogin.DalFirebase
                 await _dbClient
                     .Child("users")
                     .Child(credential.User.Uid)
-                    .AuthAsync(credential.User.Credential.IdToken)
+                    .WithAuth(credential.User.Credential.IdToken)
                     .PutAsync(profile);
 
                 _currentUser = credential;
@@ -181,7 +181,7 @@ namespace myFlatLightLogin.DalFirebase
                 await _dbClient
                     .Child("users")
                     .Child(_currentUser.User.Uid)
-                    .AuthAsync(_currentUser.User.Credential.IdToken)
+                    .WithAuth(_currentUser.User.Credential.IdToken)
                     .PutAsync(profile);
 
                 return true;
@@ -247,7 +247,7 @@ namespace myFlatLightLogin.DalFirebase
                 var profile = await _dbClient
                     .Child("users")
                     .Child(_currentUser.User.Uid)
-                    .AuthAsync(_currentUser.User.Credential.IdToken)
+                    .WithAuth(_currentUser.User.Credential.IdToken)
                     .OnceSingleAsync<FirebaseUserProfile>();
 
                 if (profile != null)
