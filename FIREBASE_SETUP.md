@@ -133,6 +133,8 @@ These rules ensure that:
 - Only authenticated users can access their own user data
 - Users cannot read or write other users' data
 
+**Important:** The application automatically includes the authentication token with all database requests (using `.AuthAsync()`), so these security rules will work correctly for both registration and login operations.
+
 ## Architecture Overview
 
 ### Project Structure

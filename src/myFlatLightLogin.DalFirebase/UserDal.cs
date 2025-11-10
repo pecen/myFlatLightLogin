@@ -138,9 +138,11 @@ namespace myFlatLightLogin.DalFirebase
                     CreatedAt = DateTime.UtcNow.ToString("o")
                 };
 
+                // Use auth token to authenticate the database request
                 await _dbClient
                     .Child("users")
                     .Child(credential.User.Uid)
+                    .AuthAsync(credential.User.Credential.IdToken)
                     .PutAsync(profile);
 
                 _currentUser = credential;
@@ -179,6 +181,7 @@ namespace myFlatLightLogin.DalFirebase
                 await _dbClient
                     .Child("users")
                     .Child(_currentUser.User.Uid)
+                    .AuthAsync(_currentUser.User.Credential.IdToken)
                     .PutAsync(profile);
 
                 return true;
@@ -240,10 +243,11 @@ namespace myFlatLightLogin.DalFirebase
                 if (_currentUser?.User == null)
                     return null;
 
-                // Fetch user profile from database
+                // Fetch user profile from database with authentication
                 var profile = await _dbClient
                     .Child("users")
                     .Child(_currentUser.User.Uid)
+                    .AuthAsync(_currentUser.User.Credential.IdToken)
                     .OnceSingleAsync<FirebaseUserProfile>();
 
                 if (profile != null)
