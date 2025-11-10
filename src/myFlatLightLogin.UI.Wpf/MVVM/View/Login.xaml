@@ -64,7 +64,7 @@
                 <!--  PasswordBox (hidden password) - Visible when IsPasswordVisible is False  -->
                 <PasswordBox
                     x:Name="txtPassword"
-                    Margin="0,0,35,0"
+                    Padding="0,0,30,0"
                     Visibility="{Binding IsPasswordVisible, Converter={StaticResource InvertedBoolToVis}}">
                     <!--  The Behavior way of implementing the PasswordBox  -->
                     <i:Interaction.Behaviors>
@@ -75,12 +75,9 @@
                 <!--  TextBox (visible password)  -->
                 <TextBox
                     x:Name="txtPasswordVisible"
-                    Margin="0,0,35,0"
-                    Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}">
-                    <TextBox.Visibility>
-                        <Binding Converter="{StaticResource BoolToVis}" Path="IsPasswordVisible" />
-                    </TextBox.Visibility>
-                </TextBox>
+                    Padding="0,0,30,0"
+                    Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
+                    Visibility="{Binding IsPasswordVisible, Converter={StaticResource BoolToVis}}" />
 
                 <!--  Lock Icon  -->
                 <icon:PackIconMaterial
@@ -91,9 +88,10 @@
                     Foreground="#c7c7c7"
                     Kind="LockOutline" />
 
-                <!--  Eye Icon Toggle Button  -->
+                <!--  Eye Icon Toggle Button (inside password field)  -->
                 <Button
-                    Padding="5"
+                    Padding="4"
+                    Margin="0,0,8,0"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center"
                     Background="Transparent"
@@ -102,8 +100,8 @@
                     Cursor="Hand"
                     ToolTip="Show/Hide Password">
                     <icon:PackIconMaterial
-                        Width="18"
-                        Height="18"
+                        Width="16"
+                        Height="16"
                         Foreground="#5a5a5a">
                         <icon:PackIconMaterial.Style>
                             <Style TargetType="icon:PackIconMaterial">
