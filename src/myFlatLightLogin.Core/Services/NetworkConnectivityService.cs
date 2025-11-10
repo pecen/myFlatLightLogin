@@ -38,9 +38,42 @@ namespace myFlatLightLogin.Core.Services
         {
             try
             {
-                bool available = NetworkInterface.GetIsNetworkAvailable();
-                Console.WriteLine($"[NetworkConnectivityService] CheckConnectivity: {available}");
-                return available;
+                // First check if any network is available
+                bool basicCheck = NetworkInterface.GetIsNetworkAvailable();
+                Console.WriteLine($"[NetworkConnectivityService] Basic network available: {basicCheck}");
+
+                if (!basicCheck)
+                    return false;
+
+                // Additional check: look for active network interfaces with gateway
+                // This helps detect when WiFi is off but other interfaces (Bluetooth, VPN) are still up
+                bool hasActiveInterface = false;
+                var interfaces = NetworkInterface.GetAllNetworkInterfaces();
+
+                foreach (var ni in interfaces)
+                {
+                    // Skip loopback and tunnel interfaces
+                    if (ni.NetworkInterfaceType == NetworkInterfaceType.Loopback ||
+                        ni.NetworkInterfaceType == NetworkInterfaceType.Tunnel)
+                        continue;
+
+                    // Check if interface is up and has an IP address
+                    if (ni.OperationalStatus == OperationalStatus.Up)
+                    {
+                        var ipProps = ni.GetIPProperties();
+
+                        // Check if interface has a gateway (indicates internet connectivity)
+                        if (ipProps.GatewayAddresses.Count > 0)
+                        {
+                            Console.WriteLine($"[NetworkConnectivityService] Active interface found: {ni.Name} ({ni.NetworkInterfaceType})");
+                            hasActiveInterface = true;
+                            break;
+                        }
+                    }
+                }
+
+                Console.WriteLine($"[NetworkConnectivityService] Has active interface with gateway: {hasActiveInterface}");
+                return hasActiveInterface;
             }
             catch (Exception ex)
             {
