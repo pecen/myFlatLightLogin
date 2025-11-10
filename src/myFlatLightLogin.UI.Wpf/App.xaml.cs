@@ -48,6 +48,8 @@ namespace FlatLightLogin
             Directory.CreateDirectory(logsPath);
 
             // Configure Serilog
+            // SECURITY NOTE: Exception details can contain sensitive data (passwords, tokens, etc.)
+            // Always log ex.Message only, never pass full exception objects to logger
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Debug(

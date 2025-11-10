@@ -218,7 +218,9 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 IsAuthenticated = false;
                 StatusMessage = $"Error: {ex.Message}";
 
-                _logger.Error(ex, "Login failed with exception");
+                // SECURITY: Log only error message, not full exception to avoid exposing sensitive data
+                _logger.Error("Login failed with exception: {ErrorType} - {ErrorMessage}",
+                    ex.GetType().Name, ex.Message);
 
                 MessageBox.Show(
                     ex.Message,
