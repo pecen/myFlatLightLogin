@@ -64,7 +64,6 @@
                 <!--  PasswordBox (hidden password) - Visible when IsPasswordVisible is False  -->
                 <PasswordBox
                     x:Name="txtPassword"
-                    Padding="0,0,30,0"
                     Visibility="{Binding IsPasswordVisible, Converter={StaticResource InvertedBoolToVis}}">
                     <!--  The Behavior way of implementing the PasswordBox  -->
                     <i:Interaction.Behaviors>
@@ -75,25 +74,28 @@
                 <!--  TextBox (visible password)  -->
                 <TextBox
                     x:Name="txtPasswordVisible"
-                    Padding="0,0,30,0"
                     Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
                     Visibility="{Binding IsPasswordVisible, Converter={StaticResource BoolToVis}}" />
 
-                <!--  Lock Icon  -->
+                <!--  Lock Icon (left side)  -->
                 <icon:PackIconMaterial
                     Width="15"
                     Margin="10,0,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
+                    Panel.ZIndex="2"
                     Foreground="#c7c7c7"
                     Kind="LockOutline" />
 
-                <!--  Eye Icon Toggle Button (inside password field)  -->
+                <!--  Eye Icon Toggle Button (right side, inside field)  -->
                 <Button
-                    Padding="4"
-                    Margin="0,0,8,0"
+                    Width="24"
+                    Height="24"
+                    Margin="0,0,5,0"
+                    Padding="0"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center"
+                    Panel.ZIndex="2"
                     Background="Transparent"
                     BorderThickness="0"
                     Command="{Binding TogglePasswordVisibilityCommand}"
