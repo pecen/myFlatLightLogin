@@ -1,7 +1,6 @@
 using myFlatLightLogin.Core.MVVM;
 using myFlatLightLogin.Core.Services;
 using myFlatLightLogin.Dal.Dto;
-using myFlatLightLogin.DalFirebase;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
@@ -10,11 +9,12 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
     /// <summary>
     /// ViewModel for the Register User view.
-    /// Handles user registration using Firebase.
+    /// Handles user registration with offline/online support using HybridUserDal.
     /// </summary>
     public class RegisterUserViewModel : ViewModelBase, IAuthenticateConfirmUser
     {
-        private readonly UserDal _userDal;
+        private readonly HybridUserDal _hybridDal;
+        private readonly NetworkConnectivityService _connectivityService;
 
         #region Properties
 
@@ -99,6 +99,19 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             set => SetProperty(ref _statusMessage, value);
         }
 
+        private bool _isOnline;
+        public bool IsOnline
+        {
+            get => _isOnline;
+            set
+            {
+                SetProperty(ref _isOnline, value);
+                OnPropertyChanged(nameof(ConnectionStatus));
+            }
+        }
+
+        public string ConnectionStatus => IsOnline ? "🟢 Online" : "🔴 Offline";
+
         public bool IsAuthenticated { get; private set; }
 
         #endregion
@@ -116,8 +129,18 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         {
             Navigation = navigationService;
 
-            // Initialize Firebase UserDal
-            _userDal = new UserDal();
+            // Initialize network connectivity service
+            _connectivityService = new NetworkConnectivityService();
+            IsOnline = _connectivityService.IsOnline;
+
+            // Listen for connectivity changes
+            _connectivityService.ConnectivityChanged += OnConnectivityChanged;
+
+            // Initialize sync service
+            var syncService = new SyncService(_connectivityService);
+
+            // Initialize Hybrid DAL (manages Firebase and SQLite)
+            _hybridDal = new HybridUserDal(_connectivityService, syncService);
 
             // Initialize commands
             NavigateToLoginCommand = new RelayCommand(
@@ -132,14 +155,13 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         #region Methods
 
         /// <summary>
-        /// Registers a new user with Firebase.
+        /// Registers a new user with Firebase (online) or SQLite (offline).
         /// </summary>
         private async Task RegisterUserAsync()
         {
             try
             {
                 IsLoading = true;
-                StatusMessage = "Creating account...";
 
                 // Validate passwords match
                 if (Password != ConfirmPassword)
@@ -152,6 +174,15 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     return;
                 }
 
+                if (IsOnline)
+                {
+                    StatusMessage = "Creating account with Firebase...";
+                }
+                else
+                {
+                    StatusMessage = "Creating account offline (will sync when connected)...";
+                }
+
                 // Create user DTO
                 var newUser = new UserDto
                 {
@@ -162,16 +193,22 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     Password = Password
                 };
 
-                // Register with Firebase
-                bool success = await Task.Run(() => _userDal.Insert(newUser));
+                // Register using HybridDAL (tries Firebase first, falls back to SQLite)
+                bool success = await _hybridDal.RegisterAsync(newUser);
 
                 if (success)
                 {
                     IsAuthenticated = true;
-                    StatusMessage = "Account created successfully!";
+
+                    string registrationMode = IsOnline ? "online" : "offline";
+                    StatusMessage = $"Account created successfully! (Registered {registrationMode})";
+
+                    string message = IsOnline
+                        ? $"Account created successfully!\n\nEmail: {Email}\n\nYou can now sign in."
+                        : $"Account created offline!\n\nEmail: {Email}\n\nYour account will be synced to Firebase when you're back online.\nYou can sign in now using offline mode.";
 
                     MessageBox.Show(
-                        $"Account created successfully!\n\nEmail: {Email}\n\nYou can now sign in.",
+                        message,
                         "Registration Successful",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
@@ -218,6 +255,23 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                    !string.IsNullOrWhiteSpace(Password) &&
                    !string.IsNullOrWhiteSpace(ConfirmPassword) &&
                    Password.Length >= 6;
+        }
+
+        /// <summary>
+        /// Handles connectivity changes.
+        /// </summary>
+        private void OnConnectivityChanged(object sender, bool isOnline)
+        {
+            IsOnline = isOnline;
+
+            if (isOnline)
+            {
+                StatusMessage = "Connection restored! You can now register with Firebase.";
+            }
+            else
+            {
+                StatusMessage = "Offline mode. You can still register (will sync later).";
+            }
         }
 
         #endregion

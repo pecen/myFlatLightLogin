@@ -1,7 +1,6 @@
 using myFlatLightLogin.Core.MVVM;
 using myFlatLightLogin.Core.Services;
 using myFlatLightLogin.Dal;
-using myFlatLightLogin.DalFirebase;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
@@ -10,11 +9,12 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
     /// <summary>
     /// ViewModel for the Login view.
-    /// Handles user authentication using Firebase.
+    /// Handles user authentication with offline/online support using HybridUserDal.
     /// </summary>
     public class LoginViewModel : ViewModelBase, IAuthenticateUser
     {
-        private readonly UserDal _userDal;
+        private readonly HybridUserDal _hybridDal;
+        private readonly NetworkConnectivityService _connectivityService;
 
         #region Properties
 
@@ -66,6 +66,19 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             set => SetProperty(ref _statusMessage, value);
         }
 
+        private bool _isOnline;
+        public bool IsOnline
+        {
+            get => _isOnline;
+            set
+            {
+                SetProperty(ref _isOnline, value);
+                OnPropertyChanged(nameof(ConnectionStatus));
+            }
+        }
+
+        public string ConnectionStatus => IsOnline ? "🟢 Online" : "🔴 Offline";
+
         public bool IsAuthenticated { get; private set; }
 
         #endregion
@@ -83,8 +96,18 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         {
             Navigation = navigationService;
 
-            // Initialize Firebase UserDal
-            _userDal = new UserDal();
+            // Initialize network connectivity service
+            _connectivityService = new NetworkConnectivityService();
+            IsOnline = _connectivityService.IsOnline;
+
+            // Listen for connectivity changes
+            _connectivityService.ConnectivityChanged += OnConnectivityChanged;
+
+            // Initialize sync service
+            var syncService = new SyncService(_connectivityService);
+
+            // Initialize Hybrid DAL (manages Firebase and SQLite)
+            _hybridDal = new HybridUserDal(_connectivityService, syncService);
 
             // Initialize commands
             NavigateToRegisterUserCommand = new RelayCommand(
@@ -99,26 +122,36 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         #region Methods
 
         /// <summary>
-        /// Authenticates user with Firebase.
+        /// Authenticates user with Firebase (online) or SQLite (offline).
         /// </summary>
         private async Task LoginAsync()
         {
             try
             {
                 IsLoading = true;
-                StatusMessage = "Signing in...";
 
-                // Authenticate with Firebase
-                var user = await _userDal.SignInAsync(Email, Password);
+                if (IsOnline)
+                {
+                    StatusMessage = "Signing in with Firebase...";
+                }
+                else
+                {
+                    StatusMessage = "Signing in offline...";
+                }
+
+                // Authenticate using HybridDAL (tries Firebase first, falls back to SQLite)
+                var user = await _hybridDal.SignInAsync(Email, Password);
 
                 if (user != null)
                 {
                     IsAuthenticated = true;
-                    StatusMessage = $"Welcome back, {user.Name ?? Email}!";
+
+                    string loginMode = IsOnline ? "online" : "offline";
+                    StatusMessage = $"Welcome back, {user.Name ?? Email}! (Logged in {loginMode})";
 
                     // Show success message
                     MessageBox.Show(
-                        $"Successfully logged in as {user.Email}",
+                        $"Successfully logged in as {user.Email}\n\nMode: {loginMode.ToUpper()}",
                         "Login Successful",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
@@ -131,8 +164,12 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     IsAuthenticated = false;
                     StatusMessage = "Login failed. Please check your credentials.";
 
+                    string message = IsOnline
+                        ? "Invalid email or password."
+                        : "Invalid email or password, or user not found in offline cache.";
+
                     MessageBox.Show(
-                        "Invalid email or password.",
+                        message,
                         "Login Failed",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
@@ -164,6 +201,23 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                    !string.IsNullOrWhiteSpace(Email) &&
                    !string.IsNullOrWhiteSpace(Password) &&
                    Password.Length >= 6;
+        }
+
+        /// <summary>
+        /// Handles connectivity changes.
+        /// </summary>
+        private void OnConnectivityChanged(object sender, bool isOnline)
+        {
+            IsOnline = isOnline;
+
+            if (isOnline)
+            {
+                StatusMessage = "Connection restored! You can now sign in with Firebase.";
+            }
+            else
+            {
+                StatusMessage = "Offline mode. You can still sign in with cached credentials.";
+            }
         }
 
         #endregion
