@@ -16,7 +16,6 @@ namespace myFlatLightLogin.DalFirebase
     public class UserDal : IUserDal
     {
         private readonly FirebaseAuthClient _authClient;
-        private readonly FirebaseClient _dbClient;
         private UserCredential? _currentUser;
 
         public UserDal()
@@ -32,9 +31,18 @@ namespace myFlatLightLogin.DalFirebase
                 }
             };
             _authClient = new FirebaseAuthClient(authConfig);
+        }
 
-            // Initialize Firebase Realtime Database
-            _dbClient = new FirebaseClient(FirebaseConfig.DatabaseUrl);
+        /// <summary>
+        /// Creates an authenticated FirebaseClient using the provided auth token.
+        /// </summary>
+        private FirebaseClient GetAuthenticatedClient(string authToken)
+        {
+            var options = new FirebaseOptions
+            {
+                AuthTokenAsyncFactory = () => Task.FromResult(authToken)
+            };
+            return new FirebaseClient(FirebaseConfig.DatabaseUrl, options);
         }
 
         #region IUserDal Implementation
@@ -80,26 +88,30 @@ namespace myFlatLightLogin.DalFirebase
 
         /// <summary>
         /// Fetches user asynchronously by ID.
+        /// Note: With Firebase security rules, this only works for the currently authenticated user.
         /// </summary>
         private async Task<UserDto> FetchAsync(int id)
         {
             try
             {
-                // Get all users and find by local ID
-                var users = await _dbClient
+                if (_currentUser?.User == null)
+                    throw new InvalidOperationException("No authenticated user. Please sign in first.");
+
+                // With security rules, we can only fetch the current user's data
+                var dbClient = GetAuthenticatedClient(_currentUser.User.Credential.IdToken);
+                var profile = await dbClient
                     .Child("users")
-                    .OnceAsync<FirebaseUserProfile>();
+                    .Child(_currentUser.User.Uid)
+                    .OnceSingleAsync<FirebaseUserProfile>();
 
-                var user = users.FirstOrDefault(u => u.Object.LocalId == id);
-
-                if (user != null)
+                if (profile != null && profile.LocalId == id)
                 {
                     return new UserDto
                     {
-                        Id = user.Object.LocalId,
-                        Name = user.Object.Name,
-                        Lastname = user.Object.Lastname,
-                        Username = user.Object.Email,
+                        Id = profile.LocalId,
+                        Name = profile.Name,
+                        Lastname = profile.Lastname,
+                        Username = profile.Email,
                         Password = null // Never return passwords
                     };
                 }
@@ -138,11 +150,11 @@ namespace myFlatLightLogin.DalFirebase
                     CreatedAt = DateTime.UtcNow.ToString("o")
                 };
 
-                // Use auth token to authenticate the database request
-                await _dbClient
+                // Use authenticated client to store user profile
+                var dbClient = GetAuthenticatedClient(credential.User.Credential.IdToken);
+                await dbClient
                     .Child("users")
                     .Child(credential.User.Uid)
-                    .WithAuth(credential.User.Credential.IdToken)
                     .PutAsync(profile);
 
                 _currentUser = credential;
@@ -178,10 +190,10 @@ namespace myFlatLightLogin.DalFirebase
                     UpdatedAt = DateTime.UtcNow.ToString("o")
                 };
 
-                await _dbClient
+                var dbClient = GetAuthenticatedClient(_currentUser.User.Credential.IdToken);
+                await dbClient
                     .Child("users")
                     .Child(_currentUser.User.Uid)
-                    .WithAuth(_currentUser.User.Credential.IdToken)
                     .PutAsync(profile);
 
                 return true;
@@ -194,28 +206,33 @@ namespace myFlatLightLogin.DalFirebase
 
         /// <summary>
         /// Deletes user from Firebase.
+        /// Note: With Firebase security rules, this only works for the currently authenticated user.
         /// </summary>
         private async Task<bool> DeleteAsync(int id)
         {
             try
             {
-                // Find user by local ID
-                var users = await _dbClient
+                if (_currentUser?.User == null)
+                    throw new InvalidOperationException("No authenticated user. Please sign in first.");
+
+                // With security rules, we can only delete the current user's data
+                var dbClient = GetAuthenticatedClient(_currentUser.User.Credential.IdToken);
+                var profile = await dbClient
                     .Child("users")
-                    .OnceAsync<FirebaseUserProfile>();
+                    .Child(_currentUser.User.Uid)
+                    .OnceSingleAsync<FirebaseUserProfile>();
 
-                var user = users.FirstOrDefault(u => u.Object.LocalId == id);
-
-                if (user != null)
+                // Only allow deletion if the ID matches the current user
+                if (profile != null && profile.LocalId == id)
                 {
                     // Delete from Realtime Database
-                    await _dbClient
+                    await dbClient
                         .Child("users")
-                        .Child(user.Key)
+                        .Child(_currentUser.User.Uid)
                         .DeleteAsync();
 
                     // Note: Deleting from Firebase Authentication requires admin SDK
-                    // or the user must be currently authenticated
+                    // or calling the delete method on the user account
                     return true;
                 }
 
@@ -244,10 +261,10 @@ namespace myFlatLightLogin.DalFirebase
                     return null;
 
                 // Fetch user profile from database with authentication
-                var profile = await _dbClient
+                var dbClient = GetAuthenticatedClient(_currentUser.User.Credential.IdToken);
+                var profile = await dbClient
                     .Child("users")
                     .Child(_currentUser.User.Uid)
-                    .WithAuth(_currentUser.User.Credential.IdToken)
                     .OnceSingleAsync<FirebaseUserProfile>();
 
                 if (profile != null)
