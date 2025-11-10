@@ -274,7 +274,9 @@ namespace myFlatLightLogin.DalFirebase
                         Id = profile.LocalId,
                         Name = profile.Name,
                         Lastname = profile.Lastname,
-                        Username = profile.Email
+                        Username = profile.Email,
+                        Email = profile.Email,
+                        FirebaseUid = profile.FirebaseUid
                     };
                 }
 
