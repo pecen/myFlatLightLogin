@@ -216,14 +216,15 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             catch (Exception ex)
             {
                 IsAuthenticated = false;
-                StatusMessage = $"Error: {ex.Message}";
+                StatusMessage = "Login error occurred";
 
-                // SECURITY: Log only error message, not full exception to avoid exposing sensitive data
-                _logger.Error("Login failed with exception: {ErrorType} - {ErrorMessage}",
-                    ex.GetType().Name, ex.Message);
+                // SECURITY: Do NOT log ex.Message - it may contain passwords!
+                // Only log exception type for debugging
+                _logger.Error("Login failed with exception: {ErrorType}", ex.GetType().Name);
 
+                // Show generic error to user (don't expose technical details)
                 MessageBox.Show(
-                    ex.Message,
+                    "An error occurred during login. Please check your credentials and try again.",
                     "Login Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);

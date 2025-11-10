@@ -192,8 +192,9 @@ namespace myFlatLightLogin.Core.Services
                 catch (Exception ex)
                 {
                     // Firebase failed - fall through to SQLite
-                    // SECURITY: Do NOT log full exception - it contains password in plain text
-                    _logger.Warning("Firebase sign in failed: {ErrorMessage}, trying SQLite fallback", ex.Message);
+                    // SECURITY: Do NOT log ex.Message - Firebase exceptions contain passwords in the message!
+                    // The exception message includes "Request Data: {...password...}"
+                    _logger.Warning("Firebase sign in failed (invalid credentials or network error), trying SQLite fallback");
                 }
             }
             else
@@ -247,8 +248,8 @@ namespace myFlatLightLogin.Core.Services
                 catch (Exception ex)
                 {
                     // Firebase failed - fall through to offline registration
-                    // SECURITY: Do NOT log full exception - it may contain password in plain text
-                    _logger.Warning("Firebase registration failed: {ErrorMessage}, registering offline", ex.Message);
+                    // SECURITY: Do NOT log ex.Message - Firebase exceptions contain passwords in the message!
+                    _logger.Warning("Firebase registration failed (network error or invalid data), registering offline");
                 }
             }
 
