@@ -72,8 +72,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             };
         }
 
-        #endregion
-
         #region Methods
 
         /// <summary>
