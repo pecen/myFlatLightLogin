@@ -57,8 +57,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             NavigateToLoginCommand = new RelayCommand(o => { Navigation.NavigateTo<LoginViewModel>(); }, o => true);
 
             // Admin-only commands for log access
-            OpenLogsFolderCommand = new AsyncRelayCommand(OpenLogsFolderAsync, o => IsUserAdministrator);
-            ViewCurrentLogCommand = new AsyncRelayCommand(ViewCurrentLogAsync, o => IsUserAdministrator);
+            OpenLogsFolderCommand = new AsyncRelayCommand(OpenLogsFolderAsync, () => IsUserAdministrator);
+            ViewCurrentLogCommand = new AsyncRelayCommand(ViewCurrentLogAsync, () => IsUserAdministrator);
 
             // Subscribe to user changes to update admin-only features visibility
             CurrentUserService.Instance.OnUserChanged += (sender, user) =>
