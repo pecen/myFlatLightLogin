@@ -210,6 +210,12 @@
                 </Setter>
 
                 <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Background" Value="#e0e0e0" />
+                        <Setter Property="Foreground" Value="#9e9e9e" />
+                        <Setter Property="BorderBrush" Value="#d0d0d0" />
+                        <Setter Property="Opacity" Value="0.6" />
+                    </Trigger>
                     <Trigger Property="IsMouseOver" Value="True">
                         <Setter Property="Background" Value="#e6e6e6" />
                         <Setter Property="Foreground" Value="#3a3a3a" />
