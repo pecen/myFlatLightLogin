@@ -1,3 +1,5 @@
+using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
 using myFlatLightLogin.Core.MVVM;
 using myFlatLightLogin.Core.Services;
 using myFlatLightLogin.Dal;
@@ -140,6 +142,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// </summary>
         private async Task LoginAsync()
         {
+            var window = (MetroWindow)Application.Current.MainWindow;
+
             try
             {
                 IsLoading = true;
@@ -184,11 +188,21 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     _logger.Information("Display name: {DisplayName}, Login mode: {LoginMode}", displayName, loginMode);
 
                     // Show success message
-                    MessageBox.Show(
+                    //MessageBox.Show(
+                    //    $"Successfully logged in as {user.Email ?? "Unknown"}\n\nMode: {loginMode.ToUpper()}",
+                    //    "Login Successful",
+                    //    MessageBoxButton.OK,
+                    //    MessageBoxImage.Information);
+
+                    await window.ShowMessageAsync("Login Successful",
                         $"Successfully logged in as {user.Email ?? "Unknown"}\n\nMode: {loginMode.ToUpper()}",
-                        "Login Successful",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                        MessageDialogStyle.Affirmative,
+                        new MetroDialogSettings
+                        {
+                            AffirmativeButtonText = "Continue",
+                            AnimateShow = true,
+                            AnimateHide = true
+                        });
 
                     _logger.Information("========== LOGIN ATTEMPT COMPLETED SUCCESSFULLY ==========");
 
@@ -204,11 +218,21 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                         ? "Invalid email or password."
                         : "Invalid email or password, or user not found in offline cache.";
 
-                    MessageBox.Show(
+                    //MessageBox.Show(
+                    //    message,
+                    //    "Login Failed",
+                    //    MessageBoxButton.OK,
+                    //    MessageBoxImage.Warning);
+
+                    await window.ShowMessageAsync("Login failed",
                         message,
-                        "Login Failed",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                        MessageDialogStyle.Affirmative,
+                        new MetroDialogSettings
+                        {
+                            AffirmativeButtonText = "Continue",
+                            AnimateShow = true,
+                            AnimateHide = true
+                        });
 
                     _logger.Warning("========== LOGIN ATTEMPT FAILED ==========");
                 }
@@ -222,21 +246,41 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 StatusMessage = $"Error: {ex.Message}";
                 _logger.Error(ex, "Login failed with exception");
 
-                MessageBox.Show(
+                //MessageBox.Show(
+                //    $"Login Error: {ex.Message}",
+                //    "Login Error",
+                //    MessageBoxButton.OK,
+                //    MessageBoxImage.Error);
+
+                await window.ShowMessageAsync("Login Error",
                     $"Login Error: {ex.Message}",
-                    "Login Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    MessageDialogStyle.Affirmative,
+                    new MetroDialogSettings
+                    {
+                        AffirmativeButtonText = "Continue",
+                        AnimateShow = true,
+                        AnimateHide = true
+                    });
 #else
                 // RELEASE MODE: Generic error (no technical details or passwords)
                 StatusMessage = "Login error occurred";
                 _logger.Error("Login failed with exception: {ErrorType}", ex.GetType().Name);
 
-                MessageBox.Show(
+                //MessageBox.Show(
+                //    "An error occurred during login. Please check your credentials and try again.",
+                //    "Login Error",
+                //    MessageBoxButton.OK,
+                //    MessageBoxImage.Error);
+
+                await window.ShowMessageAsync("Login Error",
                     "An error occurred during login. Please check your credentials and try again.",
-                    "Login Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                    MessageDialogStyle.Affirmative,
+                    new MetroDialogSettings
+                    {
+                        AffirmativeButtonText = "Continue",
+                        AnimateShow = true,
+                        AnimateHide = true
+                    });
 #endif
 
                 _logger.Error("========== LOGIN ATTEMPT FAILED WITH EXCEPTION ==========");

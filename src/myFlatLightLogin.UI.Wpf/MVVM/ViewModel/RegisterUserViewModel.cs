@@ -1,3 +1,5 @@
+using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
 using myFlatLightLogin.Core.MVVM;
 using myFlatLightLogin.Core.Services;
 using myFlatLightLogin.Dal.Dto;
@@ -159,6 +161,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// </summary>
         private async Task RegisterUserAsync()
         {
+            var window = (MetroWindow)Application.Current.MainWindow;
+
             try
             {
                 IsLoading = true;
@@ -166,11 +170,22 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 // Validate passwords match
                 if (Password != ConfirmPassword)
                 {
-                    MessageBox.Show(
-                        "Passwords do not match. Please try again.",
-                        "Registration Error",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                    //MessageBox.Show(
+                    //    "Passwords do not match. Please try again.",
+                    //    "Registration Error",
+                    //    MessageBoxButton.OK,
+                    //    MessageBoxImage.Warning);
+
+                    await window.ShowMessageAsync("Registration Error",
+                       "Passwords do not match. Please try again.",
+                       MessageDialogStyle.Affirmative,
+                       new MetroDialogSettings
+                       {
+                           AffirmativeButtonText = "Continue",
+                           AnimateShow = true,
+                           AnimateHide = true
+                       });
+
                     return;
                 }
 
@@ -207,11 +222,21 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                         ? $"Account created successfully!\n\nEmail: {Email}\n\nYou can now sign in."
                         : $"Account created offline!\n\nEmail: {Email}\n\nYour account will be synced to Firebase when you're back online.\nYou can sign in now using offline mode.";
 
-                    MessageBox.Show(
-                        message,
-                        "Registration Successful",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                    //MessageBox.Show(
+                    //    message,
+                    //    "Registration Successful",
+                    //    MessageBoxButton.OK,
+                    //    MessageBoxImage.Information);
+
+                    await window.ShowMessageAsync("Registration Successful",
+                       message,
+                       MessageDialogStyle.Affirmative,
+                       new MetroDialogSettings
+                       {
+                           AffirmativeButtonText = "Continue",
+                           AnimateShow = true,
+                           AnimateHide = true
+                       });
 
                     // Navigate back to login
                     Navigation.NavigateTo<LoginViewModel>();
@@ -221,11 +246,21 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     IsAuthenticated = false;
                     StatusMessage = "Registration failed. Please try again.";
 
-                    MessageBox.Show(
-                        "Registration failed. Please try again.",
-                        "Registration Failed",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
+                    //MessageBox.Show(
+                    //    "Registration failed. Please try again.",
+                    //    "Registration Failed",
+                    //    MessageBoxButton.OK,
+                    //    MessageBoxImage.Warning);
+
+                    await window.ShowMessageAsync("Registration failed",
+                       "Registration failed. Please try again.",
+                       MessageDialogStyle.Affirmative,
+                       new MetroDialogSettings
+                       {
+                           AffirmativeButtonText = "Continue",
+                           AnimateShow = true,
+                           AnimateHide = true
+                       });
                 }
             }
             catch (Exception ex)
@@ -233,11 +268,21 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 IsAuthenticated = false;
                 StatusMessage = $"Error: {ex.Message}";
 
-                MessageBox.Show(
-                    ex.Message,
-                    "Registration Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                //MessageBox.Show(
+                //    ex.Message,
+                //    "Registration Error",
+                //    MessageBoxButton.OK,
+                //    MessageBoxImage.Error);
+
+                await window.ShowMessageAsync("Registration Error",
+                   ex.Message,
+                   MessageDialogStyle.Affirmative,
+                   new MetroDialogSettings
+                   {
+                       AffirmativeButtonText = "Continue",
+                       AnimateShow = true,
+                       AnimateHide = true
+                   });
             }
             finally
             {
