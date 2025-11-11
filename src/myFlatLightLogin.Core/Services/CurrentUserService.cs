@@ -9,9 +9,9 @@ namespace myFlatLightLogin.Core.Services
     /// </summary>
     public class CurrentUserService
     {
-        private static CurrentUserService _instance;
-        private static readonly object _lock = new object();
-        private UserDto _currentUser;
+        private static CurrentUserService? _instance;
+        private static readonly object _lock = new();
+        private UserDto? _currentUser;
 
         /// <summary>
         /// Gets the singleton instance of CurrentUserService.
@@ -24,10 +24,7 @@ namespace myFlatLightLogin.Core.Services
                 {
                     lock (_lock)
                     {
-                        if (_instance == null)
-                        {
-                            _instance = new CurrentUserService();
-                        }
+                        _instance ??= new CurrentUserService();
                     }
                 }
                 return _instance;
@@ -44,7 +41,7 @@ namespace myFlatLightLogin.Core.Services
         /// <summary>
         /// Gets the currently logged-in user, or null if no user is logged in.
         /// </summary>
-        public UserDto CurrentUser
+        public UserDto? CurrentUser
         {
             get => _currentUser;
             private set => _currentUser = value;
@@ -87,7 +84,7 @@ namespace myFlatLightLogin.Core.Services
         /// <summary>
         /// Event raised when the current user changes (login/logout).
         /// </summary>
-        public event EventHandler<UserDto> OnUserChanged;
+        public event EventHandler<UserDto?>? OnUserChanged;
 
         /// <summary>
         /// Gets the current user's display name.

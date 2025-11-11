@@ -250,8 +250,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     StatusMessage = $"Account created successfully! (Registered {registrationMode})";
 
                     string message = IsOnline
-                        ? $"Account created successfully!\n\nEmail: {Email}\n\nYou can now sign in."
-                        : $"Account created offline!\n\nEmail: {Email}\n\nYour account will be synced to Firebase when you're back online.\nYou can sign in now using offline mode.";
+                        ? $"Account created successfully!\n\nEmail: {Email}\n\nYou can now sign in with this user name."
+                        : $"Account created offline!\n\nEmail: {Email}\n\nYour account will be synced to Firebase when you're back online.\nYou can sign in now with this user name using offline mode.";
 
                     //MessageBox.Show(
                     //    message,
