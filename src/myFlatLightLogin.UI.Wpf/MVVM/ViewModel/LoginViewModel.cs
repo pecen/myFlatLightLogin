@@ -316,7 +316,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// <summary>
         /// Clears the login form (email and password fields).
         /// </summary>
-        private void ClearForm()
+        public void ClearForm()
         {
             Email = string.Empty;
             Password = string.Empty;

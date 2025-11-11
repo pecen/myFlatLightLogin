@@ -17,6 +17,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
     public class MainWindowViewModel : ViewModelBase
     {
+        private readonly LoginViewModel _loginViewModel;
+
         public RelayCommand ShutdownWindowCommand { get; set; }
         public RelayCommand MoveWindowCommand { get; set; }
         public RelayCommand ResizeWindowCommand { get; set; }
@@ -31,15 +33,16 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// </summary>
         public bool IsUserAdministrator => CurrentUserService.Instance.IsAdmin;
 
-        public MainWindowViewModel(INavigationService navigationService)
+        public MainWindowViewModel(INavigationService navigationService, LoginViewModel loginViewModel)
         {
             Navigation = navigationService;
+            _loginViewModel = loginViewModel;
             Navigation.NavigateTo<LoginViewModel>();
 
             MoveWindowCommand = new RelayCommand(o => { Application.Current.MainWindow.DragMove(); });
 
             // By using Application.Current.MainWindow.Close() instead of Application.Current.ShutDown()
-            // we can utilize the extra MahApp popup that shows and asks if we really want to quit. 
+            // we can utilize the extra MahApp popup that shows and asks if we really want to quit.
             ShutdownWindowCommand = new RelayCommand(o => { Application.Current.MainWindow.Close(); });
 
             ResizeWindowCommand = new RelayCommand(o =>
@@ -54,7 +57,11 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 }
             });
 
-            NavigateToLoginCommand = new RelayCommand(o => { Navigation.NavigateTo<LoginViewModel>(); }, o => true);
+            NavigateToLoginCommand = new RelayCommand(o =>
+            {
+                _loginViewModel.ClearForm();
+                Navigation.NavigateTo<LoginViewModel>();
+            }, o => true);
 
             // Admin-only commands for log access
             OpenLogsFolderCommand = new AsyncRelayCommand(OpenLogsFolderAsync, () => IsUserAdministrator);
