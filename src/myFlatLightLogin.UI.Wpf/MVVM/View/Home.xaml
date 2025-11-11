@@ -44,7 +44,7 @@
                 FontSize="24"
                 FontWeight="SemiBold"
                 Foreground="#5a5a5a"
-                Text="Welcome!" />
+                Text="{Binding WelcomeText}" />
             <TextBlock
                 Margin="0,10,0,0"
                 HorizontalAlignment="Center"

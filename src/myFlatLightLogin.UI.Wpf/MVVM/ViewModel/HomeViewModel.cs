@@ -9,8 +9,16 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
     /// </summary>
     public class HomeViewModel : ViewModelBase
     {
+        private string welcomeText = string.Empty;
+        public string WelcomeText
+        {
+            get => welcomeText; 
+            private set => SetProperty(ref welcomeText, value);
+        }
+
         public HomeViewModel(INavigationService navigationService)
         {
+            WelcomeText = $"Welcome, {CurrentUserService.Instance.CurrentUser?.Name}!";
             Navigation = navigationService;
         }
     }
