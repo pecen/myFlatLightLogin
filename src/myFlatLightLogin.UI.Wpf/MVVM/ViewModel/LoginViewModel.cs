@@ -217,11 +217,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                     _logger.Information("========== LOGIN ATTEMPT COMPLETED SUCCESSFULLY ==========");
 
-                    // Hide the login window (application continues running in background)
-                    if (Application.Current.MainWindow is myFlatLightLogin.UI.Wpf.MVVM.View.MainWindow mainWindow)
-                    {
-                        mainWindow.HideAfterLogin();
-                    }
+                    // Navigate to Home view after successful login
+                    Navigation.NavigateTo<HomeViewModel>();
                 }
                 else
                 {

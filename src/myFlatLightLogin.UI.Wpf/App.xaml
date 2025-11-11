@@ -4,8 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:view="clr-namespace:myFlatLightLogin.UI.Wpf.MVVM.View"
-    xmlns:vm="clr-namespace:myFlatLightLogin.UI.Wpf.MVVM.ViewModel"
-    ShutdownMode="OnExplicitShutdown">
+    xmlns:vm="clr-namespace:myFlatLightLogin.UI.Wpf.MVVM.ViewModel">
     <Application.Resources>
 
         <ResourceDictionary>
@@ -21,6 +20,10 @@
 
             <DataTemplate DataType="{x:Type vm:RegisterUserViewModel}">
                 <view:RegisterUser />
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type vm:HomeViewModel}">
+                <view:Home />
             </DataTemplate>
 
             <Style x:Key="topButton" TargetType="Button">

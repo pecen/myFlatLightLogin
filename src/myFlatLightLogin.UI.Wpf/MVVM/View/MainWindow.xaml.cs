@@ -13,7 +13,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.View
     public partial class MainWindow : MetroWindow
     {
         private bool _shutdown;
-        private bool _isHiding;
 
         public MainWindow()
         {
@@ -23,12 +22,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.View
         private void MetroWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (e.Cancel)
-            {
-                return;
-            }
-
-            // If we're just hiding the window (after login), don't interfere
-            if (_isHiding)
             {
                 return;
             }
@@ -73,17 +66,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.View
         {
             _shutdown = true;
             Close();
-        }
-
-        /// <summary>
-        /// Hides the login window after successful login.
-        /// The application continues running in the background.
-        /// </summary>
-        public void HideAfterLogin()
-        {
-            _isHiding = true;
-            Visibility = Visibility.Hidden;
-            _isHiding = false;
         }
     }
 }
