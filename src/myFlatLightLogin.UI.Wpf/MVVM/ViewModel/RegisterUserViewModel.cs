@@ -269,7 +269,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                            AnimateHide = true
                        });
 
-                    // Navigate back to login
+                    // Clear the form before navigating back to login
+                    ClearForm();
                     Navigation.NavigateTo<LoginViewModel>();
                 }
                 else
