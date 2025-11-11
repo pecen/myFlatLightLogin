@@ -217,8 +217,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                     _logger.Information("========== LOGIN ATTEMPT COMPLETED SUCCESSFULLY ==========");
 
-                    // Navigate to main application or close login window
-                    // TODO: Navigate to main window or implement your app's logic here
+                    // Close the login window after successful login
+                    Application.Current.MainWindow?.Close();
                 }
                 else
                 {
