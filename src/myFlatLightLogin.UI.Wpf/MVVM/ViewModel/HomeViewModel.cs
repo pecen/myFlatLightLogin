@@ -12,14 +12,36 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         private string welcomeText = string.Empty;
         public string WelcomeText
         {
-            get => welcomeText; 
+            get => welcomeText;
             private set => SetProperty(ref welcomeText, value);
         }
 
         public HomeViewModel(INavigationService navigationService)
         {
-            WelcomeText = $"Welcome, {CurrentUserService.Instance.CurrentUser?.Name}!";
             Navigation = navigationService;
+
+            // Subscribe to user changes to update welcome text
+            CurrentUserService.Instance.OnUserChanged += OnUserChanged;
+
+            // Set initial welcome text
+            UpdateWelcomeText();
+        }
+
+        /// <summary>
+        /// Updates the welcome text when the current user changes.
+        /// </summary>
+        private void OnUserChanged(object sender, Dal.Dto.UserDto? user)
+        {
+            UpdateWelcomeText();
+        }
+
+        /// <summary>
+        /// Updates the welcome text with the current user's name.
+        /// </summary>
+        private void UpdateWelcomeText()
+        {
+            var userName = CurrentUserService.Instance.GetDisplayName();
+            WelcomeText = $"Welcome, {userName}!";
         }
     }
 }
