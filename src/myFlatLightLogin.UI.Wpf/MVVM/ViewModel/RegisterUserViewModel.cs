@@ -162,7 +162,11 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
             // Initialize commands
             NavigateToLoginCommand = new RelayCommand(
-                o => Navigation.NavigateTo<LoginViewModel>(),
+                o =>
+                {
+                    ClearForm();
+                    Navigation.NavigateTo<LoginViewModel>();
+                },
                 o => true);
 
             RegisterUserCommand = new AsyncRelayCommand(RegisterUserAsync, CanRegister);
@@ -174,6 +178,9 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             ToggleConfirmPasswordVisibilityCommand = new RelayCommand(
                 o => IsConfirmPasswordVisible = !IsConfirmPasswordVisible,
                 o => true);
+
+            // Clear form when view loads (in case returning from another view)
+            ClearForm();
         }
 
         #endregion
@@ -324,6 +331,21 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                    !string.IsNullOrWhiteSpace(Password) &&
                    !string.IsNullOrWhiteSpace(ConfirmPassword) &&
                    Password.Length >= 6;
+        }
+
+        /// <summary>
+        /// Clears the registration form (all input fields).
+        /// </summary>
+        private void ClearForm()
+        {
+            Name = string.Empty;
+            Lastname = string.Empty;
+            Email = string.Empty;
+            Password = string.Empty;
+            ConfirmPassword = string.Empty;
+            IsPasswordVisible = false;
+            IsConfirmPasswordVisible = false;
+            StatusMessage = string.Empty;
         }
 
         /// <summary>
