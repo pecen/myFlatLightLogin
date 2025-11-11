@@ -188,13 +188,27 @@
             </Style>
 
             <!--  Primary action button style - dims on hover (for the main action on the page)  -->
-            <Style
-                x:Key="mainButtonPrimary"
-                BasedOn="{StaticResource mainButton}"
-                TargetType="Button">
+            <Style x:Key="mainButtonPrimary" TargetType="Button">
                 <Setter Property="Background" Value="#ff131e" />
-                <Setter Property="BorderBrush" Value="#ff131e" />
                 <Setter Property="Foreground" Value="#ffffff" />
+                <Setter Property="Height" Value="40" />
+                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                <Setter Property="BorderBrush" Value="#ff131e" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="20">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
                         <Setter Property="Background" Value="#e6e6e6" />
