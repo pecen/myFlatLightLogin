@@ -11,6 +11,9 @@
         <converter:BoolToVisibilityPwdText x:Key="BoolToVisPwd" />
         <converter:InvertedBooleanToVisibilityConverter x:Key="InvertedBoolToVis" />
     </UserControl.Resources>
+    <UserControl.InputBindings>
+        <KeyBinding Key="Return" Command="{Binding RegisterUserCommand}" />
+    </UserControl.InputBindings>
     <Border
         Width="300"
         Padding="30"
