@@ -83,6 +83,20 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             set => SetProperty(ref _confirmPwdIsEmpty, value);
         }
 
+        private bool _isPasswordVisible;
+        public bool IsPasswordVisible
+        {
+            get => _isPasswordVisible;
+            set => SetProperty(ref _isPasswordVisible, value);
+        }
+
+        private bool _isConfirmPasswordVisible;
+        public bool IsConfirmPasswordVisible
+        {
+            get => _isConfirmPasswordVisible;
+            set => SetProperty(ref _isConfirmPasswordVisible, value);
+        }
+
         private bool _isLoading;
         public bool IsLoading
         {
@@ -122,6 +136,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         public RelayCommand NavigateToLoginCommand { get; set; }
         public AsyncRelayCommand RegisterUserCommand { get; set; }
+        public RelayCommand TogglePasswordVisibilityCommand { get; set; }
+        public RelayCommand ToggleConfirmPasswordVisibilityCommand { get; set; }
 
         #endregion
 
@@ -150,6 +166,14 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 o => true);
 
             RegisterUserCommand = new AsyncRelayCommand(RegisterUserAsync, CanRegister);
+
+            TogglePasswordVisibilityCommand = new RelayCommand(
+                o => IsPasswordVisible = !IsPasswordVisible,
+                o => true);
+
+            ToggleConfirmPasswordVisibilityCommand = new RelayCommand(
+                o => IsConfirmPasswordVisible = !IsConfirmPasswordVisible,
+                o => true);
         }
 
         #endregion
