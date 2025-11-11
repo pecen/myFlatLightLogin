@@ -67,5 +67,14 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.View
             _shutdown = true;
             Close();
         }
+
+        /// <summary>
+        /// Hides the login window after successful login.
+        /// The application continues running in the background.
+        /// </summary>
+        public void HideAfterLogin()
+        {
+            Hide();
+        }
     }
 }
