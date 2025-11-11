@@ -252,7 +252,7 @@
                     Command="{Binding RegisterUserCommand}"
                     Content="Register"
                     Foreground="#ffffff"
-                    Style="{StaticResource mainButton}" />
+                    Style="{StaticResource mainButtonPrimary}" />
             </Grid>
 
             <!--  Or Text  -->

@@ -180,6 +180,20 @@
 
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#ff131e" />
+                        <Setter Property="Foreground" Value="#ffffff" />
+                        <Setter Property="BorderBrush" Value="#ff131e" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!--  Primary action button style - dims on hover (for the main action on the page)  -->
+            <Style
+                x:Key="mainButtonPrimary"
+                BasedOn="{StaticResource mainButton}"
+                TargetType="Button">
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
                         <Setter Property="Background" Value="#e6e6e6" />
                         <Setter Property="Foreground" Value="#3a3a3a" />
                         <Setter Property="BorderBrush" Value="#bdbdbd" />

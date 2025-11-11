@@ -139,7 +139,7 @@
                     Command="{Binding LoginCommand}"
                     Content="Sign in"
                     Foreground="#ffffff"
-                    Style="{StaticResource mainButton}" />
+                    Style="{StaticResource mainButtonPrimary}" />
                 <Button
                     Grid.Column="1"
                     Margin="5,0,0,0"
