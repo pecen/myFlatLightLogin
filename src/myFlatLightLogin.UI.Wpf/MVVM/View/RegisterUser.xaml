@@ -247,11 +247,8 @@
                 <Button
                     Grid.Column="1"
                     Margin="5,0,0,0"
-                    Background="#ff131e"
-                    BorderBrush="#ff131e"
                     Command="{Binding RegisterUserCommand}"
                     Content="Register"
-                    Foreground="#ffffff"
                     Style="{StaticResource mainButtonPrimary}" />
             </Grid>
 

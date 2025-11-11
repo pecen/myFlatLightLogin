@@ -192,6 +192,9 @@
                 x:Key="mainButtonPrimary"
                 BasedOn="{StaticResource mainButton}"
                 TargetType="Button">
+                <Setter Property="Background" Value="#ff131e" />
+                <Setter Property="BorderBrush" Value="#ff131e" />
+                <Setter Property="Foreground" Value="#ffffff" />
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
                         <Setter Property="Background" Value="#e6e6e6" />
