@@ -14,11 +14,11 @@
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Blue.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <DataTemplate DataType="{x:Type TypeName=vm:LoginViewModel}">
+            <DataTemplate DataType="{x:Type vm:LoginViewModel}">
                 <view:Login />
             </DataTemplate>
 
-            <DataTemplate DataType="{x:Type TypeName=vm:RegisterUserViewModel}">
+            <DataTemplate DataType="{x:Type vm:RegisterUserViewModel}">
                 <view:RegisterUser />
             </DataTemplate>
 
