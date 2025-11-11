@@ -208,7 +208,7 @@ namespace myFlatLightLogin.DalSQLite
                     Username = u.Username,
                     Email = u.Email,
                     FirebaseUid = u.FirebaseUid,
-                    Role = (UserRole)u.Role // Convert integer to enum
+                    Role = GetUserRole(u.RoleId) // Convert role ID to enum
                 }).ToList();
             }
         }
