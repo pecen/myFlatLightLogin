@@ -231,9 +231,23 @@ namespace myFlatLightLogin.Core.Services
         /// <summary>
         /// Registers a new user.
         /// Tries Firebase first, falls back to SQLite if offline.
+        /// First registered user automatically becomes Admin.
         /// </summary>
         public async Task<bool> RegisterAsync(UserDto user)
         {
+            // Check if this is the first user - make them Admin
+            if (IsFirstUser())
+            {
+                user.Role = UserRole.Admin;
+                _logger.Information("First user registration detected - assigning Admin role to {Email}", user.Email);
+            }
+            else
+            {
+                // Default role is User (already set in UserDto, but being explicit)
+                user.Role = UserRole.User;
+                _logger.Information("Registering user with standard User role: {Email}", user.Email);
+            }
+
             bool success = false;
 
             // Try Firebase first if online
@@ -316,6 +330,37 @@ namespace myFlatLightLogin.Core.Services
         {
             var pending = _sqliteDal.GetUsersNeedingSync();
             return pending?.Count ?? 0;
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        /// <summary>
+        /// Checks if this is the first user to be registered in the system.
+        /// Used to automatically assign Admin role to the first user.
+        /// </summary>
+        private bool IsFirstUser()
+        {
+            try
+            {
+                // Check SQLite database for any existing users
+                using (var conn = new SQLite.SQLiteConnection(
+                    System.IO.Path.Combine(Environment.CurrentDirectory, "security.db3")))
+                {
+                    conn.CreateTable<myFlatLightLogin.DalSQLite.Model.User>();
+                    int userCount = conn.Table<myFlatLightLogin.DalSQLite.Model.User>().Count();
+
+                    _logger.Debug("Current user count in database: {UserCount}", userCount);
+                    return userCount == 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error checking if first user");
+                // If we can't determine, assume not first user (safer default)
+                return false;
+            }
         }
 
         #endregion

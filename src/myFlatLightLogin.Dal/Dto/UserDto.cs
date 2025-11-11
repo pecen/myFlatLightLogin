@@ -45,5 +45,11 @@
         /// Firebase User ID (UID) - used for Firebase implementations.
         /// </summary>
         public string FirebaseUid { get; set; }
+
+        /// <summary>
+        /// User's role for application-level authorization.
+        /// Default is User (0). First registered user becomes Admin (1).
+        /// </summary>
+        public UserRole Role { get; set; } = UserRole.User;
     }
 }

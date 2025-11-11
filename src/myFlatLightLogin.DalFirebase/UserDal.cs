@@ -112,7 +112,8 @@ namespace myFlatLightLogin.DalFirebase
                         Name = profile.Name,
                         Lastname = profile.Lastname,
                         Username = profile.Email,
-                        Password = null // Never return passwords
+                        Password = null, // Never return passwords
+                        Role = (UserRole)profile.Role // Convert integer to enum
                     };
                 }
 
@@ -147,7 +148,8 @@ namespace myFlatLightLogin.DalFirebase
                     Name = user.Name,
                     Lastname = user.Lastname,
                     Email = user.Username,
-                    CreatedAt = DateTime.UtcNow.ToString("o")
+                    CreatedAt = DateTime.UtcNow.ToString("o"),
+                    Role = (int)user.Role // Store role as integer
                 };
 
                 // Use authenticated client to store user profile
@@ -187,7 +189,8 @@ namespace myFlatLightLogin.DalFirebase
                     Name = user.Name,
                     Lastname = user.Lastname,
                     Email = user.Username,
-                    UpdatedAt = DateTime.UtcNow.ToString("o")
+                    UpdatedAt = DateTime.UtcNow.ToString("o"),
+                    Role = (int)user.Role // Store role as integer
                 };
 
                 var dbClient = GetAuthenticatedClient(_currentUser.User.Credential.IdToken);
@@ -276,7 +279,8 @@ namespace myFlatLightLogin.DalFirebase
                         Lastname = profile.Lastname,
                         Username = profile.Email,
                         Email = profile.Email,
-                        FirebaseUid = profile.FirebaseUid
+                        FirebaseUid = profile.FirebaseUid,
+                        Role = (UserRole)profile.Role // Convert integer to enum
                     };
                 }
 
@@ -343,5 +347,6 @@ namespace myFlatLightLogin.DalFirebase
         public string Email { get; set; }
         public string CreatedAt { get; set; }
         public string UpdatedAt { get; set; }
+        public int Role { get; set; } // 0 = User, 1 = Admin
     }
 }

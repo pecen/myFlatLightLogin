@@ -172,10 +172,14 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                 if (user != null)
                 {
-                    _logger.Information("User authenticated - Email: {Email}, Name: {Name}, Username: {Username}",
-                        user.Email, user.Name, user.Username);
+                    _logger.Information("User authenticated - Email: {Email}, Name: {Name}, Username: {Username}, Role: {Role}",
+                        user.Email, user.Name, user.Username, user.Role);
 
                     IsAuthenticated = true;
+
+                    // Set the current user in the application-wide service
+                    CurrentUserService.Instance.SetCurrentUser(user);
+                    _logger.Information("Current user set in CurrentUserService with role: {Role}", user.Role);
 
                     // Check connectivity AGAIN with fresh check (don't trust cached value)
                     bool isCurrentlyOnline = _connectivityService.CheckConnectivity();

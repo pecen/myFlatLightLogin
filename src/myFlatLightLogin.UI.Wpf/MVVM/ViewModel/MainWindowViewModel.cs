@@ -26,9 +26,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public AsyncRelayCommand ViewCurrentLogCommand { get; set; }
 
         /// <summary>
-        /// Gets whether the current user is a Windows administrator
+        /// Gets whether the current logged-in user has Admin role in the application.
+        /// This is checked against application roles, not Windows administrator privileges.
         /// </summary>
-        public bool IsUserAdministrator => SecurityHelper.IsUserAdministrator();
+        public bool IsUserAdministrator => CurrentUserService.Instance.IsAdmin;
 
         public MainWindowViewModel(INavigationService navigationService)
         {
@@ -58,6 +59,17 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             // Admin-only commands for log access
             OpenLogsFolderCommand = new AsyncRelayCommand(OpenLogsFolderAsync, o => IsUserAdministrator);
             ViewCurrentLogCommand = new AsyncRelayCommand(ViewCurrentLogAsync, o => IsUserAdministrator);
+
+            // Subscribe to user changes to update admin-only features visibility
+            CurrentUserService.Instance.OnUserChanged += (sender, user) =>
+            {
+                // Notify UI that IsUserAdministrator may have changed
+                OnPropertyChanged(nameof(IsUserAdministrator));
+
+                // Update CanExecute for admin commands
+                OpenLogsFolderCommand?.RaiseCanExecuteChanged();
+                ViewCurrentLogCommand?.RaiseCanExecuteChanged();
+            };
         }
 
         #endregion

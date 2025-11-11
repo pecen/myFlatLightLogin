@@ -1,4 +1,5 @@
-﻿using SQLite;
+using myFlatLightLogin.Dal.Dto;
+using SQLite;
 using System;
 
 namespace myFlatLightLogin.DalSQLite.Model
@@ -47,5 +48,12 @@ namespace myFlatLightLogin.DalSQLite.Model
         /// Indicates if this record needs to be synced to Firebase.
         /// </summary>
         public bool NeedsSync { get; set; }
+
+        /// <summary>
+        /// User's role for application-level authorization.
+        /// 0 = User (standard), 1 = Admin (elevated permissions).
+        /// Stored as integer for SQLite compatibility.
+        /// </summary>
+        public int Role { get; set; }
     }
 }
