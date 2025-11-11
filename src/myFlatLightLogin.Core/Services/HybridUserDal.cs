@@ -235,6 +235,14 @@ namespace myFlatLightLogin.Core.Services
         /// </summary>
         public async Task<bool> RegisterAsync(UserDto user)
         {
+            // Check if email already exists
+            var existingUser = FindByEmail(user.Email);
+            if (existingUser != null)
+            {
+                _logger.Warning("Registration failed - email already exists: {Email}", user.Email);
+                throw new InvalidOperationException($"An account with email '{user.Email}' already exists.");
+            }
+
             // Check if this is the first user - make them Admin
             if (IsFirstUser())
             {
@@ -335,6 +343,19 @@ namespace myFlatLightLogin.Core.Services
         #endregion
 
         #region Helper Methods
+
+        /// <summary>
+        /// Finds a user by email address.
+        /// Checks SQLite local cache first (faster and works offline).
+        /// </summary>
+        public UserDto FindByEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return null;
+
+            // Check SQLite local cache (works offline and is faster)
+            return _sqliteDal.FindByEmail(email);
+        }
 
         /// <summary>
         /// Checks if this is the first user to be registered in the system.
