@@ -129,6 +129,21 @@
                     <Button Content="Solutions" Style="{StaticResource bottomButton}" />
                     <Button Content="Videos" Style="{StaticResource bottomButton}" />
                     <Button Content="About" Style="{StaticResource bottomButton}" />
+
+                    <!--  Admin-Only Log Access Buttons  -->
+                    <Button
+                        Command="{Binding ViewCurrentLogCommand}"
+                        Content="View Logs"
+                        Style="{StaticResource bottomButton}"
+                        Visibility="{Binding IsUserAdministrator, Converter={StaticResource BoolToVis}}"
+                        ToolTip="Open current log file (Admin only)" />
+                    <Button
+                        Command="{Binding OpenLogsFolderCommand}"
+                        Content="Logs Folder"
+                        Style="{StaticResource bottomButton}"
+                        Visibility="{Binding IsUserAdministrator, Converter={StaticResource BoolToVis}}"
+                        ToolTip="Open logs folder (Admin only)" />
+
                     <Button
                         Command="{Binding NavigateToLoginCommand}"
                         Content="Login"
