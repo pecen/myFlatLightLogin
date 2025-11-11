@@ -10,8 +10,26 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
+    <UserControl.Resources>
+        <Storyboard x:Key="FadeOutAnimation">
+            <!--  Wait 5 seconds before starting fade  -->
+            <DoubleAnimation
+                BeginTime="0:0:5"
+                Storyboard.TargetName="WelcomePanel"
+                Storyboard.TargetProperty="Opacity"
+                From="1.0"
+                To="0.0"
+                Duration="0:0:1" />
+        </Storyboard>
+    </UserControl.Resources>
+    <UserControl.Triggers>
+        <EventTrigger RoutedEvent="Loaded">
+            <BeginStoryboard Storyboard="{StaticResource FadeOutAnimation}" />
+        </EventTrigger>
+    </UserControl.Triggers>
     <Grid>
         <StackPanel
+            x:Name="WelcomePanel"
             HorizontalAlignment="Center"
             VerticalAlignment="Center">
             <icon:PackIconMaterial
