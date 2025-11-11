@@ -19,6 +19,30 @@ namespace myFlatLightLogin.DalSQLite
     {
         private static readonly ILogger _logger = Log.ForContext<UserDal>();
         private static string dbFile = Path.Combine(Environment.CurrentDirectory, "security.db3");
+        private readonly RoleDal _roleDal;
+
+        public UserDal()
+        {
+            _roleDal = new RoleDal();
+        }
+
+        /// <summary>
+        /// Converts UserRole enum to RoleId.
+        /// </summary>
+        private int GetRoleId(UserRole role)
+        {
+            // Map enum to role ID (User=1, Admin=2)
+            return role == UserRole.Admin ? 2 : 1;
+        }
+
+        /// <summary>
+        /// Converts RoleId to UserRole enum.
+        /// </summary>
+        private UserRole GetUserRole(int roleId)
+        {
+            // Map role ID to enum (1=User, 2=Admin)
+            return roleId == 2 ? UserRole.Admin : UserRole.User;
+        }
 
         public UserDto Fetch(int id)
         {
@@ -41,7 +65,7 @@ namespace myFlatLightLogin.DalSQLite
                 FirebaseUid = userDto.FirebaseUid,
                 LastModified = DateTime.UtcNow.ToString("o"),
                 NeedsSync = true, // Mark for sync to Firebase
-                Role = (int)userDto.Role // Store role as integer
+                RoleId = GetRoleId(userDto.Role) // Convert enum to role ID
             };
 
             bool result = DbCore.Insert(user);
@@ -72,7 +96,7 @@ namespace myFlatLightLogin.DalSQLite
                 user.FirebaseUid = userDto.FirebaseUid;
                 user.LastModified = DateTime.UtcNow.ToString("o");
                 user.NeedsSync = true; // Mark for sync to Firebase
-                user.Role = (int)userDto.Role; // Update role
+                user.RoleId = GetRoleId(userDto.Role); // Update role ID
 
                 // Only update password if provided
                 if (!string.IsNullOrEmpty(userDto.Password))
@@ -144,7 +168,7 @@ namespace myFlatLightLogin.DalSQLite
                     Username = user.Username,
                     Email = user.Email,
                     FirebaseUid = user.FirebaseUid,
-                    Role = (UserRole)user.Role // Convert integer to enum
+                    Role = GetUserRole(user.RoleId) // Convert role ID to enum
                 };
             }
         }
@@ -211,7 +235,7 @@ namespace myFlatLightLogin.DalSQLite
                     Username = user.Username,
                     Email = user.Email,
                     FirebaseUid = user.FirebaseUid,
-                    Role = (UserRole)user.Role // Convert integer to enum
+                    Role = GetUserRole(user.RoleId) // Convert role ID to enum
                 };
             }
         }
@@ -237,7 +261,7 @@ namespace myFlatLightLogin.DalSQLite
                     Username = user.Username,
                     Email = user.Email,
                     FirebaseUid = user.FirebaseUid,
-                    Role = (UserRole)user.Role // Convert integer to enum
+                    Role = GetUserRole(user.RoleId) // Convert role ID to enum
                 };
             }
         }
@@ -271,7 +295,7 @@ namespace myFlatLightLogin.DalSQLite
                         FirebaseUid = firebaseUid,
                         LastModified = lastModified,
                         NeedsSync = false,
-                        Role = (int)userDto.Role // Store role from Firebase
+                        RoleId = GetRoleId(userDto.Role) // Convert enum to role ID
                     };
                     return conn.Insert(user) > 0;
                 }
@@ -285,7 +309,7 @@ namespace myFlatLightLogin.DalSQLite
                     user.FirebaseUid = firebaseUid;
                     user.LastModified = lastModified;
                     user.NeedsSync = false; // Don't sync back
-                    user.Role = (int)userDto.Role; // Update role from Firebase
+                    user.RoleId = GetRoleId(userDto.Role); // Update role ID from Firebase
 
                     return conn.Update(user) > 0;
                 }

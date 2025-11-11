@@ -50,10 +50,9 @@ namespace myFlatLightLogin.DalSQLite.Model
         public bool NeedsSync { get; set; }
 
         /// <summary>
-        /// User's role for application-level authorization.
-        /// 0 = User (standard), 1 = Admin (elevated permissions).
-        /// Stored as integer for SQLite compatibility.
+        /// Foreign key to the Role table.
+        /// References the user's role for application-level authorization.
         /// </summary>
-        public int Role { get; set; }
+        public int RoleId { get; set; }
     }
 }
