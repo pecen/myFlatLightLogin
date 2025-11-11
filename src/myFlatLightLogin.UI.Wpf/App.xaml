@@ -180,9 +180,9 @@
 
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="#ff131e" />
-                        <Setter Property="Foreground" Value="#ffffff" />
-                        <Setter Property="BorderBrush" Value="#ff131e" />
+                        <Setter Property="Background" Value="#e6e6e6" />
+                        <Setter Property="Foreground" Value="#3a3a3a" />
+                        <Setter Property="BorderBrush" Value="#bdbdbd" />
                     </Trigger>
                 </Style.Triggers>
             </Style>
