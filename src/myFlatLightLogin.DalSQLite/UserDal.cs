@@ -46,8 +46,25 @@ namespace myFlatLightLogin.DalSQLite
 
         public UserDto Fetch(int id)
         {
-            List<UserDto> items = DbCore.Fetch<UserDto>();
-            return items.FirstOrDefault(i => i.Id == id);
+            using (var conn = new SQLiteConnection(dbFile))
+            {
+                conn.CreateTable<User>();
+                var user = conn.Table<User>().FirstOrDefault(u => u.Id == id);
+
+                if (user == null)
+                    return null;
+
+                return new UserDto
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Lastname = user.Lastname,
+                    Username = user.Username,
+                    Email = user.Email,
+                    FirebaseUid = user.FirebaseUid,
+                    Role = GetUserRole(user.RoleId) // Convert role ID to enum
+                };
+            }
         }
 
         public bool Insert(UserDto userDto)
