@@ -26,6 +26,10 @@
                 <view:Home />
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type vm:RoleManagementViewModel}">
+                <view:RoleManagement />
+            </DataTemplate>
+
             <Style x:Key="topButton" TargetType="Button">
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="Foreground" Value="#ff131e" />

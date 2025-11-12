@@ -35,6 +35,7 @@ namespace FlatLightLogin
             services.AddSingleton<LoginViewModel>();
             services.AddSingleton<RegisterUserViewModel>();
             services.AddSingleton<HomeViewModel>();
+            services.AddSingleton<RoleManagementViewModel>();
 
             services.AddSingleton<INavigationService, NavigationService>();
 

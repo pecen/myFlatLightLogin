@@ -16,9 +16,16 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             private set => SetProperty(ref welcomeText, value);
         }
 
+        public RelayCommand NavigateToRoleManagementCommand { get; }
+
         public HomeViewModel(INavigationService navigationService)
         {
             Navigation = navigationService;
+
+            // Initialize commands
+            NavigateToRoleManagementCommand = new RelayCommand(
+                o => Navigation.NavigateTo<RoleManagementViewModel>(),
+                o => true);
 
             // Subscribe to user changes to update welcome text
             CurrentUserService.Instance.OnUserChanged += OnUserChanged;

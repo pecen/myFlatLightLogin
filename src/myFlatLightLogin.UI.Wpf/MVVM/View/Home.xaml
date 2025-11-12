@@ -51,6 +51,13 @@
                 FontSize="14"
                 Foreground="#909090"
                 Text="You have successfully logged in." />
+
+            <!--  Admin Tools  -->
+            <Button
+                Margin="0,40,0,0"
+                Command="{Binding NavigateToRoleManagementCommand}"
+                Content="Manage Roles (Admin)"
+                Style="{StaticResource mainButtonPrimary}" />
         </StackPanel>
     </Grid>
 </UserControl>
