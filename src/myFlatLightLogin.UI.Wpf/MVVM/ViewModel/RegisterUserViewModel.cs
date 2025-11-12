@@ -24,14 +24,22 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public string Name
         {
             get => _name;
-            set => SetProperty(ref _name, value);
+            set
+            {
+                SetProperty(ref _name, value);
+                ((AsyncRelayCommand)RegisterUserCommand)?.RaiseCanExecuteChanged();
+            }
         }
 
         private string _lastname = string.Empty;
         public string Lastname
         {
             get => _lastname;
-            set => SetProperty(ref _lastname, value);
+            set
+            {
+                SetProperty(ref _lastname, value);
+                ((AsyncRelayCommand)RegisterUserCommand)?.RaiseCanExecuteChanged();
+            }
         }
 
         private string _email = string.Empty;
@@ -328,6 +336,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         private bool CanRegister()
         {
             return !IsLoading &&
+                   !string.IsNullOrWhiteSpace(Name) &&
+                   !string.IsNullOrWhiteSpace(Lastname) &&
                    !string.IsNullOrWhiteSpace(Email) &&
                    !string.IsNullOrWhiteSpace(Password) &&
                    !string.IsNullOrWhiteSpace(ConfirmPassword) &&
