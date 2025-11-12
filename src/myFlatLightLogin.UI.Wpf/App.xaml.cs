@@ -19,6 +19,11 @@ namespace FlatLightLogin
     {
         private ServiceProvider _serviceProvider;
 
+        /// <summary>
+        /// Public access to the service provider for manual dependency resolution.
+        /// </summary>
+        public ServiceProvider ServiceProvider => _serviceProvider;
+
         public App()
         {
             // Configure Serilog
