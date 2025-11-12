@@ -5,6 +5,7 @@ using myFlatLightLogin.Dal.Dto;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace myFlatLightLogin.DalFirebase
@@ -16,14 +17,47 @@ namespace myFlatLightLogin.DalFirebase
     public class RoleDal : IRoleDal
     {
         private readonly FirebaseClient _dbClient;
+        private readonly SemaphoreSlim _initLock = new SemaphoreSlim(1, 1);
+        private bool _isInitialized = false;
 
         public RoleDal()
         {
             // Initialize Firebase client (no authentication needed for public role data)
             _dbClient = new FirebaseClient(FirebaseConfig.DatabaseUrl);
 
-            // Initialize roles on first run (seed default roles if needed)
-            InitializeRolesAsync().GetAwaiter().GetResult();
+            // Note: Roles are initialized lazily on first access to avoid blocking the constructor
+            // You can also call InitializeAsync() explicitly from async context
+        }
+
+        /// <summary>
+        /// Initializes Firebase roles. Call this method explicitly in async context if needed.
+        /// </summary>
+        public async Task InitializeAsync()
+        {
+            await EnsureInitializedAsync();
+        }
+
+        /// <summary>
+        /// Ensures roles are initialized (lazy initialization with thread safety).
+        /// </summary>
+        private async Task EnsureInitializedAsync()
+        {
+            if (_isInitialized)
+                return;
+
+            await _initLock.WaitAsync();
+            try
+            {
+                if (!_isInitialized)
+                {
+                    await InitializeRolesAsync();
+                    _isInitialized = true;
+                }
+            }
+            finally
+            {
+                _initLock.Release();
+            }
         }
 
         /// <summary>
@@ -150,6 +184,8 @@ namespace myFlatLightLogin.DalFirebase
         {
             try
             {
+                await EnsureInitializedAsync();
+
                 var role = await _dbClient
                     .Child("roles")
                     .Child(id.ToString())
@@ -180,6 +216,8 @@ namespace myFlatLightLogin.DalFirebase
         {
             try
             {
+                await EnsureInitializedAsync();
+
                 var roles = await _dbClient
                     .Child("roles")
                     .OnceAsync<FirebaseRole>();
@@ -211,6 +249,8 @@ namespace myFlatLightLogin.DalFirebase
         {
             try
             {
+                await EnsureInitializedAsync();
+
                 var roles = await _dbClient
                     .Child("roles")
                     .OnceAsync<FirebaseRole>();

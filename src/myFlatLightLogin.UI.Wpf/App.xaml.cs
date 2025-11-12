@@ -7,6 +7,7 @@ using myFlatLightLogin.UI.Wpf.MVVM.ViewModel;
 using Serilog;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace FlatLightLogin
@@ -74,29 +75,34 @@ namespace FlatLightLogin
         {
             Log.Information("OnStartup called");
 
-            // Initialize Firebase Roles (seeds default roles if they don't exist)
-            try
+            // Initialize Firebase Roles asynchronously (seeds default roles if they don't exist)
+            // This runs in the background to avoid blocking the UI thread
+            _ = Task.Run(async () =>
             {
-                Log.Information("Initializing Firebase Roles...");
-                var roleDal = new RoleDal();
-                Log.Information("Firebase Roles initialized successfully");
+                try
+                {
+                    Log.Information("Initializing Firebase Roles...");
+                    var roleDal = new RoleDal();
+                    await roleDal.InitializeAsync();
+                    Log.Information("Firebase Roles initialized successfully");
 
-                // OPTIONAL: Uncomment to migrate existing Firebase users to add Role field
-                // This only needs to be run once for existing users created before Role system
-                // After running once, you can comment it out again
-                /*
-                Log.Information("Running Firebase user migration...");
-                var migrationUtility = new FirebaseMigrationUtility();
-                int usersUpdated = await migrationUtility.MigrateUsersWithRoleFieldAsync();
-                Log.Information($"Migration complete. {usersUpdated} users updated with Role field.");
-                */
-            }
-            catch (Exception ex)
-            {
-                // Log error but don't prevent app startup
-                // Role initialization may fail if Firebase is not configured
-                Log.Warning($"Failed to initialize Firebase Roles: {ex.Message}");
-            }
+                    // OPTIONAL: Uncomment to migrate existing Firebase users to add Role field
+                    // This only needs to be run once for existing users created before Role system
+                    // After running once, you can comment it out again
+                    /*
+                    Log.Information("Running Firebase user migration...");
+                    var migrationUtility = new FirebaseMigrationUtility();
+                    int usersUpdated = await migrationUtility.MigrateUsersWithRoleFieldAsync();
+                    Log.Information($"Migration complete. {usersUpdated} users updated with Role field.");
+                    */
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't prevent app startup
+                    // Role initialization may fail if Firebase is not configured
+                    Log.Warning($"Failed to initialize Firebase Roles: {ex.Message}");
+                }
+            });
 
             var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             mainWindow.Show();
