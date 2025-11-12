@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using myFlatLightLogin.Core.MVVM;
 using myFlatLightLogin.Core.Services;
+using myFlatLightLogin.DalFirebase;
 using myFlatLightLogin.UI.Wpf.MVVM.View;
 using myFlatLightLogin.UI.Wpf.MVVM.ViewModel;
 using Serilog;
@@ -72,6 +73,20 @@ namespace FlatLightLogin
         protected override void OnStartup(StartupEventArgs e)
         {
             Log.Information("OnStartup called");
+
+            // Initialize Firebase Roles (seeds default roles if they don't exist)
+            try
+            {
+                Log.Information("Initializing Firebase Roles...");
+                var roleDal = new RoleDal();
+                Log.Information("Firebase Roles initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't prevent app startup
+                // Role initialization may fail if Firebase is not configured
+                Log.Warning($"Failed to initialize Firebase Roles: {ex.Message}");
+            }
 
             var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             mainWindow.Show();
