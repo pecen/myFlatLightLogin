@@ -28,18 +28,26 @@
                 </Grid.RowDefinitions>
 
             <!--  Header  -->
-            <StackPanel Grid.Row="0" Margin="0,0,0,20">
-                <TextBlock
-                    FontSize="24"
-                    FontWeight="Bold"
-                    Foreground="#5a5a5a"
-                    Text="Role Management" />
-                <TextBlock
-                    Margin="0,5,0,0"
-                    FontSize="12"
-                    Foreground="#7a7a7a"
-                    Text="Manage application roles (Firebase)" />
-            </StackPanel>
+            <Grid Grid.Row="0" Margin="0,0,0,20">
+                <StackPanel HorizontalAlignment="Left">
+                    <TextBlock
+                        FontSize="24"
+                        FontWeight="Bold"
+                        Foreground="#5a5a5a"
+                        Text="Role Management" />
+                    <TextBlock
+                        Margin="0,5,0,0"
+                        FontSize="12"
+                        Foreground="#7a7a7a"
+                        Text="Manage application roles (Firebase)" />
+                </StackPanel>
+                <Button
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Command="{Binding BackCommand}"
+                    Content="← Back to Home"
+                    Style="{StaticResource mainButton}" />
+            </Grid>
 
             <!--  Action Buttons  -->
             <StackPanel Grid.Row="1" Margin="0,0,0,10" Orientation="Horizontal">

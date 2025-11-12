@@ -87,6 +87,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public AsyncRelayCommand UpdateRoleCommand { get; }
         public AsyncRelayCommand DeleteRoleCommand { get; }
         public RelayCommand ClearFormCommand { get; }
+        public RelayCommand BackCommand { get; }
 
         #endregion
 
@@ -104,6 +105,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             UpdateRoleCommand = new AsyncRelayCommand(UpdateRoleAsync, () => !IsLoading && SelectedRole != null);
             DeleteRoleCommand = new AsyncRelayCommand(DeleteRoleAsync, () => !IsLoading && SelectedRole != null);
             ClearFormCommand = new RelayCommand(o => ClearForm(), o => true);
+            BackCommand = new RelayCommand(o => Navigation.NavigateTo<HomeViewModel>(), o => true);
 
             // Load roles on initialization
             _ = LoadRolesAsync();
@@ -145,6 +147,9 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     StatusMessage = "No roles found in Firebase. Click 'Seed Default Roles' to create them.";
                     Log.Warning("No roles found in Firebase");
                 }
+
+                // Update the form to show next auto-generated ID
+                ClearForm();
             }
             catch (Exception ex)
             {
@@ -230,9 +235,13 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 StatusMessage = "Adding new role...";
                 Log.Information($"Adding new role: {EditRoleName}");
 
+                // Auto-generate next Role ID
+                // Start from 3 since User=1 and Admin=2 are reserved
+                int nextId = Roles.Count > 0 ? Roles.Max(r => r.Id) + 1 : 3;
+
                 var newRole = new RoleDto
                 {
-                    Id = EditRoleId,
+                    Id = nextId,
                     Name = EditRoleName,
                     Description = EditRoleDescription
                 };
@@ -378,12 +387,13 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         }
 
         /// <summary>
-        /// Clears the form fields.
+        /// Clears the form fields and sets the next auto-generated Role ID.
         /// </summary>
         private void ClearForm()
         {
             SelectedRole = null;
-            EditRoleId = 0;
+            // Show the next auto-generated ID (starts from 3, as User=1 and Admin=2 are reserved)
+            EditRoleId = Roles.Count > 0 ? Roles.Max(r => r.Id) + 1 : 3;
             EditRoleName = string.Empty;
             EditRoleDescription = string.Empty;
         }
