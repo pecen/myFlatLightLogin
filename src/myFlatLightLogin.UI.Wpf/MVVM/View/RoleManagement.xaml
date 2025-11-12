@@ -167,6 +167,8 @@
                         Grid.Row="0"
                         Grid.Column="1"
                         Margin="0,5"
+                        Background="#f0f0f0"
+                        IsReadOnly="True"
                         Text="{Binding EditRoleId, UpdateSourceTrigger=PropertyChanged}" />
 
                     <!--  Role Name  -->
