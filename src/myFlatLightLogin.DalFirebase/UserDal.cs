@@ -272,6 +272,26 @@ namespace myFlatLightLogin.DalFirebase
 
                 if (profile != null)
                 {
+                    // Migration: If Role field is not explicitly set (default 0), update the profile
+                    // This ensures existing users without Role field get it added to Firebase
+                    bool needsRoleUpdate = false;
+                    if (profile.Role == 0 && string.IsNullOrEmpty(profile.UpdatedAt))
+                    {
+                        // User created before Role field existed, update with default role
+                        profile.Role = 0; // Explicitly set to User role
+                        profile.UpdatedAt = DateTime.UtcNow.ToString("o");
+                        needsRoleUpdate = true;
+                    }
+
+                    // Update profile in Firebase if needed (adds Role field for legacy users)
+                    if (needsRoleUpdate)
+                    {
+                        await dbClient
+                            .Child("users")
+                            .Child(_currentUser.User.Uid)
+                            .PutAsync(profile);
+                    }
+
                     return new UserDto
                     {
                         Id = profile.LocalId,
@@ -347,6 +367,10 @@ namespace myFlatLightLogin.DalFirebase
         public string Email { get; set; }
         public string CreatedAt { get; set; }
         public string UpdatedAt { get; set; }
-        public int Role { get; set; } // 0 = User, 1 = Admin
+
+        /// <summary>
+        /// User's role. 0 = User (default), 1 = Admin
+        /// </summary>
+        public int Role { get; set; } = 0; // Default to User role
     }
 }
