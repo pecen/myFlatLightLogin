@@ -127,17 +127,24 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                 var roles = await Task.Run(() => _roleDal.GetAllRoles());
 
+                Log.Information($"Retrieved {roles?.Count ?? 0} roles from Firebase");
+
                 Roles.Clear();
-                if (roles != null)
+                if (roles != null && roles.Count > 0)
                 {
                     foreach (var role in roles)
                     {
+                        Log.Information($"Adding role: ID={role.Id}, Name={role.Name}, Description={role.Description}");
                         Roles.Add(role);
                     }
+                    StatusMessage = $"Loaded {Roles.Count} roles successfully.";
+                    Log.Information($"Successfully loaded {Roles.Count} roles into UI");
                 }
-
-                StatusMessage = $"Loaded {Roles.Count} roles successfully.";
-                Log.Information($"Loaded {Roles.Count} roles from Firebase");
+                else
+                {
+                    StatusMessage = "No roles found in Firebase. Click 'Seed Default Roles' to create them.";
+                    Log.Warning("No roles found in Firebase");
+                }
             }
             catch (Exception ex)
             {
