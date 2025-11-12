@@ -362,7 +362,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// <summary>
         /// Handles connectivity changes.
         /// </summary>
-        private void OnConnectivityChanged(object sender, bool isOnline)
+        private void OnConnectivityChanged(object? sender, bool isOnline)
         {
             IsOnline = isOnline;
 

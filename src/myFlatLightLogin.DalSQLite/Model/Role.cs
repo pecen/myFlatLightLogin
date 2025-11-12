@@ -18,12 +18,12 @@ namespace myFlatLightLogin.DalSQLite.Model
         /// Role name (e.g., "Admin", "User", "Manager").
         /// </summary>
         [MaxLength(50), Unique, NotNull]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Optional description of the role.
         /// </summary>
         [MaxLength(200)]
-        public string Description { get; set; }
+        public string? Description { get; set; }
     }
 }

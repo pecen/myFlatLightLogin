@@ -14,11 +14,11 @@ namespace myFlatLightLogin.Dal.Dto
         /// <summary>
         /// Role name (e.g., "User", "Admin").
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Optional description of the role.
         /// </summary>
-        public string Description { get; set; }
+        public string? Description { get; set; }
     }
 }
