@@ -65,7 +65,7 @@ namespace myFlatLightLogin.DalSQLite
         /// <summary>
         /// Gets a role by its ID.
         /// </summary>
-        public RoleDto GetRoleById(int id)
+        public RoleDto? GetRoleById(int id)
         {
             using (var conn = new SQLiteConnection(_dbPath))
             {
@@ -158,8 +158,8 @@ namespace myFlatLightLogin.DalSQLite
             return new Role
             {
                 Id = roleDto.Id,
-                Name = roleDto.Name,
-                Description = roleDto.Description
+                Name = roleDto.Name ?? string.Empty,
+                Description = roleDto.Description ?? string.Empty
             };
         }
 
