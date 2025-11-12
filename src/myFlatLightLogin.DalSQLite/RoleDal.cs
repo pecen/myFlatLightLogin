@@ -1,3 +1,5 @@
+using myFlatLightLogin.Dal;
+using myFlatLightLogin.Dal.Dto;
 using myFlatLightLogin.DalSQLite.Model;
 using SQLite;
 using System;
@@ -10,7 +12,7 @@ namespace myFlatLightLogin.DalSQLite
     /// <summary>
     /// Data Access Layer for Role operations in SQLite.
     /// </summary>
-    public class RoleDal
+    public class RoleDal : IRoleDal
     {
         private readonly string _dbPath;
 
@@ -63,43 +65,46 @@ namespace myFlatLightLogin.DalSQLite
         /// <summary>
         /// Gets a role by its ID.
         /// </summary>
-        public Role GetRoleById(int id)
+        public RoleDto GetRoleById(int id)
         {
             using (var conn = new SQLiteConnection(_dbPath))
             {
-                return conn.Table<Role>().FirstOrDefault(r => r.Id == id);
+                var role = conn.Table<Role>().FirstOrDefault(r => r.Id == id);
+                return role != null ? ConvertToDto(role) : null;
             }
         }
 
         /// <summary>
         /// Gets a role by its name.
         /// </summary>
-        public Role GetRoleByName(string name)
+        public RoleDto GetRoleByName(string name)
         {
             using (var conn = new SQLiteConnection(_dbPath))
             {
-                return conn.Table<Role>().FirstOrDefault(r => r.Name == name);
+                var role = conn.Table<Role>().FirstOrDefault(r => r.Name == name);
+                return role != null ? ConvertToDto(role) : null;
             }
         }
 
         /// <summary>
         /// Gets all roles.
         /// </summary>
-        public List<Role> GetAllRoles()
+        public List<RoleDto> GetAllRoles()
         {
             using (var conn = new SQLiteConnection(_dbPath))
             {
-                return conn.Table<Role>().ToList();
+                return conn.Table<Role>().ToList().Select(ConvertToDto).ToList();
             }
         }
 
         /// <summary>
         /// Adds a new role.
         /// </summary>
-        public bool InsertRole(Role role)
+        public bool InsertRole(RoleDto roleDto)
         {
             using (var conn = new SQLiteConnection(_dbPath))
             {
+                var role = ConvertToModel(roleDto);
                 int rowsAffected = conn.Insert(role);
                 return rowsAffected > 0;
             }
@@ -108,10 +113,11 @@ namespace myFlatLightLogin.DalSQLite
         /// <summary>
         /// Updates an existing role.
         /// </summary>
-        public bool UpdateRole(Role role)
+        public bool UpdateRole(RoleDto roleDto)
         {
             using (var conn = new SQLiteConnection(_dbPath))
             {
+                var role = ConvertToModel(roleDto);
                 int rowsAffected = conn.Update(role);
                 return rowsAffected > 0;
             }
@@ -128,5 +134,35 @@ namespace myFlatLightLogin.DalSQLite
                 return rowsAffected > 0;
             }
         }
+
+        #region Helper Methods
+
+        /// <summary>
+        /// Converts a Role model to RoleDto.
+        /// </summary>
+        private RoleDto ConvertToDto(Role role)
+        {
+            return new RoleDto
+            {
+                Id = role.Id,
+                Name = role.Name,
+                Description = role.Description
+            };
+        }
+
+        /// <summary>
+        /// Converts a RoleDto to Role model.
+        /// </summary>
+        private Role ConvertToModel(RoleDto roleDto)
+        {
+            return new Role
+            {
+                Id = roleDto.Id,
+                Name = roleDto.Name,
+                Description = roleDto.Description
+            };
+        }
+
+        #endregion
     }
 }
