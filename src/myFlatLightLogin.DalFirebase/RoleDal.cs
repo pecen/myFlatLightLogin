@@ -241,7 +241,10 @@ namespace myFlatLightLogin.DalFirebase
                     .Child("roles")
                     .OnceAsync<FirebaseRole>();
 
-                var role = roles.FirstOrDefault(r => r.Object.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+                // Filter out null entries and find by name
+                var role = roles
+                    .Where(r => r.Object != null)
+                    .FirstOrDefault(r => r.Object.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
 
                 if (role != null)
                 {
@@ -274,12 +277,15 @@ namespace myFlatLightLogin.DalFirebase
                     .Child("roles")
                     .OnceAsync<FirebaseRole>();
 
-                return roles.Select(r => new RoleDto
-                {
-                    Id = r.Object.Id,
-                    Name = r.Object.Name,
-                    Description = r.Object.Description
-                }).ToList();
+                // Filter out null entries (Firebase returns null for missing array indices)
+                return roles
+                    .Where(r => r.Object != null)
+                    .Select(r => new RoleDto
+                    {
+                        Id = r.Object.Id,
+                        Name = r.Object.Name,
+                        Description = r.Object.Description
+                    }).ToList();
             }
             catch (Exception ex)
             {
