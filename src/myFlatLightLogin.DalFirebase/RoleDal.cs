@@ -237,8 +237,11 @@ namespace myFlatLightLogin.DalFirebase
             {
                 await EnsureInitializedAsync();
 
+                // Use OrderByKey and StartAt to skip the null entry at index 0
                 var roles = await _dbClient
                     .Child("roles")
+                    .OrderByKey()
+                    .StartAt("1") // Start at key "1" to skip null at index 0
                     .OnceAsync<FirebaseRole>();
 
                 // Filter out null entries and find by name
@@ -273,11 +276,15 @@ namespace myFlatLightLogin.DalFirebase
             {
                 await EnsureInitializedAsync();
 
+                // Use OrderByKey and StartAt to skip the null entry at index 0
+                // This prevents JSON deserialization errors when Firebase returns array format
                 var roles = await _dbClient
                     .Child("roles")
+                    .OrderByKey()
+                    .StartAt("1") // Start at key "1" to skip null at index 0
                     .OnceAsync<FirebaseRole>();
 
-                // Filter out null entries (Firebase returns null for missing array indices)
+                // Filter out any remaining null entries and convert to DTOs
                 return roles
                     .Where(r => r.Object != null)
                     .Select(r => new RoleDto
