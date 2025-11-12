@@ -30,7 +30,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// <summary>
         /// Updates the welcome text when the current user changes.
         /// </summary>
-        private void OnUserChanged(object sender, Dal.Dto.UserDto? user)
+        private void OnUserChanged(object? sender, Dal.Dto.UserDto? user)
         {
             UpdateWelcomeText();
         }
