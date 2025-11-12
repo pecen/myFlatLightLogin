@@ -67,28 +67,74 @@
                 Header="Existing Roles">
                 <DataGrid
                     MinHeight="200"
+                    Background="White"
                     AlternatingRowBackground="#f5f5f5"
                     AutoGenerateColumns="False"
                     CanUserAddRows="False"
+                    BorderBrush="#cccccc"
+                    BorderThickness="1"
+                    FontSize="14"
+                    Foreground="#000000"
                     GridLinesVisibility="All"
                     HeadersVisibility="Column"
                     IsReadOnly="True"
                     ItemsSource="{Binding Roles}"
-                    RowHeight="30"
+                    RowBackground="White"
+                    RowHeight="40"
                     SelectedItem="{Binding SelectedRole}">
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="#e0e0e0" />
+                            <Setter Property="Foreground" Value="#000000" />
+                            <Setter Property="FontWeight" Value="Bold" />
+                            <Setter Property="Padding" Value="10,5" />
+                            <Setter Property="BorderBrush" Value="#cccccc" />
+                            <Setter Property="BorderThickness" Value="0,0,1,1" />
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
+                    <DataGrid.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="Padding" Value="10,5" />
+                            <Setter Property="BorderBrush" Value="#e0e0e0" />
+                            <Setter Property="BorderThickness" Value="0,0,1,1" />
+                            <Setter Property="VerticalAlignment" Value="Center" />
+                        </Style>
+                    </DataGrid.CellStyle>
                     <DataGrid.Columns>
                         <DataGridTextColumn
                             Width="80"
                             Binding="{Binding Id}"
-                            Header="ID" />
+                            Header="ID">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#000000" />
+                                    <Setter Property="FontSize" Value="14" />
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
                         <DataGridTextColumn
                             Width="150"
                             Binding="{Binding Name}"
-                            Header="Name" />
+                            Header="Name">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#000000" />
+                                    <Setter Property="FontSize" Value="14" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
                         <DataGridTextColumn
                             Width="*"
                             Binding="{Binding Description}"
-                            Header="Description" />
+                            Header="Description">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#000000" />
+                                    <Setter Property="FontSize" Value="14" />
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
                     </DataGrid.Columns>
                 </DataGrid>
             </GroupBox>
