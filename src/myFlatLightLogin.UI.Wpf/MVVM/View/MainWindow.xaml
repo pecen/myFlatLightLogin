@@ -124,11 +124,26 @@
                     Margin="10"
                     HorizontalAlignment="Right"
                     Orientation="Horizontal">
-                    <Button Content="Home" Style="{StaticResource bottomButton}" />
-                    <Button Content="Features" Style="{StaticResource bottomButton}" />
-                    <Button Content="Solutions" Style="{StaticResource bottomButton}" />
-                    <Button Content="Videos" Style="{StaticResource bottomButton}" />
-                    <Button Content="About" Style="{StaticResource bottomButton}" />
+                    <Button
+                        Content="Home"
+                        IsEnabled="{Binding IsUserLoggedIn}"
+                        Style="{StaticResource bottomButton}" />
+                    <Button
+                        Content="Features"
+                        IsEnabled="{Binding IsUserLoggedIn}"
+                        Style="{StaticResource bottomButton}" />
+                    <Button
+                        Content="Solutions"
+                        IsEnabled="{Binding IsUserLoggedIn}"
+                        Style="{StaticResource bottomButton}" />
+                    <Button
+                        Content="Videos"
+                        IsEnabled="{Binding IsUserLoggedIn}"
+                        Style="{StaticResource bottomButton}" />
+                    <Button
+                        Content="About"
+                        IsEnabled="{Binding IsUserLoggedIn}"
+                        Style="{StaticResource bottomButton}" />
 
                     <!--  Admin-Only Log Access Buttons  -->
                     <Button

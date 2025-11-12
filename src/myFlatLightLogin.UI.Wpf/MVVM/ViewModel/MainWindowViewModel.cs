@@ -33,6 +33,11 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// </summary>
         public bool IsUserAdministrator => CurrentUserService.Instance.IsAdmin;
 
+        /// <summary>
+        /// Gets whether a user is currently logged in.
+        /// </summary>
+        public bool IsUserLoggedIn => CurrentUserService.Instance.CurrentUser != null;
+
         public MainWindowViewModel(INavigationService navigationService, LoginViewModel loginViewModel)
         {
             Navigation = navigationService;
@@ -70,8 +75,9 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             // Subscribe to user changes to update admin-only features visibility
             CurrentUserService.Instance.OnUserChanged += (sender, user) =>
             {
-                // Notify UI that IsUserAdministrator may have changed
+                // Notify UI that IsUserAdministrator and IsUserLoggedIn may have changed
                 OnPropertyChanged(nameof(IsUserAdministrator));
+                OnPropertyChanged(nameof(IsUserLoggedIn));
 
                 // Update CanExecute for admin commands
                 OpenLogsFolderCommand?.RaiseCanExecuteChanged();
