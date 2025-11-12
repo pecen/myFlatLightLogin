@@ -300,6 +300,7 @@ namespace myFlatLightLogin.DalFirebase
                         Username = profile.Email,
                         Email = profile.Email,
                         FirebaseUid = profile.FirebaseUid,
+                        FirebaseAuthToken = _currentUser.User.Credential.IdToken, // Store auth token for authenticated API calls
                         Role = (UserRole)profile.Role // Convert integer to enum
                     };
                 }

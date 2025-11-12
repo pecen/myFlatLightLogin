@@ -16,14 +16,33 @@ namespace myFlatLightLogin.DalFirebase
     /// </summary>
     public class RoleDal : IRoleDal
     {
-        private readonly FirebaseClient _dbClient;
+        private FirebaseClient _dbClient;
         private readonly SemaphoreSlim _initLock = new SemaphoreSlim(1, 1);
         private bool _isInitialized = false;
+        private readonly string _authToken;
 
-        public RoleDal()
+        /// <summary>
+        /// Initializes a new instance of RoleDal.
+        /// </summary>
+        /// <param name="authToken">Optional authentication token for Firebase access.</param>
+        public RoleDal(string authToken = null)
         {
-            // Initialize Firebase client (no authentication needed for public role data)
-            _dbClient = new FirebaseClient(FirebaseConfig.DatabaseUrl);
+            _authToken = authToken;
+
+            // Initialize Firebase client with or without authentication
+            if (!string.IsNullOrEmpty(_authToken))
+            {
+                var options = new FirebaseOptions
+                {
+                    AuthTokenAsyncFactory = () => Task.FromResult(_authToken)
+                };
+                _dbClient = new FirebaseClient(FirebaseConfig.DatabaseUrl, options);
+            }
+            else
+            {
+                // Unauthenticated client (will only work if Firebase rules allow public access)
+                _dbClient = new FirebaseClient(FirebaseConfig.DatabaseUrl);
+            }
 
             // Note: Roles are initialized lazily on first access to avoid blocking the constructor
             // You can also call InitializeAsync() explicitly from async context

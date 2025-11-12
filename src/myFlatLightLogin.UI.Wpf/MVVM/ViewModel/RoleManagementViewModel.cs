@@ -93,7 +93,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public RoleManagementViewModel(INavigationService navigationService)
         {
             Navigation = navigationService;
-            _roleDal = new RoleDal();
+
+            // Get auth token from current user for Firebase authentication
+            var authToken = CurrentUserService.Instance.CurrentUser?.FirebaseAuthToken;
+            _roleDal = new RoleDal(authToken);
 
             LoadRolesCommand = new AsyncRelayCommand(LoadRolesAsync, () => !IsLoading);
             SeedDefaultRolesCommand = new AsyncRelayCommand(SeedDefaultRolesAsync, () => !IsLoading);

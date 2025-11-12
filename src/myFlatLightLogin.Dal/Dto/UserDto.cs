@@ -47,6 +47,11 @@
         public string? FirebaseUid { get; set; }
 
         /// <summary>
+        /// Firebase authentication token for authenticated API calls.
+        /// </summary>
+        public string? FirebaseAuthToken { get; set; }
+
+        /// <summary>
         /// User's role for application-level authorization.
         /// Default is User (0). First registered user becomes Admin (1).
         /// </summary>
