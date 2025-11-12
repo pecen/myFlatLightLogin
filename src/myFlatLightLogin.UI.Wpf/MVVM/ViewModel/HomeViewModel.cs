@@ -1,5 +1,6 @@
 using myFlatLightLogin.Core.MVVM;
 using myFlatLightLogin.Core.Services;
+using myFlatLightLogin.Dal.Dto;
 
 namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
@@ -16,6 +17,13 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             private set => SetProperty(ref welcomeText, value);
         }
 
+        private bool _isUserAdmin;
+        public bool IsUserAdmin
+        {
+            get => _isUserAdmin;
+            private set => SetProperty(ref _isUserAdmin, value);
+        }
+
         public RelayCommand NavigateToRoleManagementCommand { get; }
 
         public HomeViewModel(INavigationService navigationService)
@@ -25,13 +33,14 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             // Initialize commands
             NavigateToRoleManagementCommand = new RelayCommand(
                 o => Navigation.NavigateTo<RoleManagementViewModel>(),
-                o => true);
+                o => IsUserAdmin);
 
             // Subscribe to user changes to update welcome text
             CurrentUserService.Instance.OnUserChanged += OnUserChanged;
 
-            // Set initial welcome text
+            // Set initial welcome text and role check
             UpdateWelcomeText();
+            UpdateUserRole();
         }
 
         /// <summary>
@@ -40,6 +49,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         private void OnUserChanged(object? sender, Dal.Dto.UserDto? user)
         {
             UpdateWelcomeText();
+            UpdateUserRole();
         }
 
         /// <summary>
@@ -49,6 +59,15 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         {
             var userName = CurrentUserService.Instance.GetDisplayName();
             WelcomeText = $"Welcome, {userName}!";
+        }
+
+        /// <summary>
+        /// Updates the user role status (checks if user is admin).
+        /// </summary>
+        private void UpdateUserRole()
+        {
+            var currentUser = CurrentUserService.Instance.CurrentUser;
+            IsUserAdmin = currentUser?.Role == UserRole.Admin;
         }
     }
 }
