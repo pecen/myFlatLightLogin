@@ -99,6 +99,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public RelayCommand NavigateToRegisterUserCommand { get; set; }
         public AsyncRelayCommand LoginCommand { get; set; }
         public RelayCommand TogglePasswordVisibilityCommand { get; set; }
+        public AsyncRelayCommand MigrateUserRolesCommand { get; set; }
 
         #endregion
 
@@ -135,6 +136,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             TogglePasswordVisibilityCommand = new RelayCommand(
                 o => IsPasswordVisible = !IsPasswordVisible,
                 o => true);
+
+            MigrateUserRolesCommand = new AsyncRelayCommand(MigrateUserRolesAsync, () => !IsLoading);
 
             // Clear form when view loads (in case returning from another view)
             ClearForm();
@@ -338,6 +341,74 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             else
             {
                 StatusMessage = "Offline mode. You can still sign in with cached credentials.";
+            }
+        }
+
+        /// <summary>
+        /// Migrates user roles from old enum values to new enum values.
+        /// OLD: User=0, Admin=1 -> NEW: User=1, Admin=2
+        /// </summary>
+        private async Task MigrateUserRolesAsync()
+        {
+            var window = (MetroWindow)Application.Current.MainWindow;
+
+            try
+            {
+                IsLoading = true;
+                StatusMessage = "Migrating user roles...";
+                _logger.Information("Starting user role migration...");
+
+                var result = await Utilities.UserRoleMigrationUtility.MigrateUserRolesAsync();
+
+                if (result.success)
+                {
+                    StatusMessage = result.message;
+                    _logger.Information("Migration completed: {Message}", result.message);
+
+                    await window.ShowMessageAsync("Migration Successful",
+                        result.message,
+                        MessageDialogStyle.Affirmative,
+                        new MetroDialogSettings
+                        {
+                            AffirmativeButtonText = "OK",
+                            AnimateShow = true,
+                            AnimateHide = true
+                        });
+                }
+                else
+                {
+                    StatusMessage = $"Migration failed: {result.message}";
+                    _logger.Error("Migration failed: {Message}", result.message);
+
+                    await window.ShowMessageAsync("Migration Failed",
+                        result.message,
+                        MessageDialogStyle.Affirmative,
+                        new MetroDialogSettings
+                        {
+                            AffirmativeButtonText = "OK",
+                            AnimateShow = true,
+                            AnimateHide = true
+                        });
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Migration error: {ex.Message}";
+                _logger.Error(ex, "Migration failed with exception");
+
+                await window.ShowMessageAsync("Migration Error",
+                    $"An error occurred during migration: {ex.Message}",
+                    MessageDialogStyle.Affirmative,
+                    new MetroDialogSettings
+                    {
+                        AffirmativeButtonText = "OK",
+                        AnimateShow = true,
+                        AnimateHide = true
+                    });
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 
