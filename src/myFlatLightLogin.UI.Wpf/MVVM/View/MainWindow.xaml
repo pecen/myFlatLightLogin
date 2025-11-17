@@ -124,11 +124,71 @@
                     Margin="10"
                     HorizontalAlignment="Right"
                     Orientation="Horizontal">
-                    <Button Content="Home" Style="{StaticResource bottomButton}" />
-                    <Button Content="Contacts" Style="{StaticResource bottomButton}" />
-                    <Button Content="Solutions" Style="{StaticResource bottomButton}" />
-                    <Button Content="Videos" Style="{StaticResource bottomButton}" />
-                    <Button Content="About" Style="{StaticResource bottomButton}" />
+                    <Button
+                        Content="Home"
+                        IsEnabled="{Binding IsUserLoggedIn}"
+                        Style="{StaticResource bottomButton}" />
+                    <Button
+                        Content="Features"
+                        IsEnabled="{Binding IsUserLoggedIn}"
+                        Style="{StaticResource bottomButton}" />
+                    <Button
+                        Content="Solutions"
+                        IsEnabled="{Binding IsUserLoggedIn}"
+                        Style="{StaticResource bottomButton}" />
+                    <Button
+                        Content="Videos"
+                        IsEnabled="{Binding IsUserLoggedIn}"
+                        Style="{StaticResource bottomButton}" />
+                    <Button
+                        Content="About"
+                        IsEnabled="{Binding IsUserLoggedIn}"
+                        Style="{StaticResource bottomButton}" />
+
+                    <!--  Admin-Only Sync Status and Button  -->
+                    <StackPanel
+                        Margin="5,0"
+                        Orientation="Horizontal"
+                        Visibility="{Binding IsUserAdministrator, Converter={StaticResource BoolToVis}}">
+                        <TextBlock
+                            Margin="10,0"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="#606060">
+                            <Run Text="Sync:" />
+                            <Run FontWeight="SemiBold" Text="{Binding SyncStatusMessage}" />
+                        </TextBlock>
+                        <Button
+                            Command="{Binding SyncNowCommand}"
+                            Style="{StaticResource bottomButton}"
+                            ToolTip="Manually sync pending users to Firebase (Admin only)">
+                            <StackPanel Orientation="Horizontal">
+                                <icon:PackIconMaterial
+                                    Width="14"
+                                    Height="14"
+                                    Margin="0,0,5,0"
+                                    VerticalAlignment="Center"
+                                    Kind="Sync"
+                                    Spin="{Binding IsSyncing}" />
+                                <TextBlock Text="Sync Now" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <!--  Admin-Only Log Access Buttons  -->
+                    <Button
+                        Command="{Binding ViewCurrentLogCommand}"
+                        Content="View Logs"
+                        Style="{StaticResource bottomButton}"
+                        Visibility="{Binding IsUserAdministrator, Converter={StaticResource BoolToVis}}"
+                        ToolTip="Open current log file (Admin only)" />
+                    <Button
+                        Command="{Binding OpenLogsFolderCommand}"
+                        Content="Logs Folder"
+                        Style="{StaticResource bottomButton}"
+                        Visibility="{Binding IsUserAdministrator, Converter={StaticResource BoolToVis}}"
+                        ToolTip="Open logs folder (Admin only)" />
+
                     <Button
                         Command="{Binding NavigateToLoginCommand}"
                         Content="Login"

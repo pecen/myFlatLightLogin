@@ -9,7 +9,11 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <converter:BoolToVisibilityPwdText x:Key="BoolToVisPwd" />
+        <converter:InvertedBooleanToVisibilityConverter x:Key="InvertedBoolToVis" />
     </UserControl.Resources>
+    <UserControl.InputBindings>
+        <KeyBinding Key="Return" Command="{Binding RegisterUserCommand}" />
+    </UserControl.InputBindings>
     <Border
         Width="300"
         Padding="30"
@@ -25,7 +29,47 @@
                 FontSize="16"
                 FontWeight="SemiBold"
                 Foreground="#5a5a5a"
-                Text="Login or Register" />
+                Text="Register New Account" />
+
+            <!--  Name TextBox  -->
+            <Grid>
+                <TextBlock
+                    Margin="35,0,5,0"
+                    VerticalAlignment="Center"
+                    Panel.ZIndex="1"
+                    Foreground="#bdbdbd"
+                    IsHitTestVisible="False"
+                    Text="Enter Name"
+                    Visibility="{Binding ElementName=txtName, Path=Text.IsEmpty, Converter={StaticResource BoolToVis}}" />
+                <TextBox x:Name="txtName" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+
+                <icon:PackIconMaterial
+                    Width="15"
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    Foreground="#c7c7c7"
+                    Kind="AccountOutline" />
+            </Grid>
+
+            <!--  Lastname TextBox  -->
+            <Grid>
+                <TextBlock
+                    Margin="35,0,5,0"
+                    VerticalAlignment="Center"
+                    Panel.ZIndex="1"
+                    Foreground="#bdbdbd"
+                    IsHitTestVisible="False"
+                    Text="Enter Lastname"
+                    Visibility="{Binding ElementName=txtLastname, Path=Text.IsEmpty, Converter={StaticResource BoolToVis}}" />
+                <TextBox x:Name="txtLastname" Text="{Binding Lastname, UpdateSourceTrigger=PropertyChanged}" />
+
+                <icon:PackIconMaterial
+                    Width="15"
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    Foreground="#c7c7c7"
+                    Kind="AccountOutline" />
+            </Grid>
 
             <!--  Email TextBox  -->
             <Grid>
@@ -37,7 +81,7 @@
                     IsHitTestVisible="False"
                     Text="Enter Email"
                     Visibility="{Binding ElementName=txtEmail, Path=Text.IsEmpty, Converter={StaticResource BoolToVis}}" />
-                <TextBox x:Name="txtEmail" />
+                <TextBox x:Name="txtEmail" Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" />
 
                 <icon:PackIconMaterial
                     Width="15"
@@ -47,10 +91,11 @@
                     Kind="EmailVariant" />
             </Grid>
 
-            <!--  Password TextBox  -->
+            <!--  Password TextBox with Show/Hide Toggle  -->
             <Grid>
+                <!--  Placeholder text  -->
                 <TextBlock
-                    Margin="35,0,5,0"
+                    Margin="35,0,40,0"
                     VerticalAlignment="Center"
                     Panel.ZIndex="1"
                     Foreground="#bdbdbd"
@@ -58,26 +103,68 @@
                     Text="Enter Password"
                     Visibility="{Binding PwdIsEmpty, Converter={StaticResource BoolToVis}}" />
 
-                <PasswordBox x:Name="txtPassword">
-
+                <!--  PasswordBox (hidden password) - Visible when IsPasswordVisible is False  -->
+                <PasswordBox
+                    x:Name="txtPassword"
+                    Visibility="{Binding IsPasswordVisible, Converter={StaticResource InvertedBoolToVis}}">
                     <i:Interaction.Behaviors>
                         <behavior:PasswordBoxBehavior />
                     </i:Interaction.Behaviors>
-
                 </PasswordBox>
 
+                <!--  TextBox (visible password)  -->
+                <TextBox
+                    x:Name="txtPasswordVisible"
+                    Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
+                    Visibility="{Binding IsPasswordVisible, Converter={StaticResource BoolToVis}}" />
+
+                <!--  Lock Icon (left side)  -->
                 <icon:PackIconMaterial
                     Width="15"
                     Margin="10,0,0,0"
+                    HorizontalAlignment="Left"
                     VerticalAlignment="Center"
+                    Panel.ZIndex="2"
                     Foreground="#c7c7c7"
                     Kind="LockOutline" />
+
+                <!--  Eye Icon Toggle Button (right side, inside field)  -->
+                <Button
+                    Width="24"
+                    Height="24"
+                    Margin="0,0,5,0"
+                    Padding="0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Panel.ZIndex="2"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{Binding TogglePasswordVisibilityCommand}"
+                    Cursor="Hand"
+                    ToolTip="Show/Hide Password">
+                    <icon:PackIconMaterial
+                        Width="16"
+                        Height="16"
+                        Foreground="#5a5a5a">
+                        <icon:PackIconMaterial.Style>
+                            <Style TargetType="icon:PackIconMaterial">
+                                <Setter Property="Kind" Value="EyeOutline" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsPasswordVisible}" Value="True">
+                                        <Setter Property="Kind" Value="EyeOffOutline" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </icon:PackIconMaterial.Style>
+                    </icon:PackIconMaterial>
+                </Button>
             </Grid>
 
-            <!--  Confirm Password TextBox  -->
+            <!--  Confirm Password TextBox with Show/Hide Toggle  -->
             <Grid>
+                <!--  Placeholder text  -->
                 <TextBlock
-                    Margin="35,0,5,0"
+                    Margin="35,0,40,0"
                     VerticalAlignment="Center"
                     Panel.ZIndex="1"
                     Foreground="#bdbdbd"
@@ -85,20 +172,61 @@
                     Text="Confirm Password"
                     Visibility="{Binding ConfirmPwdIsEmpty, Converter={StaticResource BoolToVis}}" />
 
-                <PasswordBox x:Name="txtConfirmPassword">
-
+                <!--  PasswordBox (hidden password) - Visible when IsConfirmPasswordVisible is False  -->
+                <PasswordBox
+                    x:Name="txtConfirmPassword"
+                    Visibility="{Binding IsConfirmPasswordVisible, Converter={StaticResource InvertedBoolToVis}}">
                     <i:Interaction.Behaviors>
                         <behavior:PasswordBoxBehavior />
                     </i:Interaction.Behaviors>
-
                 </PasswordBox>
 
+                <!--  TextBox (visible password)  -->
+                <TextBox
+                    x:Name="txtConfirmPasswordVisible"
+                    Text="{Binding ConfirmPassword, UpdateSourceTrigger=PropertyChanged}"
+                    Visibility="{Binding IsConfirmPasswordVisible, Converter={StaticResource BoolToVis}}" />
+
+                <!--  Check Icon (left side)  -->
                 <icon:PackIconMaterial
                     Width="15"
                     Margin="10,0,0,0"
+                    HorizontalAlignment="Left"
                     VerticalAlignment="Center"
+                    Panel.ZIndex="2"
                     Foreground="#c7c7c7"
                     Kind="CheckCircleOutline" />
+
+                <!--  Eye Icon Toggle Button (right side, inside field)  -->
+                <Button
+                    Width="24"
+                    Height="24"
+                    Margin="0,0,5,0"
+                    Padding="0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Panel.ZIndex="2"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{Binding ToggleConfirmPasswordVisibilityCommand}"
+                    Cursor="Hand"
+                    ToolTip="Show/Hide Confirm Password">
+                    <icon:PackIconMaterial
+                        Width="16"
+                        Height="16"
+                        Foreground="#5a5a5a">
+                        <icon:PackIconMaterial.Style>
+                            <Style TargetType="icon:PackIconMaterial">
+                                <Setter Property="Kind" Value="EyeOutline" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsConfirmPasswordVisible}" Value="True">
+                                        <Setter Property="Kind" Value="EyeOffOutline" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </icon:PackIconMaterial.Style>
+                    </icon:PackIconMaterial>
+                </Button>
             </Grid>
 
             <!--<CheckBox
@@ -122,12 +250,9 @@
                 <Button
                     Grid.Column="1"
                     Margin="5,0,0,0"
-                    Background="#ff131e"
-                    BorderBrush="#ff131e"
                     Command="{Binding RegisterUserCommand}"
                     Content="Register"
-                    Foreground="#ffffff"
-                    Style="{StaticResource mainButton}" />
+                    Style="{StaticResource mainButtonPrimary}" />
             </Grid>
 
             <!--  Or Text  -->
