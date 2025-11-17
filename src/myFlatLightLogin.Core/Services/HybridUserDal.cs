@@ -145,10 +145,20 @@ namespace myFlatLightLogin.Core.Services
             bool isOnline = _connectivityService.CheckConnectivity();
             _logger.Information("Fresh connectivity check: {IsOnline}", isOnline);
 
+            // Additional check: Can we actually reach Firebase servers?
+            // This is critical for VM scenarios where network adapters appear "up" but have no real connectivity
+            bool canReachFirebase = false;
+            if (isOnline)
+            {
+                _logger.Information("Network appears online, testing Firebase reachability...");
+                canReachFirebase = await _connectivityService.CanReachFirebaseAsync();
+                _logger.Information("Firebase reachability test result: {CanReach}", canReachFirebase);
+            }
+
             UserDto user = null;
 
-            // Try Firebase first if online
-            if (isOnline)
+            // Try Firebase first if we can actually reach it
+            if (isOnline && canReachFirebase)
             {
                 _logger.Information("Attempting Firebase sign in...");
                 try
@@ -205,7 +215,14 @@ namespace myFlatLightLogin.Core.Services
             }
             else
             {
-                _logger.Information("Offline mode detected - skipping Firebase");
+                if (!isOnline)
+                {
+                    _logger.Information("Offline mode detected - skipping Firebase");
+                }
+                else
+                {
+                    _logger.Information("Firebase unreachable - skipping Firebase, using SQLite only");
+                }
             }
 
             // Firebase failed or offline - try SQLite
@@ -235,6 +252,8 @@ namespace myFlatLightLogin.Core.Services
         /// </summary>
         public async Task<bool> RegisterAsync(UserDto user)
         {
+            _logger.Information("RegisterAsync called for: {Email}", user.Email);
+
             // Check if email already exists
             var existingUser = FindByEmail(user.Email);
             if (existingUser != null)
@@ -256,17 +275,33 @@ namespace myFlatLightLogin.Core.Services
                 _logger.Information("Registering user with standard User role: {Email}", user.Email);
             }
 
+            // Get FRESH connectivity status (don't trust cached value)
+            bool isOnline = _connectivityService.CheckConnectivity();
+            _logger.Information("Fresh connectivity check for registration: {IsOnline}", isOnline);
+
+            // Additional check: Can we actually reach Firebase servers?
+            // This is critical for VM scenarios where network adapters appear "up" but have no real connectivity
+            bool canReachFirebase = false;
+            if (isOnline)
+            {
+                _logger.Information("Network appears online, testing Firebase reachability...");
+                canReachFirebase = await _connectivityService.CanReachFirebaseAsync();
+                _logger.Information("Firebase reachability test result: {CanReach}", canReachFirebase);
+            }
+
             bool success = false;
 
-            // Try Firebase first if online
-            if (_connectivityService.IsOnline)
+            // Try Firebase first if we can actually reach it
+            if (isOnline && canReachFirebase)
             {
+                _logger.Information("Attempting Firebase registration...");
                 try
                 {
                     success = await Task.Run(() => _firebaseDal.Insert(user));
 
                     if (success)
                     {
+                        _logger.Information("Firebase registration successful for {Email}", user.Email);
                         // Firebase registration successful - save to SQLite
                         _sqliteDal.Insert(user);
                         _sqliteDal.MarkAsSynced(user.Id); // Already in Firebase
@@ -279,25 +314,39 @@ namespace myFlatLightLogin.Core.Services
 #if DEBUG
                     // DEBUG MODE: Log full exception details for development/troubleshooting
                     // WARNING: This includes passwords in plain text! Only use in development.
-                    _logger.Warning(ex, "Firebase registration failed, registering offline");
+                    _logger.Warning(ex, "Firebase registration failed, falling back to offline registration");
 #else
                     // RELEASE MODE: Do NOT log ex.Message - it contains passwords!
                     // Log generic error only for production security
-                    _logger.Warning("Firebase registration failed (network error or invalid data), registering offline");
+                    _logger.Warning("Firebase registration failed (network error or invalid data), falling back to offline registration");
 #endif
+                }
+            }
+            else
+            {
+                if (!isOnline)
+                {
+                    _logger.Information("Offline mode detected - registering locally to SQLite only");
+                }
+                else
+                {
+                    _logger.Information("Firebase unreachable - registering locally to SQLite only");
                 }
             }
 
             // Firebase failed or offline - register in SQLite only
+            _logger.Information("Attempting SQLite registration...");
             success = _sqliteDal.Insert(user);
 
             if (success)
             {
+                _logger.Information("SQLite registration successful for {Email}", user.Email);
                 // Mark for sync when online
                 // (NeedsSync is automatically set to true in SQLite Insert)
                 return true;
             }
 
+            _logger.Error("Both Firebase and SQLite registration failed for {Email}", user.Email);
             return false;
         }
 
