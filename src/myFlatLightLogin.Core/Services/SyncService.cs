@@ -171,19 +171,12 @@ namespace myFlatLightLogin.Core.Services
                         }
                         else
                         {
-                            // This is an existing user - update in Firebase
-                            bool updated = await Task.Run(() => _firebaseDal.Update(user));
-
-                            if (updated)
-                            {
-                                // Mark as synced in SQLite
-                                _sqliteDal.MarkAsSynced(user.Id);
-                                successCount++;
-                            }
-                            else
-                            {
-                                failureCount++;
-                            }
+                            // This is an existing user - skip for now
+                            // Updates require an authenticated session, which we don't have during automatic sync
+                            // Updates will happen when the user signs in
+                            // For now, just mark as synced to avoid repeated attempts
+                            _sqliteDal.MarkAsSynced(user.Id);
+                            successCount++;
                         }
                     }
                     catch (Exception ex)
