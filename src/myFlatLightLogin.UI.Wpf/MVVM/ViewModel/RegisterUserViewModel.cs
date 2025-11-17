@@ -248,26 +248,20 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 };
 
                 // Register using HybridDAL (tries Firebase first, falls back to SQLite)
-                bool success = await _hybridDal.RegisterAsync(newUser);
+                var result = await _hybridDal.RegisterAsync(newUser);
 
-                if (success)
+                if (result.Success)
                 {
                     IsAuthenticated = true;
+                    StatusMessage = result.Message;
 
-                    string registrationMode = IsOnline ? "online" : "offline";
-                    StatusMessage = $"Account created successfully! (Registered {registrationMode})";
+                    string title = result.Mode == Dal.RegistrationMode.Firebase
+                        ? "Registration Successful"
+                        : "Registration Successful (Offline)";
 
-                    string message = IsOnline
-                        ? $"Account created successfully!\n\nEmail: {Email}\n\nYou can now sign in with this user name."
-                        : $"Account created offline!\n\nEmail: {Email}\n\nYour account will be synced to Firebase when you're back online.\nYou can sign in now with this user name using offline mode.";
+                    string message = $"{result.Message}\n\nEmail: {Email}\n\nYou can now sign in with this user name.";
 
-                    //MessageBox.Show(
-                    //    message,
-                    //    "Registration Successful",
-                    //    MessageBoxButton.OK,
-                    //    MessageBoxImage.Information);
-
-                    await window.ShowMessageAsync("Registration Successful",
+                    await window.ShowMessageAsync(title,
                        message,
                        MessageDialogStyle.Affirmative,
                        new MetroDialogSettings
@@ -284,16 +278,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 else
                 {
                     IsAuthenticated = false;
-                    StatusMessage = "Registration failed. Please try again.";
+                    StatusMessage = result.Message;
 
-                    //MessageBox.Show(
-                    //    "Registration failed. Please try again.",
-                    //    "Registration Failed",
-                    //    MessageBoxButton.OK,
-                    //    MessageBoxImage.Warning);
-
-                    await window.ShowMessageAsync("Registration failed",
-                       "Registration failed. Please try again.",
+                    await window.ShowMessageAsync("Registration Failed",
+                       result.Message,
                        MessageDialogStyle.Affirmative,
                        new MetroDialogSettings
                        {

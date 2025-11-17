@@ -250,7 +250,7 @@ namespace myFlatLightLogin.Core.Services
         /// Tries Firebase first, falls back to SQLite if offline.
         /// First registered user automatically becomes Admin.
         /// </summary>
-        public async Task<bool> RegisterAsync(UserDto user)
+        public async Task<RegistrationResult> RegisterAsync(UserDto user)
         {
             _logger.Information("RegisterAsync called for: {Email}", user.Email);
 
@@ -259,7 +259,7 @@ namespace myFlatLightLogin.Core.Services
             if (existingUser != null)
             {
                 _logger.Warning("Registration failed - email already exists: {Email}", user.Email);
-                throw new InvalidOperationException($"An account with email '{user.Email}' already exists.");
+                return RegistrationResult.Failure($"An account with email '{user.Email}' already exists.");
             }
 
             // Check if this is the first user - make them Admin
@@ -289,15 +289,18 @@ namespace myFlatLightLogin.Core.Services
                 _logger.Information("Firebase reachability test result: {CanReach}", canReachFirebase);
             }
 
-            bool success = false;
+            bool firebaseAttempted = false;
+            string firebaseErrorDetails = null;
 
             // Try Firebase first if we can actually reach it
             if (isOnline && canReachFirebase)
             {
                 _logger.Information("Attempting Firebase registration...");
+                firebaseAttempted = true;
+
                 try
                 {
-                    success = await Task.Run(() => _firebaseDal.Insert(user));
+                    bool success = await Task.Run(() => _firebaseDal.Insert(user));
 
                     if (success)
                     {
@@ -305,19 +308,25 @@ namespace myFlatLightLogin.Core.Services
                         // Firebase registration successful - save to SQLite
                         _sqliteDal.Insert(user);
                         _sqliteDal.MarkAsSynced(user.Id); // Already in Firebase
-                        return true;
+                        return RegistrationResult.FirebaseSuccess();
+                    }
+                    else
+                    {
+                        _logger.Warning("Firebase registration returned false for {Email}", user.Email);
+                        firebaseErrorDetails = "Firebase registration returned false";
                     }
                 }
                 catch (Exception ex)
                 {
-                    // Firebase failed - fall through to offline registration
+                    // Catch ALL exceptions from Firebase - do NOT let them propagate to VS debugger
+                    // This prevents VS from breaking on FirebaseAuthException
+                    firebaseErrorDetails = ex.Message;
+
 #if DEBUG
                     // DEBUG MODE: Log full exception details for development/troubleshooting
-                    // WARNING: This includes passwords in plain text! Only use in development.
-                    _logger.Warning(ex, "Firebase registration failed, falling back to offline registration");
+                    _logger.Warning(ex, "Firebase registration failed with exception, falling back to offline registration");
 #else
                     // RELEASE MODE: Do NOT log ex.Message - it contains passwords!
-                    // Log generic error only for production security
                     _logger.Warning("Firebase registration failed (network error or invalid data), falling back to offline registration");
 #endif
                 }
@@ -331,23 +340,25 @@ namespace myFlatLightLogin.Core.Services
                 else
                 {
                     _logger.Information("Firebase unreachable - registering locally to SQLite only");
+                    firebaseAttempted = true;
+                    firebaseErrorDetails = "Firebase server unreachable (ping failed)";
                 }
             }
 
             // Firebase failed or offline - register in SQLite only
             _logger.Information("Attempting SQLite registration...");
-            success = _sqliteDal.Insert(user);
+            bool sqliteSuccess = _sqliteDal.Insert(user);
 
-            if (success)
+            if (sqliteSuccess)
             {
                 _logger.Information("SQLite registration successful for {Email}", user.Email);
                 // Mark for sync when online
                 // (NeedsSync is automatically set to true in SQLite Insert)
-                return true;
+                return RegistrationResult.SQLiteSuccess(firebaseAttempted, firebaseErrorDetails);
             }
 
             _logger.Error("Both Firebase and SQLite registration failed for {Email}", user.Email);
-            return false;
+            return RegistrationResult.Failure("Registration failed in both Firebase and local database. Please try again.");
         }
 
         /// <summary>
