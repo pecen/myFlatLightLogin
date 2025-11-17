@@ -18,10 +18,10 @@
     Background="Transparent"
     Closing="MetroWindow_Closing"
     ResizeMode="NoResize"
+    ShowCloseButton="False"
     ShowMaxRestoreButton="False"
     ShowMinButton="False"
     ShowTitleBar="False"
-    ShowCloseButton="False"
     WindowStartupLocation="CenterScreen"
     WindowStyle="None"
     mc:Ignorable="d">
@@ -117,7 +117,7 @@
                     VerticalAlignment="Center"
                     FontSize="13"
                     Foreground="#909090"
-                    Text="Copyright 2023. All rights reserved." />
+                    Text="Copyright 2025. All rights reserved." />
 
                 <!--  Menu Buttons  -->
                 <StackPanel
@@ -180,14 +180,14 @@
                         Command="{Binding ViewCurrentLogCommand}"
                         Content="View Logs"
                         Style="{StaticResource bottomButton}"
-                        Visibility="{Binding IsUserAdministrator, Converter={StaticResource BoolToVis}}"
-                        ToolTip="Open current log file (Admin only)" />
+                        ToolTip="Open current log file (Admin only)"
+                        Visibility="{Binding IsUserAdministrator, Converter={StaticResource BoolToVis}}" />
                     <Button
                         Command="{Binding OpenLogsFolderCommand}"
                         Content="Logs Folder"
                         Style="{StaticResource bottomButton}"
-                        Visibility="{Binding IsUserAdministrator, Converter={StaticResource BoolToVis}}"
-                        ToolTip="Open logs folder (Admin only)" />
+                        ToolTip="Open logs folder (Admin only)"
+                        Visibility="{Binding IsUserAdministrator, Converter={StaticResource BoolToVis}}" />
 
                     <Button
                         Command="{Binding NavigateToLoginCommand}"
