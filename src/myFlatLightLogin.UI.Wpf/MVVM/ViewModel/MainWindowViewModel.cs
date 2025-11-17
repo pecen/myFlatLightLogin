@@ -18,6 +18,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
     public class MainWindowViewModel : ViewModelBase
     {
         private readonly LoginViewModel _loginViewModel;
+        private readonly HybridUserDal _hybridUserDal;
+        private readonly SyncService _syncService;
 
         public RelayCommand ShutdownWindowCommand { get; set; }
         public RelayCommand MoveWindowCommand { get; set; }
@@ -26,6 +28,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public RelayCommand NavigateToRegisterUserCommand { get; set; }
         public AsyncRelayCommand OpenLogsFolderCommand { get; set; }
         public AsyncRelayCommand ViewCurrentLogCommand { get; set; }
+        public AsyncRelayCommand SyncNowCommand { get; set; }
 
         /// <summary>
         /// Gets whether the current logged-in user has Admin role in the application.
@@ -38,10 +41,43 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// </summary>
         public bool IsUserLoggedIn => CurrentUserService.Instance.CurrentUser != null;
 
-        public MainWindowViewModel(INavigationService navigationService, LoginViewModel loginViewModel)
+        private int _pendingSyncCount;
+        /// <summary>
+        /// Gets the number of users pending sync to Firebase.
+        /// </summary>
+        public int PendingSyncCount
+        {
+            get => _pendingSyncCount;
+            set => SetProperty(ref _pendingSyncCount, value);
+        }
+
+        private string _syncStatusMessage;
+        /// <summary>
+        /// Gets the current sync status message.
+        /// </summary>
+        public string SyncStatusMessage
+        {
+            get => _syncStatusMessage;
+            set => SetProperty(ref _syncStatusMessage, value);
+        }
+
+        private bool _isSyncing;
+        /// <summary>
+        /// Gets whether a sync operation is currently in progress.
+        /// </summary>
+        public bool IsSyncing
+        {
+            get => _isSyncing;
+            set => SetProperty(ref _isSyncing, value);
+        }
+
+        public MainWindowViewModel(INavigationService navigationService, LoginViewModel loginViewModel,
+            HybridUserDal hybridUserDal, SyncService syncService)
         {
             Navigation = navigationService;
             _loginViewModel = loginViewModel;
+            _hybridUserDal = hybridUserDal;
+            _syncService = syncService;
             Navigation.NavigateTo<LoginViewModel>();
 
             MoveWindowCommand = new RelayCommand(o => { Application.Current.MainWindow.DragMove(); });
@@ -71,6 +107,12 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             // Admin-only commands for log access
             OpenLogsFolderCommand = new AsyncRelayCommand(OpenLogsFolderAsync, () => IsUserAdministrator);
             ViewCurrentLogCommand = new AsyncRelayCommand(ViewCurrentLogAsync, () => IsUserAdministrator);
+            SyncNowCommand = new AsyncRelayCommand(SyncNowAsync, () => IsUserAdministrator && !IsSyncing);
+
+            // Subscribe to sync events
+            _syncService.SyncStarted += OnSyncStarted;
+            _syncService.SyncCompleted += OnSyncCompleted;
+            _syncService.SyncProgress += OnSyncProgress;
 
             // Subscribe to user changes to update admin-only features visibility
             CurrentUserService.Instance.OnUserChanged += (sender, user) =>
@@ -82,7 +124,14 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 // Update CanExecute for admin commands
                 OpenLogsFolderCommand?.RaiseCanExecuteChanged();
                 ViewCurrentLogCommand?.RaiseCanExecuteChanged();
+                SyncNowCommand?.RaiseCanExecuteChanged();
+
+                // Refresh sync status when user logs in/out
+                RefreshSyncStatus();
             };
+
+            // Initialize sync status
+            RefreshSyncStatus();
         }
 
         #region Methods
@@ -196,6 +245,120 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                         AnimateHide = true
                     });
             }
+        }
+
+        /// <summary>
+        /// Manually triggers a sync operation (admin only).
+        /// </summary>
+        private async Task SyncNowAsync()
+        {
+            var window = (MetroWindow)Application.Current.MainWindow;
+
+            try
+            {
+                SyncStatusMessage = "Starting sync...";
+                var result = await _syncService.SyncAsync();
+
+                if (result.Success)
+                {
+                    await window.ShowMessageAsync("Sync Complete",
+                        $"Sync completed successfully!\n\nUsers uploaded: {result.UsersUploaded}\nDuration: {result.Duration.TotalSeconds:F1}s",
+                        MessageDialogStyle.Affirmative,
+                        new MetroDialogSettings
+                        {
+                            AffirmativeButtonText = "OK",
+                            AnimateShow = true,
+                            AnimateHide = true
+                        });
+                }
+                else
+                {
+                    await window.ShowMessageAsync("Sync Failed",
+                        $"Sync failed: {result.ErrorMessage}",
+                        MessageDialogStyle.Affirmative,
+                        new MetroDialogSettings
+                        {
+                            AffirmativeButtonText = "OK",
+                            AnimateShow = true,
+                            AnimateHide = true
+                        });
+                }
+
+                RefreshSyncStatus();
+            }
+            catch (Exception ex)
+            {
+                await window.ShowMessageAsync("Error",
+                    $"Sync error: {ex.Message}",
+                    MessageDialogStyle.Affirmative,
+                    new MetroDialogSettings
+                    {
+                        AffirmativeButtonText = "OK",
+                        AnimateShow = true,
+                        AnimateHide = true
+                    });
+            }
+        }
+
+        /// <summary>
+        /// Refreshes the sync status display.
+        /// </summary>
+        private void RefreshSyncStatus()
+        {
+            try
+            {
+                PendingSyncCount = _hybridUserDal.GetPendingSyncCount();
+
+                if (PendingSyncCount > 0)
+                {
+                    SyncStatusMessage = $"{PendingSyncCount} user(s) pending sync";
+                }
+                else
+                {
+                    SyncStatusMessage = "All synced";
+                }
+            }
+            catch (Exception ex)
+            {
+                SyncStatusMessage = $"Error: {ex.Message}";
+            }
+        }
+
+        /// <summary>
+        /// Event handler for sync started.
+        /// </summary>
+        private void OnSyncStarted(object sender, EventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                IsSyncing = true;
+                SyncStatusMessage = "Syncing...";
+                SyncNowCommand?.RaiseCanExecuteChanged();
+            });
+        }
+
+        /// <summary>
+        /// Event handler for sync completed.
+        /// </summary>
+        private void OnSyncCompleted(object sender, SyncCompletedEventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                IsSyncing = false;
+                SyncNowCommand?.RaiseCanExecuteChanged();
+                RefreshSyncStatus();
+            });
+        }
+
+        /// <summary>
+        /// Event handler for sync progress updates.
+        /// </summary>
+        private void OnSyncProgress(object sender, SyncProgressEventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                SyncStatusMessage = e.Message;
+            });
         }
 
         #endregion

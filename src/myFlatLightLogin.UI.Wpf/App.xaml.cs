@@ -18,6 +18,9 @@ namespace FlatLightLogin
     public partial class App : Application
     {
         private ServiceProvider _serviceProvider;
+        private NetworkConnectivityService _connectivityService;
+        private SyncService _syncService;
+        private HybridUserDal _hybridUserDal;
 
         /// <summary>
         /// Public access to the service provider for manual dependency resolution.
@@ -30,6 +33,11 @@ namespace FlatLightLogin
             ConfigureSerilog();
 
             IServiceCollection services = new ServiceCollection();
+
+            // Register core services as singletons
+            services.AddSingleton<NetworkConnectivityService>();
+            services.AddSingleton<SyncService>();
+            services.AddSingleton<HybridUserDal>();
 
             services.AddSingleton(provider => new MainWindow
             {
@@ -48,6 +56,14 @@ namespace FlatLightLogin
                 viewModelType => (ViewModelBase)serviceProvider.GetRequiredService(viewModelType));
 
             _serviceProvider = services.BuildServiceProvider();
+
+            // Get service instances
+            _connectivityService = _serviceProvider.GetRequiredService<NetworkConnectivityService>();
+            _syncService = _serviceProvider.GetRequiredService<SyncService>();
+            _hybridUserDal = _serviceProvider.GetRequiredService<HybridUserDal>();
+
+            // Subscribe to connectivity changes for automatic sync
+            _connectivityService.ConnectivityChanged += OnConnectivityChanged;
         }
 
         private void ConfigureSerilog()
@@ -110,6 +126,46 @@ namespace FlatLightLogin
                 }
             });
 
+            // Perform automatic sync on startup if online
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    if (_connectivityService.IsOnline)
+                    {
+                        Log.Information("App startup - checking for pending sync...");
+                        var pendingCount = _hybridUserDal.GetPendingSyncCount();
+
+                        if (pendingCount > 0)
+                        {
+                            Log.Information("Found {PendingCount} users pending sync, starting sync...", pendingCount);
+                            var syncResult = await _syncService.SyncAsync();
+
+                            if (syncResult.Success)
+                            {
+                                Log.Information("Startup sync completed successfully. Uploaded: {UsersUploaded}", syncResult.UsersUploaded);
+                            }
+                            else
+                            {
+                                Log.Warning("Startup sync failed: {ErrorMessage}", syncResult.ErrorMessage);
+                            }
+                        }
+                        else
+                        {
+                            Log.Information("No users pending sync on startup");
+                        }
+                    }
+                    else
+                    {
+                        Log.Information("App started offline - sync will occur when connection is restored");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "Error during startup sync");
+                }
+            });
+
             var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             mainWindow.Show();
 
@@ -122,10 +178,54 @@ namespace FlatLightLogin
             Log.Information("Application Shutting Down");
             Log.Information("========================================");
 
+            // Cleanup connectivity service
+            _connectivityService?.Dispose();
+
             // Ensure all logs are flushed before exit
             Log.CloseAndFlush();
 
             base.OnExit(e);
+        }
+
+        /// <summary>
+        /// Handles connectivity changes and automatically triggers sync when connection is restored.
+        /// </summary>
+        private async void OnConnectivityChanged(object sender, bool isOnline)
+        {
+            Log.Information("Connectivity changed: IsOnline = {IsOnline}", isOnline);
+
+            if (isOnline)
+            {
+                // Connection restored - check for pending sync
+                try
+                {
+                    var pendingCount = _hybridUserDal.GetPendingSyncCount();
+
+                    if (pendingCount > 0)
+                    {
+                        Log.Information("Connection restored - found {PendingCount} users pending sync, starting automatic sync...", pendingCount);
+
+                        var syncResult = await _syncService.SyncAsync();
+
+                        if (syncResult.Success)
+                        {
+                            Log.Information("Automatic sync completed successfully. Uploaded: {UsersUploaded}", syncResult.UsersUploaded);
+                        }
+                        else
+                        {
+                            Log.Warning("Automatic sync failed: {ErrorMessage}", syncResult.ErrorMessage);
+                        }
+                    }
+                    else
+                    {
+                        Log.Information("Connection restored - no users pending sync");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "Error during automatic sync on connectivity restore");
+                }
+            }
         }
     }
 }
