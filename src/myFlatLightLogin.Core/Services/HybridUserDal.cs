@@ -400,6 +400,119 @@ namespace myFlatLightLogin.Core.Services
             return pending?.Count ?? 0;
         }
 
+        /// <summary>
+        /// Changes user password with online/offline support and Firebase synchronization.
+        /// Online: Updates Firebase immediately, then SQLite.
+        /// Offline: Updates SQLite with old password hash stored for later sync.
+        /// </summary>
+        /// <param name="userId">User ID</param>
+        /// <param name="currentPassword">Current password (plain text)</param>
+        /// <param name="newPassword">New password (plain text)</param>
+        /// <returns>PasswordChangeResult with success/failure details</returns>
+        public async Task<PasswordChangeResult> ChangePasswordAsync(
+            int userId,
+            string currentPassword,
+            string newPassword)
+        {
+            _logger.Information("Password change requested for user ID: {UserId}, IsOnline: {IsOnline}", userId, IsOnline);
+
+            if (_connectivityService.IsOnline)
+            {
+                return await ChangePasswordOnlineAsync(userId, currentPassword, newPassword);
+            }
+            else
+            {
+                return ChangePasswordOffline(userId, currentPassword, newPassword);
+            }
+        }
+
+        /// <summary>
+        /// Changes password when online - updates Firebase immediately.
+        /// </summary>
+        private async Task<PasswordChangeResult> ChangePasswordOnlineAsync(
+            int userId,
+            string currentPassword,
+            string newPassword)
+        {
+            try
+            {
+                _logger.Information("Changing password online for user ID: {UserId}", userId);
+
+                // 1. Get user from SQLite
+                var user = _sqliteDal.Fetch(userId);
+                if (user == null)
+                    return PasswordChangeResult.Failure("User not found");
+
+                // 2. Verify current password against SQLite hash
+                var currentHash = myFlatLightLogin.Core.Utilities.SecurityHelper.HashPassword(currentPassword);
+                var storedUser = _sqliteDal.Fetch(userId);
+                if (storedUser == null || storedUser.Password != currentHash)
+                {
+                    _logger.Warning("Current password verification failed for user ID: {UserId}", userId);
+                    return PasswordChangeResult.Failure("Current password is incorrect");
+                }
+
+                // 3. Update Firebase password
+                _logger.Information("Updating Firebase password for user: {Email}", user.Email);
+                bool firebaseSuccess = await _firebaseDal.UpdatePasswordAsync(newPassword);
+
+                if (!firebaseSuccess)
+                {
+                    _logger.Warning("Firebase password update failed for user ID: {UserId}", userId);
+                    return PasswordChangeResult.Failure("Failed to update password in Firebase");
+                }
+
+                // 4. Update SQLite password hash (Firebase already updated)
+                _logger.Information("Updating SQLite password hash for user ID: {UserId}", userId);
+                bool sqliteSuccess = _sqliteDal.ChangePasswordOnline(userId, newPassword);
+
+                if (!sqliteSuccess)
+                {
+                    _logger.Warning("SQLite password update failed for user ID: {UserId}", userId);
+                    return PasswordChangeResult.Failure("Failed to update password in local database");
+                }
+
+                _logger.Information("Password changed successfully online for user ID: {UserId}", userId);
+                return PasswordChangeResult.OnlineSuccess();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error changing password online for user ID: {UserId}", userId);
+                return PasswordChangeResult.Failure($"Failed to change password: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Changes password when offline - stores old password hash for later sync.
+        /// </summary>
+        private PasswordChangeResult ChangePasswordOffline(
+            int userId,
+            string currentPassword,
+            string newPassword)
+        {
+            try
+            {
+                _logger.Information("Changing password offline for user ID: {UserId}", userId);
+
+                // Update SQLite with old password hash stored
+                bool success = _sqliteDal.ChangePasswordOffline(userId, currentPassword, newPassword);
+
+                if (!success)
+                {
+                    _logger.Warning("SQLite offline password change failed for user ID: {UserId}", userId);
+                    return PasswordChangeResult.Failure("Failed to change password. Please verify your current password is correct.");
+                }
+
+                _logger.Information("Password changed offline successfully for user ID: {UserId}", userId);
+                return PasswordChangeResult.OfflineSuccess();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error changing password offline for user ID: {UserId}", userId);
+                return PasswordChangeResult.Failure($"Failed to change password: {ex.Message}");
+            }
+        }
+
         #endregion
 
         #region Helper Methods

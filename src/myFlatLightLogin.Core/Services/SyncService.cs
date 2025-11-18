@@ -236,6 +236,56 @@ namespace myFlatLightLogin.Core.Services
                 Total = total
             });
         }
+
+        /// <summary>
+        /// Gets users with pending password changes that need interactive sync.
+        /// These users require the old password to be entered before syncing.
+        /// </summary>
+        public List<UserDto> GetUsersWithPendingPasswordChanges()
+        {
+            return _sqliteDal.GetUsersWithPendingPasswordChanges();
+        }
+
+        /// <summary>
+        /// Syncs a password change to Firebase using the old password for authentication.
+        /// </summary>
+        /// <param name="user">User with pending password change</param>
+        /// <param name="oldPassword">Old password (plain text) for Firebase authentication</param>
+        /// <param name="newPassword">New password (plain text) to set in Firebase</param>
+        /// <returns>True if sync was successful</returns>
+        public async Task<bool> SyncPasswordChangeAsync(UserDto user, string oldPassword, string newPassword)
+        {
+            try
+            {
+                if (!_connectivityService.IsOnline)
+                    return false;
+
+                // Verify old password hash matches stored hash
+                var oldPasswordHash = myFlatLightLogin.Core.Utilities.SecurityHelper.HashPassword(oldPassword);
+                if (oldPasswordHash != user.OldPasswordHash)
+                {
+                    return false; // Old password doesn't match
+                }
+
+                // Update Firebase password with old password authentication
+                bool success = await _firebaseDal.UpdatePasswordWithOldPasswordAsync(
+                    user.Email,
+                    oldPassword,
+                    newPassword);
+
+                if (success)
+                {
+                    // Clear pending password change in SQLite
+                    _sqliteDal.ClearPendingPasswordChange(user.Id);
+                }
+
+                return success;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 
     /// <summary>

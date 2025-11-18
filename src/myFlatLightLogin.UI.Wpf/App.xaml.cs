@@ -49,6 +49,7 @@ namespace FlatLightLogin
             services.AddSingleton<RegisterUserViewModel>();
             services.AddSingleton<HomeViewModel>();
             services.AddSingleton<RoleManagementViewModel>();
+            services.AddSingleton<ChangePasswordViewModel>();
 
             services.AddSingleton<INavigationService, NavigationService>();
 

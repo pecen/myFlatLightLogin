@@ -53,9 +53,16 @@
                 Foreground="#909090"
                 Text="You have successfully logged in." />
 
+            <!--  User Actions  -->
+            <Button
+                Margin="0,40,0,10"
+                Command="{Binding NavigateToChangePasswordCommand}"
+                Content="Change Password"
+                Style="{StaticResource mainButtonPrimary}" />
+
             <!--  Admin Tools  -->
             <Button
-                Margin="0,40,0,0"
+                Margin="0,10,0,0"
                 Command="{Binding NavigateToRoleManagementCommand}"
                 Content="Manage Roles (Admin)"
                 Style="{StaticResource mainButtonPrimary}"
