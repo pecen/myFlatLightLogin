@@ -31,8 +31,14 @@ namespace myFlatLightLogin.DalSQLite
         /// </summary>
         private int GetRoleId(UserRole role)
         {
-            // Map enum to role ID (User=1, Admin=2)
-            return role == UserRole.Admin ? 2 : 1;
+            // Map enum to role ID (User=1, Admin=2, Guest=3)
+            return role switch
+            {
+                UserRole.Admin => 2,
+                UserRole.Guest => 3,
+                UserRole.User => 1,
+                _ => 1 // Default to User
+            };
         }
 
         /// <summary>
@@ -40,8 +46,14 @@ namespace myFlatLightLogin.DalSQLite
         /// </summary>
         private UserRole GetUserRole(int roleId)
         {
-            // Map role ID to enum (1=User, 2=Admin)
-            return roleId == 2 ? UserRole.Admin : UserRole.User;
+            // Map role ID to enum (1=User, 2=Admin, 3=Guest)
+            return roleId switch
+            {
+                2 => UserRole.Admin,
+                3 => UserRole.Guest,
+                1 => UserRole.User,
+                _ => UserRole.User // Default to User
+            };
         }
 
         public UserDto Fetch(int id)
