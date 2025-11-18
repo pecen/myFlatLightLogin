@@ -19,6 +19,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         private static readonly ILogger _logger = Log.ForContext<LoginViewModel>();
         private readonly HybridUserDal _hybridDal;
         private readonly NetworkConnectivityService _connectivityService;
+        private readonly SyncService _syncService;
 
         #region Properties
 
@@ -117,10 +118,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             _connectivityService.ConnectivityChanged += OnConnectivityChanged;
 
             // Initialize sync service
-            var syncService = new SyncService(_connectivityService);
+            _syncService = new SyncService(_connectivityService);
 
             // Initialize Hybrid DAL (manages Firebase and SQLite)
-            _hybridDal = new HybridUserDal(_connectivityService, syncService);
+            _hybridDal = new HybridUserDal(_connectivityService, _syncService);
 
             // Initialize commands
             NavigateToRegisterUserCommand = new RelayCommand(
@@ -219,6 +220,13 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                         });
 
                     _logger.Information("========== LOGIN ATTEMPT COMPLETED SUCCESSFULLY ==========");
+
+                    // Check for pending password changes (offline password change that needs sync)
+                    if (user.PendingPasswordChange && _connectivityService.IsOnline)
+                    {
+                        _logger.Information("Pending password change detected for user: {Email}. Showing password sync dialog.", user.Email);
+                        await ShowPasswordSyncDialogAsync(user, window);
+                    }
 
                     // Navigate to Home view after successful login
                     Navigation.NavigateTo<HomeViewModel>();
@@ -409,6 +417,48 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             finally
             {
                 IsLoading = false;
+            }
+        }
+
+        /// <summary>
+        /// Shows the password sync dialog to sync an offline password change to Firebase.
+        /// </summary>
+        private async Task ShowPasswordSyncDialogAsync(UserDto user, MetroWindow window)
+        {
+            try
+            {
+                _logger.Information("Showing password sync dialog for user: {Email}", user.Email);
+
+                // Create the dialog view and ViewModel
+                var dialogView = new myFlatLightLogin.UI.Wpf.MVVM.View.PasswordSyncDialog();
+                var dialogViewModel = new PasswordSyncDialogViewModel(
+                    _syncService,
+                    user,
+                    window);
+
+                dialogView.DataContext = dialogViewModel;
+
+                // Create a task completion source to wait for dialog closure
+                var tcs = new TaskCompletionSource<bool>();
+                dialogViewModel.OnDialogClosed += (sender, e) => tcs.TrySetResult(dialogViewModel.DialogResult);
+
+                // Show the dialog as a Metro dialog
+                await window.ShowMetroDialogAsync(new MahApps.Metro.Controls.Dialogs.CustomDialog
+                {
+                    Content = dialogView
+                });
+
+                // Wait for the dialog to close
+                bool result = await tcs.Task;
+
+                // Hide the dialog
+                await window.HideMetroDialogAsync(await window.GetCurrentDialogAsync<MahApps.Metro.Controls.Dialogs.BaseMetroDialog>());
+
+                _logger.Information("Password sync dialog closed. Result: {Result}", result);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error showing password sync dialog");
             }
         }
 
