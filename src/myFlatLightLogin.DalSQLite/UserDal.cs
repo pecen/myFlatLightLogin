@@ -334,6 +334,111 @@ namespace myFlatLightLogin.DalSQLite
         }
 
         /// <summary>
+        /// Gets all users with pending password changes that need interactive sync.
+        /// </summary>
+        public List<UserDto> GetUsersWithPendingPasswordChanges()
+        {
+            using (var conn = new SQLiteConnection(dbFile))
+            {
+                conn.CreateTable<User>();
+                var users = conn.Table<User>()
+                    .Where(u => u.PendingPasswordChange == true)
+                    .ToList();
+
+                return users.Select(u => new UserDto
+                {
+                    Id = u.Id,
+                    Name = u.Name,
+                    Lastname = u.Lastname,
+                    Username = u.Username,
+                    Email = u.Email,
+                    FirebaseUid = u.FirebaseUid,
+                    PendingPasswordChange = u.PendingPasswordChange,
+                    OldPasswordHash = u.OldPasswordHash,
+                    PasswordChangedDate = u.PasswordChangedDate,
+                    Role = GetUserRole(u.RoleId)
+                }).ToList();
+            }
+        }
+
+        /// <summary>
+        /// Clears pending password change flag after successful sync.
+        /// </summary>
+        public bool ClearPendingPasswordChange(int userId)
+        {
+            using (var conn = new SQLiteConnection(dbFile))
+            {
+                conn.CreateTable<User>();
+                var user = conn.Find<User>(userId);
+
+                if (user != null)
+                {
+                    user.PendingPasswordChange = false;
+                    user.OldPasswordHash = null;
+                    user.NeedsSync = false; // Also clear needs sync
+                    return conn.Update(user) > 0;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Changes user password offline, storing old password hash for later sync.
+        /// </summary>
+        public bool ChangePasswordOffline(int userId, string currentPassword, string newPassword)
+        {
+            using (var conn = new SQLiteConnection(dbFile))
+            {
+                conn.CreateTable<User>();
+                var user = conn.Find<User>(userId);
+
+                if (user == null)
+                    return false;
+
+                // Verify current password
+                if (!VerifyPassword(currentPassword, user.Password))
+                    return false;
+
+                // Store old password hash for sync verification
+                user.OldPasswordHash = user.Password;
+
+                // Update to new password hash
+                user.Password = HashPassword(newPassword);
+                user.PendingPasswordChange = true;
+                user.PasswordChangedDate = DateTime.UtcNow.ToString("o");
+                user.LastModified = DateTime.UtcNow.ToString("o");
+                user.NeedsSync = true;
+
+                return conn.Update(user) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Changes user password online (updates password hash only).
+        /// </summary>
+        public bool ChangePasswordOnline(int userId, string newPassword)
+        {
+            using (var conn = new SQLiteConnection(dbFile))
+            {
+                conn.CreateTable<User>();
+                var user = conn.Find<User>(userId);
+
+                if (user == null)
+                    return false;
+
+                // Update to new password hash
+                user.Password = HashPassword(newPassword);
+                user.PasswordChangedDate = DateTime.UtcNow.ToString("o");
+                user.LastModified = DateTime.UtcNow.ToString("o");
+
+                // Don't set NeedsSync - password was already changed in Firebase
+
+                return conn.Update(user) > 0;
+            }
+        }
+
+        /// <summary>
         /// Hashes a password using SHA256.
         /// </summary>
         private string HashPassword(string password)

@@ -330,6 +330,70 @@ namespace myFlatLightLogin.DalFirebase
             return _currentUser;
         }
 
+        /// <summary>
+        /// Updates the current user's password in Firebase Authentication.
+        /// Requires an active authenticated session.
+        /// </summary>
+        /// <param name="newPassword">New password (plain text)</param>
+        /// <returns>True if password was updated successfully</returns>
+        public async Task<bool> UpdatePasswordAsync(string newPassword)
+        {
+            try
+            {
+                if (_currentUser?.User == null)
+                    throw new InvalidOperationException("No authenticated user. Please sign in first.");
+
+                // Use Firebase Authentication API to update password
+                // Note: This requires the user to be recently authenticated
+                await _authClient.ChangePasswordAsync(_currentUser.User.Credential.IdToken, newPassword);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to update password: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Updates user password using old password for authentication.
+        /// Used for syncing password changes made offline.
+        /// </summary>
+        /// <param name="email">User's email address</param>
+        /// <param name="oldPassword">Old password (for re-authentication)</param>
+        /// <param name="newPassword">New password to set</param>
+        /// <returns>True if password was updated successfully</returns>
+        public async Task<bool> UpdatePasswordWithOldPasswordAsync(
+            string email,
+            string oldPassword,
+            string newPassword)
+        {
+            try
+            {
+                // 1. Sign in with old password to get fresh credentials
+                var credential = await _authClient.SignInWithEmailAndPasswordAsync(email, oldPassword);
+
+                if (credential?.User == null)
+                    return false;
+
+                // 2. Update to new password
+                await _authClient.ChangePasswordAsync(credential.User.Credential.IdToken, newPassword);
+
+                // 3. Update current user session
+                _currentUser = credential;
+
+                return true;
+            }
+            catch (FirebaseAuthException ex)
+            {
+                throw new Exception($"Failed to update password: {GetFriendlyErrorMessage(ex)}", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to update password: {ex.Message}", ex);
+            }
+        }
+
         #endregion
 
         #region Helper Methods
