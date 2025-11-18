@@ -93,10 +93,14 @@ namespace myFlatLightLogin.Core.Services
         public async Task<bool> CanReachFirebaseAsync()
         {
             if (!CheckConnectivity())
+            {
+                _logger.Debug("CanReachFirebaseAsync: CheckConnectivity returned false");
                 return false;
+            }
 
             try
             {
+                _logger.Debug("CanReachFirebaseAsync: Attempting HTTP request to Firebase...");
                 using var httpClient = new HttpClient();
                 httpClient.Timeout = TimeSpan.FromSeconds(5);
 
@@ -106,12 +110,22 @@ namespace myFlatLightLogin.Core.Services
 
                 // Any response (even 400/404) means we can reach Firebase servers
                 // We just want to know if the network path is working
-                _logger.Debug("Firebase reachability test - Status: {StatusCode}", response.StatusCode);
+                _logger.Information("Firebase reachability test - Status: {StatusCode}, Success: true", response.StatusCode);
                 return true;
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.Warning("Firebase reachability test failed: Request timed out after 5 seconds");
+                return false;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.Warning(ex, "Firebase reachability test failed: HTTP error - {Message}", ex.Message);
+                return false;
             }
             catch (Exception ex)
             {
-                _logger.Warning(ex, "Firebase reachability test failed: {Message}", ex.Message);
+                _logger.Warning(ex, "Firebase reachability test failed: Unexpected error - {Message}", ex.Message);
                 return false;
             }
         }
