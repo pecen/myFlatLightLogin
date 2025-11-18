@@ -6,6 +6,9 @@ using myFlatLightLogin.Dal;
 using myFlatLightLogin.Dal.Dto;
 using System;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace myFlatLightLogin.DalFirebase
@@ -343,9 +346,8 @@ namespace myFlatLightLogin.DalFirebase
                 if (_currentUser?.User == null)
                     throw new InvalidOperationException("No authenticated user. Please sign in first.");
 
-                // Use Firebase Authentication API to update password
-                // Note: This requires the user to be recently authenticated
-                await _authClient.ChangePasswordAsync(_currentUser.User.Credential.IdToken, newPassword);
+                // Use Firebase Authentication REST API to update password
+                await ChangePasswordViaRestApiAsync(_currentUser.User.Credential.IdToken, newPassword);
 
                 return true;
             }
@@ -376,8 +378,8 @@ namespace myFlatLightLogin.DalFirebase
                 if (credential?.User == null)
                     return false;
 
-                // 2. Update to new password
-                await _authClient.ChangePasswordAsync(credential.User.Credential.IdToken, newPassword);
+                // 2. Update to new password using Firebase REST API
+                await ChangePasswordViaRestApiAsync(credential.User.Credential.IdToken, newPassword);
 
                 // 3. Update current user session
                 _currentUser = credential;
@@ -397,6 +399,37 @@ namespace myFlatLightLogin.DalFirebase
         #endregion
 
         #region Helper Methods
+
+        /// <summary>
+        /// Changes user password using Firebase Authentication REST API.
+        /// </summary>
+        /// <param name="idToken">User's ID token</param>
+        /// <param name="newPassword">New password to set</param>
+        private async Task ChangePasswordViaRestApiAsync(string idToken, string newPassword)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var requestUrl = $"https://identitytoolkit.googleapis.com/v1/accounts:update?key={FirebaseConfig.ApiKey}";
+
+                var requestBody = new
+                {
+                    idToken = idToken,
+                    password = newPassword,
+                    returnSecureToken = true
+                };
+
+                var json = JsonSerializer.Serialize(requestBody);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await httpClient.PostAsync(requestUrl, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Firebase password update failed: {errorContent}");
+                }
+            }
+        }
 
         /// <summary>
         /// Converts Firebase authentication exceptions to user-friendly messages.
