@@ -56,5 +56,22 @@
         /// Default is User (0). First registered user becomes Admin (1).
         /// </summary>
         public UserRole Role { get; set; } = UserRole.User;
+
+        /// <summary>
+        /// Indicates if the user's password was changed while offline.
+        /// When true, sync requires old password for Firebase authentication.
+        /// </summary>
+        public bool PendingPasswordChange { get; set; }
+
+        /// <summary>
+        /// Hash of the old password (before offline change).
+        /// Used to verify old password during sync. Cleared after successful sync.
+        /// </summary>
+        public string? OldPasswordHash { get; set; }
+
+        /// <summary>
+        /// Timestamp when password was last changed (UTC, ISO 8601).
+        /// </summary>
+        public string? PasswordChangedDate { get; set; }
     }
 }

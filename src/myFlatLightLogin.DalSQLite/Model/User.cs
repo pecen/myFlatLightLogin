@@ -54,5 +54,23 @@ namespace myFlatLightLogin.DalSQLite.Model
         /// References the user's role for application-level authorization.
         /// </summary>
         public int RoleId { get; set; }
+
+        /// <summary>
+        /// Indicates if the user's password was changed while offline and needs special sync handling.
+        /// When true, the user will be prompted for their old password during sync.
+        /// </summary>
+        public bool PendingPasswordChange { get; set; }
+
+        /// <summary>
+        /// Temporarily stores the hash of the old password before an offline password change.
+        /// Used to verify the old password when syncing with Firebase.
+        /// Cleared after successful sync.
+        /// </summary>
+        public string OldPasswordHash { get; set; }
+
+        /// <summary>
+        /// Timestamp when password was last changed (UTC, ISO 8601 format).
+        /// </summary>
+        public string PasswordChangedDate { get; set; }
     }
 }
