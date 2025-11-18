@@ -40,7 +40,8 @@ namespace myFlatLightLogin.DalSQLite
         }
 
         /// <summary>
-        /// Seeds the default roles (User and Admin).
+        /// Seeds the default roles (User, Admin, and Guest).
+        /// Role IDs must match the UserRole enum values.
         /// </summary>
         private void SeedDefaultRoles(SQLiteConnection conn)
         {
@@ -58,8 +59,16 @@ namespace myFlatLightLogin.DalSQLite
                 Description = "Administrator with elevated permissions (e.g., view logs, manage users)"
             };
 
+            var guestRole = new Role
+            {
+                Id = 3,
+                Name = "Guest",
+                Description = "Guest user with limited permissions (read-only access)"
+            };
+
             conn.Insert(userRole);
             conn.Insert(adminRole);
+            conn.Insert(guestRole);
         }
 
         /// <summary>
