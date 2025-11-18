@@ -145,49 +145,216 @@
                         IsEnabled="{Binding IsUserLoggedIn}"
                         Style="{StaticResource bottomButton}" />
 
-                    <!--  Admin-Only Sync Status and Button  -->
-                    <StackPanel
-                        Margin="5,0"
-                        Orientation="Horizontal"
+                    <!--  Admin-Only Sync Menu  -->
+                    <Menu
+                        Background="Transparent"
                         Visibility="{Binding IsUserAdministrator, Converter={StaticResource BoolToVis}}">
-                        <TextBlock
-                            Margin="10,0"
-                            VerticalAlignment="Center"
+                        <MenuItem
+                            Height="37"
+                            Padding="10,0"
+                            Background="Transparent"
                             FontSize="12"
-                            Foreground="#606060">
-                            <Run Text="Sync:" />
-                            <Run FontWeight="SemiBold" Text="{Binding SyncStatusMessage}" />
-                        </TextBlock>
-                        <Button
-                            Command="{Binding SyncNowCommand}"
-                            Style="{StaticResource bottomButton}"
-                            ToolTip="Manually sync pending users to Firebase (Admin only)">
-                            <StackPanel Orientation="Horizontal">
-                                <icon:PackIconMaterial
-                                    Width="14"
-                                    Height="14"
-                                    Margin="0,0,5,0"
-                                    VerticalAlignment="Center"
-                                    Kind="Sync"
-                                    Spin="{Binding IsSyncing}" />
-                                <TextBlock Text="Sync Now" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
+                            FontWeight="SemiBold"
+                            Foreground="#5e5e5e">
+                            <MenuItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <icon:PackIconMaterial
+                                        Width="14"
+                                        Height="14"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Kind="Sync"
+                                        Spin="{Binding IsSyncing}" />
+                                    <TextBlock Text="Sync" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </MenuItem.Header>
+                            <MenuItem.Style>
+                                <Style TargetType="MenuItem">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="MenuItem">
+                                                <Border
+                                                    x:Name="Border"
+                                                    Background="{TemplateBinding Background}"
+                                                    BorderThickness="0">
+                                                    <Grid>
+                                                        <ContentPresenter
+                                                            Margin="{TemplateBinding Padding}"
+                                                            ContentSource="Header"
+                                                            RecognizesAccessKey="True" />
+                                                        <Popup
+                                                            x:Name="Popup"
+                                                            AllowsTransparency="True"
+                                                            Focusable="False"
+                                                            IsOpen="{TemplateBinding IsSubmenuOpen}"
+                                                            Placement="Top"
+                                                            PopupAnimation="Fade">
+                                                            <Border
+                                                                Padding="5"
+                                                                Background="White"
+                                                                BorderBrush="#e2e9e9"
+                                                                BorderThickness="1"
+                                                                CornerRadius="5">
+                                                                <Border.Effect>
+                                                                    <DropShadowEffect
+                                                                        BlurRadius="10"
+                                                                        Direction="270"
+                                                                        Opacity="0.3"
+                                                                        ShadowDepth="2" />
+                                                                </Border.Effect>
+                                                                <StackPanel IsItemsHost="True" />
+                                                            </Border>
+                                                        </Popup>
+                                                    </Grid>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Border" Property="Background" Value="Transparent" />
+                                                        <Setter Property="Foreground" Value="#ff131e" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </MenuItem.Style>
 
-                    <!--  Admin-Only Log Access Buttons  -->
-                    <Button
-                        Command="{Binding ViewCurrentLogCommand}"
-                        Content="View Logs"
-                        Style="{StaticResource bottomButton}"
-                        Visibility="{Binding IsUserAdministrator, Converter={StaticResource BoolToVis}}"
-                        ToolTip="Open current log file (Admin only)" />
-                    <Button
-                        Command="{Binding OpenLogsFolderCommand}"
-                        Content="Logs Folder"
-                        Style="{StaticResource bottomButton}"
-                        Visibility="{Binding IsUserAdministrator, Converter={StaticResource BoolToVis}}"
-                        ToolTip="Open logs folder (Admin only)" />
+                            <!--  Sync Status Display  -->
+                            <MenuItem
+                                Background="White"
+                                FontSize="11"
+                                Foreground="#606060"
+                                IsEnabled="False">
+                                <MenuItem.Header>
+                                    <StackPanel>
+                                        <TextBlock
+                                            Padding="5"
+                                            FontWeight="SemiBold"
+                                            Text="{Binding SyncStatusMessage}" />
+                                    </StackPanel>
+                                </MenuItem.Header>
+                            </MenuItem>
+
+                            <Separator />
+
+                            <!--  Sync Now Action  -->
+                            <MenuItem
+                                Command="{Binding SyncNowCommand}"
+                                FontSize="12"
+                                Header="Sync Now"
+                                ToolTip="Manually sync pending users to Firebase">
+                                <MenuItem.Icon>
+                                    <icon:PackIconMaterial
+                                        Width="14"
+                                        Height="14"
+                                        Kind="CloudUpload" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </MenuItem>
+                    </Menu>
+
+                    <!--  Admin-Only Logs Menu  -->
+                    <Menu
+                        Background="Transparent"
+                        Visibility="{Binding IsUserAdministrator, Converter={StaticResource BoolToVis}}">
+                        <MenuItem
+                            Height="37"
+                            Padding="10,0"
+                            Background="Transparent"
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            Foreground="#5e5e5e">
+                            <MenuItem.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <icon:PackIconMaterial
+                                        Width="14"
+                                        Height="14"
+                                        Margin="0,0,5,0"
+                                        VerticalAlignment="Center"
+                                        Kind="FileDocument" />
+                                    <TextBlock Text="Logs" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </MenuItem.Header>
+                            <MenuItem.Style>
+                                <Style TargetType="MenuItem">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="MenuItem">
+                                                <Border
+                                                    x:Name="Border"
+                                                    Background="{TemplateBinding Background}"
+                                                    BorderThickness="0">
+                                                    <Grid>
+                                                        <ContentPresenter
+                                                            Margin="{TemplateBinding Padding}"
+                                                            ContentSource="Header"
+                                                            RecognizesAccessKey="True" />
+                                                        <Popup
+                                                            x:Name="Popup"
+                                                            AllowsTransparency="True"
+                                                            Focusable="False"
+                                                            IsOpen="{TemplateBinding IsSubmenuOpen}"
+                                                            Placement="Top"
+                                                            PopupAnimation="Fade">
+                                                            <Border
+                                                                Padding="5"
+                                                                Background="White"
+                                                                BorderBrush="#e2e9e9"
+                                                                BorderThickness="1"
+                                                                CornerRadius="5">
+                                                                <Border.Effect>
+                                                                    <DropShadowEffect
+                                                                        BlurRadius="10"
+                                                                        Direction="270"
+                                                                        Opacity="0.3"
+                                                                        ShadowDepth="2" />
+                                                                </Border.Effect>
+                                                                <StackPanel IsItemsHost="True" />
+                                                            </Border>
+                                                        </Popup>
+                                                    </Grid>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Border" Property="Background" Value="Transparent" />
+                                                        <Setter Property="Foreground" Value="#ff131e" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </MenuItem.Style>
+
+                            <!--  View Current Log  -->
+                            <MenuItem
+                                Command="{Binding ViewCurrentLogCommand}"
+                                FontSize="12"
+                                Header="View Current Log"
+                                ToolTip="Open current log file">
+                                <MenuItem.Icon>
+                                    <icon:PackIconMaterial
+                                        Width="14"
+                                        Height="14"
+                                        Kind="FileEye" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+
+                            <!--  Open Logs Folder  -->
+                            <MenuItem
+                                Command="{Binding OpenLogsFolderCommand}"
+                                FontSize="12"
+                                Header="Open Logs Folder"
+                                ToolTip="Open logs folder in Explorer">
+                                <MenuItem.Icon>
+                                    <icon:PackIconMaterial
+                                        Width="14"
+                                        Height="14"
+                                        Kind="FolderOpen" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </MenuItem>
+                    </Menu>
 
                     <Button
                         Command="{Binding NavigateToLoginCommand}"
