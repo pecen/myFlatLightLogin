@@ -40,8 +40,12 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public bool IsOnline => _connectivityService.IsOnline;
         public string ConnectionStatus => IsOnline ? "🟢 Online" : "🔴 Offline";
 
-        public ChangePasswordViewModel(HybridUserDal hybridUserDal, NetworkConnectivityService connectivityService)
+        public ChangePasswordViewModel(
+            INavigationService navigationService,
+            HybridUserDal hybridUserDal,
+            NetworkConnectivityService connectivityService)
         {
+            Navigation = navigationService;
             _hybridUserDal = hybridUserDal;
             _connectivityService = connectivityService;
 
