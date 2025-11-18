@@ -15,6 +15,11 @@ namespace myFlatLightLogin.Dal.Dto
         /// <summary>
         /// Administrator with elevated permissions (e.g., view logs, manage users) (Database Role ID: 2).
         /// </summary>
-        Admin = 2
+        Admin = 2,
+
+        /// <summary>
+        /// Guest user who is not registered in the system and with limited permissions (Database Role ID: 3).
+        /// </summary>
+        Guest = 3
     }
 }
