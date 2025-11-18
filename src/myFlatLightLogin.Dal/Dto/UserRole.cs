@@ -3,7 +3,7 @@ namespace myFlatLightLogin.Dal.Dto
     /// <summary>
     /// Defines application-level user roles for authorization.
     /// These values MUST match the Role IDs in the database (Firebase/SQLite).
-    /// User = 1, Admin = 2. Additional roles can be added starting from ID 3.
+    /// User = 1, Admin = 2, Guest = 3. Additional roles can be added starting from ID 4.
     /// </summary>
     public enum UserRole
     {
