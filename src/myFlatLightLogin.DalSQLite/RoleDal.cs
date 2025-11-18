@@ -74,7 +74,7 @@ namespace myFlatLightLogin.DalSQLite
         /// <summary>
         /// Gets a role by its ID.
         /// </summary>
-        public RoleDto? GetRoleById(int id)
+        public RoleDto? Fetch(int id)
         {
             using (var conn = new SQLiteConnection(_dbPath))
             {
@@ -86,7 +86,7 @@ namespace myFlatLightLogin.DalSQLite
         /// <summary>
         /// Gets a role by its name.
         /// </summary>
-        public RoleDto GetRoleByName(string name)
+        public RoleDto Fetch(string name)
         {
             using (var conn = new SQLiteConnection(_dbPath))
             {
@@ -98,7 +98,7 @@ namespace myFlatLightLogin.DalSQLite
         /// <summary>
         /// Gets all roles.
         /// </summary>
-        public List<RoleDto> GetAllRoles()
+        public List<RoleDto> Fetch()
         {
             using (var conn = new SQLiteConnection(_dbPath))
             {
@@ -109,7 +109,7 @@ namespace myFlatLightLogin.DalSQLite
         /// <summary>
         /// Adds a new role.
         /// </summary>
-        public bool InsertRole(RoleDto roleDto)
+        public bool Insert(RoleDto roleDto)
         {
             using (var conn = new SQLiteConnection(_dbPath))
             {
@@ -122,7 +122,7 @@ namespace myFlatLightLogin.DalSQLite
         /// <summary>
         /// Updates an existing role.
         /// </summary>
-        public bool UpdateRole(RoleDto roleDto)
+        public bool Update(RoleDto roleDto)
         {
             using (var conn = new SQLiteConnection(_dbPath))
             {
@@ -135,7 +135,7 @@ namespace myFlatLightLogin.DalSQLite
         /// <summary>
         /// Deletes a role by ID.
         /// </summary>
-        public bool DeleteRole(int id)
+        public bool Delete(int id)
         {
             using (var conn = new SQLiteConnection(_dbPath))
             {
