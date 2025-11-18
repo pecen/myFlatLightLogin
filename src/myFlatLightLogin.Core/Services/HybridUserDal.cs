@@ -179,6 +179,17 @@ namespace myFlatLightLogin.Core.Services
                             user.Password = password; // Store for offline auth
                             _sqliteDal.Insert(user);
                             _logger.Information("User cached successfully");
+
+                            // Re-fetch to get the SQLite-assigned ID
+                            existingUser = _sqliteDal.FindByEmail(email);
+                            if (existingUser != null)
+                            {
+                                // Return the SQLite user with correct ID, but preserve Firebase data
+                                existingUser.FirebaseUid = user.FirebaseUid;
+                                existingUser.FirebaseAuthToken = user.FirebaseAuthToken;
+                                existingUser.Role = user.Role;
+                                return existingUser;
+                            }
                         }
                         else
                         {
@@ -187,9 +198,14 @@ namespace myFlatLightLogin.Core.Services
                             existingUser.Name = user.Name;
                             existingUser.Lastname = user.Lastname;
                             existingUser.FirebaseUid = user.FirebaseUid;
+                            existingUser.FirebaseAuthToken = user.FirebaseAuthToken;
                             existingUser.Password = password; // Update password
+                            existingUser.Role = user.Role;
                             _sqliteDal.Update(existingUser);
                             _logger.Information("Cache updated successfully");
+
+                            // Return the SQLite user with correct local ID
+                            return existingUser;
                         }
 
                         return user;
