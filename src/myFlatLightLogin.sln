@@ -8,10 +8,15 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3A547610-7230-488F-A0AC-6501D0FA5BD1}"
 	ProjectSection(SolutionItems) = preProject
 		..\.gitignore = ..\.gitignore
-		..\FIREBASE_SETUP.md = ..\FIREBASE_SETUP.md
+		..\doc\FIREBASE_ROLE_MIGRATION.md = ..\doc\FIREBASE_ROLE_MIGRATION.md
+		..\doc\FIREBASE_SECURITY_RULES.md = ..\doc\FIREBASE_SECURITY_RULES.md
+		..\doc\FIREBASE_SETUP.md = ..\doc\FIREBASE_SETUP.md
 		nuget.config = nuget.config
-		..\OFFLINE_SYNC.md = ..\OFFLINE_SYNC.md
-		..\README.md = ..\README.md
+		..\doc\OFFLINE_PASSWORD_CHANGE_PLAN.md = ..\doc\OFFLINE_PASSWORD_CHANGE_PLAN.md
+		..\doc\OFFLINE_SYNC.md = ..\doc\OFFLINE_SYNC.md
+		..\doc\README.md = ..\doc\README.md
+		..\doc\SYNC_IMPLEMENTATION.md = ..\doc\SYNC_IMPLEMENTATION.md
+		..\doc\TESTING_GUIDE.md = ..\doc\TESTING_GUIDE.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "myFlatLightLogin.Dal", "myFlatLightLogin.Dal\myFlatLightLogin.Dal.csproj", "{654EF7ED-D615-4B5B-B21C-1AA912472EE1}"
