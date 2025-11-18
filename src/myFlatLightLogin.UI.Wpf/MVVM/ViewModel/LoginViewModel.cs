@@ -3,6 +3,8 @@ using MahApps.Metro.Controls.Dialogs;
 using myFlatLightLogin.Core.MVVM;
 using myFlatLightLogin.Core.Services;
 using myFlatLightLogin.Dal;
+using myFlatLightLogin.Dal.Dto;
+using myFlatLightLogin.UI.Wpf.MVVM.View;
 using Serilog;
 using System;
 using System.Threading.Tasks;
