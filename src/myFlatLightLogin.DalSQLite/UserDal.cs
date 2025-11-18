@@ -62,6 +62,7 @@ namespace myFlatLightLogin.DalSQLite
                     Username = user.Username,
                     Email = user.Email,
                     FirebaseUid = user.FirebaseUid,
+                    RegistrationDate = user.RegistrationDate,
                     Role = GetUserRole(user.RoleId) // Convert role ID to enum
                 };
             }
@@ -80,6 +81,7 @@ namespace myFlatLightLogin.DalSQLite
                 Email = userDto.Email,
                 Password = HashPassword(userDto.Password),
                 FirebaseUid = userDto.FirebaseUid,
+                RegistrationDate = DateTime.UtcNow.ToString("o"), // Set once during registration
                 LastModified = DateTime.UtcNow.ToString("o"),
                 NeedsSync = true, // Mark for sync to Firebase
                 RoleId = GetRoleId(userDto.Role) // Convert enum to role ID
@@ -185,6 +187,7 @@ namespace myFlatLightLogin.DalSQLite
                     Username = user.Username,
                     Email = user.Email,
                     FirebaseUid = user.FirebaseUid,
+                    RegistrationDate = user.RegistrationDate,
                     Role = GetUserRole(user.RoleId) // Convert role ID to enum
                 };
             }
@@ -252,6 +255,7 @@ namespace myFlatLightLogin.DalSQLite
                     Username = user.Username,
                     Email = user.Email,
                     FirebaseUid = user.FirebaseUid,
+                    RegistrationDate = user.RegistrationDate,
                     Role = GetUserRole(user.RoleId) // Convert role ID to enum
                 };
             }
@@ -278,6 +282,7 @@ namespace myFlatLightLogin.DalSQLite
                     Username = user.Username,
                     Email = user.Email,
                     FirebaseUid = user.FirebaseUid,
+                    RegistrationDate = user.RegistrationDate,
                     Role = GetUserRole(user.RoleId) // Convert role ID to enum
                 };
             }

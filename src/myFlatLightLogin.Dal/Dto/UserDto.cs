@@ -52,6 +52,12 @@
         public string? FirebaseAuthToken { get; set; }
 
         /// <summary>
+        /// Registration date timestamp in UTC when the account was created (ISO 8601).
+        /// This is set once during registration and never changed.
+        /// </summary>
+        public string? RegistrationDate { get; set; }
+
+        /// <summary>
         /// User's role for application-level authorization.
         /// Default is User (0). First registered user becomes Admin (1).
         /// </summary>

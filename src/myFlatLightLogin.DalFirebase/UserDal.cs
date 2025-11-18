@@ -116,6 +116,7 @@ namespace myFlatLightLogin.DalFirebase
                         Lastname = profile.Lastname,
                         Username = profile.Email,
                         Password = null, // Never return passwords
+                        RegistrationDate = profile.CreatedAt,
                         Role = (UserRole)profile.Role // Convert integer to enum
                     };
                 }
@@ -185,6 +186,14 @@ namespace myFlatLightLogin.DalFirebase
                 if (_currentUser?.User == null)
                     throw new InvalidOperationException("No authenticated user");
 
+                var dbClient = GetAuthenticatedClient(_currentUser.User.Credential.IdToken);
+
+                // Fetch existing profile to preserve CreatedAt
+                var existingProfile = await dbClient
+                    .Child("users")
+                    .Child(_currentUser.User.Uid)
+                    .OnceSingleAsync<FirebaseUserProfile>();
+
                 var profile = new FirebaseUserProfile
                 {
                     LocalId = user.Id,
@@ -192,11 +201,11 @@ namespace myFlatLightLogin.DalFirebase
                     Name = user.Name,
                     Lastname = user.Lastname,
                     Email = user.Username,
+                    CreatedAt = existingProfile?.CreatedAt ?? DateTime.UtcNow.ToString("o"), // Preserve CreatedAt or set if missing
                     UpdatedAt = DateTime.UtcNow.ToString("o"),
                     Role = (int)user.Role // Store role as integer
                 };
 
-                var dbClient = GetAuthenticatedClient(_currentUser.User.Credential.IdToken);
                 await dbClient
                     .Child("users")
                     .Child(_currentUser.User.Uid)
@@ -304,6 +313,7 @@ namespace myFlatLightLogin.DalFirebase
                         Email = profile.Email,
                         FirebaseUid = profile.FirebaseUid,
                         FirebaseAuthToken = _currentUser.User.Credential.IdToken, // Store auth token for authenticated API calls
+                        RegistrationDate = profile.CreatedAt,
                         Role = (UserRole)profile.Role // Convert integer to enum
                     };
                 }

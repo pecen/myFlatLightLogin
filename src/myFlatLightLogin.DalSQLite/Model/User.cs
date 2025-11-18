@@ -39,6 +39,13 @@ namespace myFlatLightLogin.DalSQLite.Model
         public string FirebaseUid { get; set; }
 
         /// <summary>
+        /// Registration date timestamp in UTC when the account was created.
+        /// Format: ISO 8601 (yyyy-MM-ddTHH:mm:ss.fffZ)
+        /// This is set once during registration and never changed.
+        /// </summary>
+        public string RegistrationDate { get; set; }
+
+        /// <summary>
         /// Last modified timestamp in UTC for conflict resolution.
         /// Format: ISO 8601 (yyyy-MM-ddTHH:mm:ss.fffZ)
         /// </summary>
