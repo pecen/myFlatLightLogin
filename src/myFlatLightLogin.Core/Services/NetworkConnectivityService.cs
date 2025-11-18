@@ -1,5 +1,6 @@
 using Serilog;
 using System;
+using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 
@@ -87,6 +88,7 @@ namespace myFlatLightLogin.Core.Services
 
         /// <summary>
         /// Checks if the device can reach Firebase servers.
+        /// Uses HTTP request instead of ping to avoid ICMP blocking issues.
         /// </summary>
         public async Task<bool> CanReachFirebaseAsync()
         {
@@ -95,12 +97,21 @@ namespace myFlatLightLogin.Core.Services
 
             try
             {
-                using var ping = new Ping();
-                var reply = await ping.SendPingAsync("firebase.google.com", 3000);
-                return reply.Status == IPStatus.Success;
+                using var httpClient = new HttpClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(5);
+
+                // Try to reach Firebase Auth REST API endpoint
+                // This is a real endpoint that responds to HEAD/GET requests
+                var response = await httpClient.GetAsync("https://identitytoolkit.googleapis.com/");
+
+                // Any response (even 400/404) means we can reach Firebase servers
+                // We just want to know if the network path is working
+                _logger.Debug("Firebase reachability test - Status: {StatusCode}", response.StatusCode);
+                return true;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.Warning(ex, "Firebase reachability test failed: {Message}", ex.Message);
                 return false;
             }
         }
