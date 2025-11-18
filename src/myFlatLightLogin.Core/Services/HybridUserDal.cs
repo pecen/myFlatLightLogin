@@ -199,12 +199,22 @@ namespace myFlatLightLogin.Core.Services
                             existingUser.Lastname = user.Lastname;
                             existingUser.FirebaseUid = user.FirebaseUid;
                             existingUser.FirebaseAuthToken = user.FirebaseAuthToken;
-                            existingUser.Password = password; // Update password
+                            existingUser.Password = password; // Update password (will be hashed by SQLite Update)
                             existingUser.Role = user.Role;
                             _sqliteDal.Update(existingUser);
                             _logger.Information("Cache updated successfully");
 
-                            // Return the SQLite user with correct local ID
+                            // Re-fetch from database to get the hashed password
+                            // This ensures the in-memory object matches what's stored in SQLite
+                            var updatedUser = _sqliteDal.Fetch(existingUser.Id);
+                            if (updatedUser != null)
+                            {
+                                updatedUser.FirebaseUid = existingUser.FirebaseUid;
+                                updatedUser.FirebaseAuthToken = existingUser.FirebaseAuthToken;
+                                return updatedUser;
+                            }
+
+                            // Fallback: return existingUser (shouldn't happen)
                             return existingUser;
                         }
 
@@ -460,9 +470,7 @@ namespace myFlatLightLogin.Core.Services
                     return PasswordChangeResult.Failure("User not found");
 
                 // 2. Verify current password against SQLite hash
-                var currentHash = myFlatLightLogin.Core.Utilities.SecurityHelper.HashPassword(currentPassword);
-                var storedUser = _sqliteDal.Fetch(userId);
-                if (storedUser == null || storedUser.Password != currentHash)
+                if (!_sqliteDal.VerifyUserPassword(userId, currentPassword))
                 {
                     _logger.Warning("Current password verification failed for user ID: {UserId}", userId);
                     return PasswordChangeResult.Failure("Current password is incorrect");

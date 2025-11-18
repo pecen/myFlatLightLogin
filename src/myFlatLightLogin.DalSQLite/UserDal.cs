@@ -439,6 +439,26 @@ namespace myFlatLightLogin.DalSQLite
         }
 
         /// <summary>
+        /// Verifies a user's password against the stored hash.
+        /// </summary>
+        /// <param name="userId">User ID</param>
+        /// <param name="password">Plain text password to verify</param>
+        /// <returns>True if password matches, false otherwise</returns>
+        public bool VerifyUserPassword(int userId, string password)
+        {
+            using (var conn = new SQLiteConnection(dbFile))
+            {
+                conn.CreateTable<User>();
+                var user = conn.Find<User>(userId);
+
+                if (user == null)
+                    return false;
+
+                return VerifyPassword(password, user.Password);
+            }
+        }
+
+        /// <summary>
         /// Hashes a password using SHA256.
         /// </summary>
         private string HashPassword(string password)
