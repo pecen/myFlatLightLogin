@@ -1,6 +1,7 @@
 using myFlatLightLogin.Dal.Dto;
 using myFlatLightLogin.DalFirebase;
 using myFlatLightLogin.DalSQLite;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,7 @@ namespace myFlatLightLogin.Core.Services
     /// </summary>
     public class SyncService
     {
+        private static readonly ILogger _logger = Log.ForContext<SyncService>();
         private readonly FirebaseUserDal _firebaseDal;
         private readonly SQLiteUserDal _sqliteDal;
         private readonly NetworkConnectivityService _connectivityService;
@@ -138,6 +140,8 @@ namespace myFlatLightLogin.Core.Services
                 // Get all users that need to be synced
                 var usersNeedingSync = _sqliteDal.GetUsersNeedingSync();
 
+                _logger.Information("UploadToFirebaseAsync: Found {Count} users needing sync", usersNeedingSync?.Count ?? 0);
+
                 if (usersNeedingSync == null || usersNeedingSync.Count == 0)
                 {
                     result.Count = 0;
@@ -152,20 +156,39 @@ namespace myFlatLightLogin.Core.Services
                 {
                     try
                     {
+                        _logger.Information("Processing sync for user: {Email}, FirebaseUid: {Uid}, NeedsSync: {NeedsSync}",
+                            user.Email, user.FirebaseUid ?? "NULL", user.NeedsSync);
+
                         // Check if user already exists in Firebase
                         if (string.IsNullOrEmpty(user.FirebaseUid))
                         {
                             // This is a new user created offline - register in Firebase
+                            _logger.Information("User {Email} has no FirebaseUid - registering in Firebase", user.Email);
+
                             bool registered = await Task.Run(() => _firebaseDal.Insert(user));
 
                             if (registered)
                             {
+                                _logger.Information("Firebase registration successful. FirebaseUid: {Uid}", user.FirebaseUid);
+
+                                // CRITICAL: Update SQLite with the new FirebaseUid
+                                // The Firebase Insert populated user.FirebaseUid, but we need to save it to SQLite
+                                var updatedUser = _sqliteDal.Fetch(user.Id);
+                                if (updatedUser != null)
+                                {
+                                    updatedUser.FirebaseUid = user.FirebaseUid;
+                                    _sqliteDal.Update(updatedUser);
+                                    _logger.Information("Updated SQLite with FirebaseUid: {Uid}", user.FirebaseUid);
+                                }
+
                                 // Mark as synced in SQLite
                                 _sqliteDal.MarkAsSynced(user.Id);
+                                _logger.Information("Marked user {Email} as synced in SQLite", user.Email);
                                 successCount++;
                             }
                             else
                             {
+                                _logger.Warning("Firebase registration returned false for user {Email}", user.Email);
                                 failureCount++;
                             }
                         }
@@ -175,6 +198,7 @@ namespace myFlatLightLogin.Core.Services
                             // Updates require an authenticated session, which we don't have during automatic sync
                             // Updates will happen when the user signs in
                             // For now, just mark as synced to avoid repeated attempts
+                            _logger.Information("User {Email} already has FirebaseUid - skipping (updates require auth session)", user.Email);
                             _sqliteDal.MarkAsSynced(user.Id);
                             successCount++;
                         }
@@ -182,10 +206,14 @@ namespace myFlatLightLogin.Core.Services
                     catch (Exception ex)
                     {
                         // Log error but continue with other users
+                        _logger.Error(ex, "Failed to sync user {Email}", user.Email);
                         failureCount++;
                         result.ErrorMessage += $"Failed to sync user {user.Email}: {ex.Message}; ";
                     }
                 }
+
+                _logger.Information("Sync upload complete: {SuccessCount} succeeded, {FailureCount} failed",
+                    successCount, failureCount);
 
                 result.Count = successCount;
                 result.Success = failureCount == 0;
@@ -194,6 +222,7 @@ namespace myFlatLightLogin.Core.Services
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "UploadToFirebaseAsync failed");
                 result.Success = false;
                 result.ErrorMessage = ex.Message;
                 return result;
