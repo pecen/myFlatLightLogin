@@ -31,8 +31,7 @@ Look for log entries with keywords: `Password`, `Sync`, `Firebase`, `Offline`, `
 **Steps**:
 1. Ensure internet connection is active
 2. Navigate to Register User screen
-3. Verify connection indicator shows 🟢 (online)
-4. Enter user details:
+3. Enter user details:
    - Name: TestUser
    - Lastname: Test
    - Email: testuser@example.com (ensure this email doesn't exist in Firebase)
@@ -113,8 +112,7 @@ SELECT COUNT(*) FROM User WHERE Email = 'existinguser@example.com';
 **Steps**:
 1. **Disconnect from internet** (airplane mode or disable network)
 2. Navigate to Register User screen
-3. Verify connection indicator shows 🔴 (offline)
-4. Enter user details:
+3. Enter user details:
    - Name: OfflineUser
    - Lastname: Test
    - Email: offlineuser@example.com
@@ -187,11 +185,10 @@ SELECT FirebaseUid, NeedsSync FROM User WHERE Email = 'offlineuser@example.com';
 1. Start the application with internet connected
 2. Log in with a test user
 3. Navigate to "Change Password" from Home screen
-4. Verify connection indicator shows 🟢 (online)
-5. Enter current password, new password, and confirm password
-6. Click "Change Password"
-7. Log out
-8. Log back in with the **new password**
+4. Enter current password, new password, and confirm password
+5. Click "Change Password"
+6. Log out
+7. Log back in with the **new password**
 
 **Expected Results**:
 - ✅ Success message appears: "Password changed successfully"
@@ -229,12 +226,11 @@ WHERE Email = 'your-test-email@example.com';
 2. Log in with a test user (while online)
 3. **Disconnect from internet** (airplane mode or disable network adapter)
 4. Navigate to "Change Password" from Home screen
-5. Verify connection indicator shows 🔴 (offline)
-6. Enter current password, new password, and confirm password
-7. Click "Change Password"
-8. **Read the offline warning dialog carefully**
-9. Click "Yes" to proceed with offline password change
-10. Verify success message appears
+5. Enter current password, new password, and confirm password
+6. Click "Change Password"
+7. **Read the offline warning dialog carefully**
+8. Click "Yes" to proceed with offline password change
+9. Verify success message appears
 
 **Expected Results**:
 - ✅ Warning dialog appears with message about needing OLD password to sync later
@@ -538,8 +534,8 @@ SELECT PendingPasswordChange FROM User WHERE Email = 'your-test-email@example.co
 
 **Issue**: Offline warning dialog doesn't appear
 - **Check**:
-  - Connection indicator shows 🔴 (offline)
-  - NetworkConnectivityService.IsOnline = false
+  - Verify you're actually offline (disconnect network)
+  - NetworkConnectivityService.IsOnline = false (check in logs)
   - Check ChangePasswordViewModel logs
 
 **Issue**: Password validation fails in sync dialog
