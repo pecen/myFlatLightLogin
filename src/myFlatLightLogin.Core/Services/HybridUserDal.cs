@@ -1,3 +1,4 @@
+using Firebase.Auth;
 using myFlatLightLogin.Dal;
 using myFlatLightLogin.Dal.Dto;
 using Serilog;
@@ -375,16 +376,53 @@ namespace myFlatLightLogin.Core.Services
                 }
                 catch (Exception ex)
                 {
-                    // Catch ALL exceptions from Firebase - do NOT let them propagate to VS debugger
-                    // This prevents VS from breaking on FirebaseAuthException
+                    // Check if this is a Firebase authentication error wrapped in Exception
+                    var innerAuthEx = ex.InnerException as FirebaseAuthException;
+
+                    if (innerAuthEx != null)
+                    {
+                        // This is a user-related error (EMAIL_EXISTS, weak password, etc.)
+                        // Do NOT fall back to SQLite - fail the registration with clear message
+                        _logger.Warning("Firebase registration failed with auth error: {Reason} - {Message}",
+                            innerAuthEx.Reason, ex.Message);
+
+                        // Check specific error reasons that should NOT create local accounts
+                        switch (innerAuthEx.Reason)
+                        {
+                            case AuthErrorReason.EmailExists:
+                                return RegistrationResult.Failure(
+                                    "An account with this email already exists in Firebase. " +
+                                    "If you previously deleted this account, please also delete it from " +
+                                    "Firebase Authentication (not just Realtime Database).");
+
+                            case AuthErrorReason.InvalidEmailAddress:
+                                return RegistrationResult.Failure("The email address is invalid.");
+
+                            case AuthErrorReason.WeakPassword:
+                                return RegistrationResult.Failure("Password is too weak. Please use at least 6 characters.");
+
+                            case AuthErrorReason.UserDisabled:
+                                return RegistrationResult.Failure("This account has been disabled.");
+
+                            case AuthErrorReason.OperationNotAllowed:
+                                return RegistrationResult.Failure("Email/password registration is not enabled in Firebase.");
+
+                            default:
+                                // Other auth errors - don't create local account
+                                return RegistrationResult.Failure($"Firebase authentication error: {ex.Message}");
+                        }
+                    }
+
+                    // Not a FirebaseAuthException - likely a network/connectivity error
+                    // Fall back to SQLite registration
                     firebaseErrorDetails = ex.Message;
 
 #if DEBUG
                     // DEBUG MODE: Log full exception details for development/troubleshooting
-                    _logger.Warning(ex, "Firebase registration failed with exception, falling back to offline registration");
+                    _logger.Warning(ex, "Firebase registration failed with network error, falling back to offline registration");
 #else
                     // RELEASE MODE: Do NOT log ex.Message - it contains passwords!
-                    _logger.Warning("Firebase registration failed (network error or invalid data), falling back to offline registration");
+                    _logger.Warning("Firebase registration failed (network error), falling back to offline registration");
 #endif
                 }
             }
