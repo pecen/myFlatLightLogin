@@ -87,9 +87,10 @@ WHERE Email = 'testuser@example.com';
 
 **Expected Results**:
 - ❌ Registration fails with clear error message
-- ✅ Error message: "An account with this email already exists in Firebase. If you previously deleted this account, please also delete it from Firebase Authentication (not just Realtime Database)."
+- ✅ User-facing error message: "An account with this email already exists in Firebase. Please contact Support for further assistance in how to solve this."
 - ✅ **NO local SQLite account is created** (this is critical!)
 - ✅ User remains on Registration screen
+- ✅ Log contains detailed technical message: "EMAIL_EXISTS error: An account with this email already exists in Firebase. If you previously deleted this account, please also delete it from Firebase Authentication (not just Realtime Database)."
 
 **Verify in SQLite Database**:
 ```sql

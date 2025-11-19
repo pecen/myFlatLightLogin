@@ -390,25 +390,37 @@ namespace myFlatLightLogin.Core.Services
                         switch (innerAuthEx.Reason)
                         {
                             case AuthErrorReason.EmailExists:
+                                // Log detailed technical explanation for troubleshooting
+                                _logger.Warning(
+                                    "EMAIL_EXISTS error: An account with this email already exists in Firebase. " +
+                                    "If you previously deleted this account, please also delete it from " +
+                                    "Firebase Authentication (not just Realtime Database). Email: {Email}",
+                                    user.Email);
+
+                                // User-friendly message directing to support
                                 return RegistrationResult.Failure(
                                     "An account with this email already exists in Firebase. " +
-                                    "If you previously deleted this account, please also delete it from " +
-                                    "Firebase Authentication (not just Realtime Database).");
+                                    "Please contact Support for further assistance in how to solve this.");
 
                             case AuthErrorReason.InvalidEmailAddress:
+                                _logger.Warning("Invalid email address provided: {Email}", user.Email);
                                 return RegistrationResult.Failure("The email address is invalid.");
 
                             case AuthErrorReason.WeakPassword:
+                                _logger.Warning("Weak password rejected for user: {Email}", user.Email);
                                 return RegistrationResult.Failure("Password is too weak. Please use at least 6 characters.");
 
                             case AuthErrorReason.UserDisabled:
+                                _logger.Warning("Attempt to register with disabled account: {Email}", user.Email);
                                 return RegistrationResult.Failure("This account has been disabled.");
 
                             case AuthErrorReason.OperationNotAllowed:
+                                _logger.Warning("Email/password registration not enabled in Firebase");
                                 return RegistrationResult.Failure("Email/password registration is not enabled in Firebase.");
 
                             default:
                                 // Other auth errors - don't create local account
+                                _logger.Warning("Firebase auth error ({Reason}): {Message}", innerAuthEx.Reason, ex.Message);
                                 return RegistrationResult.Failure($"Firebase authentication error: {ex.Message}");
                         }
                     }
