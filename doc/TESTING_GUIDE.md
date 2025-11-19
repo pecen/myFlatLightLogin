@@ -1,7 +1,7 @@
-# Testing Guide - Offline Password Change Feature
+# Testing Guide - Authentication & Offline Features
 
 ## Overview
-This guide covers testing the complete offline password change feature, including automatic sync, password change UI, and password sync dialog.
+This guide covers testing user registration, authentication, and the complete offline password change feature, including automatic sync, password change UI, and password sync dialog.
 
 ---
 
@@ -18,11 +18,165 @@ The application uses Serilog. Check logs at:
 - Console output during runtime
 - Log files (if configured in your Serilog settings)
 
-Look for log entries with keywords: `Password`, `Sync`, `Firebase`, `Offline`
+Look for log entries with keywords: `Password`, `Sync`, `Firebase`, `Offline`, `Registration`
 
 ---
 
-## Test Scenarios
+## User Registration Testing
+
+### Test 1: Normal Registration (Happy Path)
+
+**Goal**: Verify user registration works correctly when online and user doesn't exist
+
+**Steps**:
+1. Ensure internet connection is active
+2. Navigate to Register User screen
+3. Verify connection indicator shows 🟢 (online)
+4. Enter user details:
+   - Name: TestUser
+   - Lastname: Test
+   - Email: testuser@example.com (ensure this email doesn't exist in Firebase)
+   - Password: test123456
+   - Confirm Password: test123456
+5. Click "Register"
+
+**Expected Results**:
+- ✅ Success message: "Registration Successful"
+- ✅ Message shows user was created in Firebase (not offline)
+- ✅ User is created in Firebase Authentication
+- ✅ User profile is created in Firebase Realtime Database
+- ✅ User is created in SQLite local database
+
+**Verify in Firebase Console**:
+- **Authentication → Users**: User should appear with the email
+- **Realtime Database → users → {uid}**: User profile should exist with Name, Lastname, Email, Role
+
+**Verify in SQLite Database**:
+```sql
+SELECT Id, Name, Email, FirebaseUid, NeedsSync, RegistrationDate
+FROM User
+WHERE Email = 'testuser@example.com';
+```
+- ✅ `FirebaseUid` should be populated (NOT NULL)
+- ✅ `NeedsSync` should be `0` (false) - already synced to Firebase
+- ✅ `RegistrationDate` should be set
+
+---
+
+### Test 2: EMAIL_EXISTS Error (Firebase Auth Cleanup Required)
+
+**Goal**: Verify proper error handling when user exists in Firebase Authentication but not in Realtime Database
+
+**Background**: This scenario occurs when someone manually deletes a user from Realtime Database but forgets to delete from Authentication.
+
+**Setup**:
+1. Create a test user (e.g., existinguser@example.com) through normal registration
+2. In Firebase Console:
+   - Go to **Realtime Database → users**
+   - Delete the user's profile node
+   - **DO NOT** delete from Authentication (leave it there)
+
+**Steps**:
+1. Ensure internet connection is active
+2. Navigate to Register User screen
+3. Try to register with the same email:
+   - Email: existinguser@example.com
+   - Password: test123456
+   - Confirm Password: test123456
+4. Click "Register"
+
+**Expected Results**:
+- ❌ Registration fails with clear error message
+- ✅ Error message: "An account with this email already exists in Firebase. If you previously deleted this account, please also delete it from Firebase Authentication (not just Realtime Database)."
+- ✅ **NO local SQLite account is created** (this is critical!)
+- ✅ User remains on Registration screen
+
+**Verify in SQLite Database**:
+```sql
+SELECT COUNT(*) FROM User WHERE Email = 'existinguser@example.com';
+```
+- ✅ Should return `0` - no orphaned local account created
+
+**How to Fix** (for testing cleanup):
+1. Go to Firebase Console → Authentication → Users
+2. Find the user with the email
+3. Delete the user from Authentication
+4. Now you can register with that email again
+
+---
+
+### Test 3: Offline Registration (Fallback to SQLite)
+
+**Goal**: Verify registration falls back to local SQLite when internet is unavailable
+
+**Steps**:
+1. **Disconnect from internet** (airplane mode or disable network)
+2. Navigate to Register User screen
+3. Verify connection indicator shows 🔴 (offline)
+4. Enter user details:
+   - Name: OfflineUser
+   - Lastname: Test
+   - Email: offlineuser@example.com
+   - Password: test123456
+   - Confirm Password: test123456
+5. Click "Register"
+
+**Expected Results**:
+- ✅ Success message: "Registration Successful (Offline)"
+- ✅ Message explains: "Your account was created locally and will sync to Firebase when you're back online."
+- ✅ User can navigate to Login screen
+
+**Verify in SQLite Database**:
+```sql
+SELECT Id, Name, Email, FirebaseUid, NeedsSync, RegistrationDate
+FROM User
+WHERE Email = 'offlineuser@example.com';
+```
+- ✅ `FirebaseUid` should be `NULL` (not yet in Firebase)
+- ✅ `NeedsSync` should be `1` (true) - needs sync when online
+- ✅ `RegistrationDate` should be set
+
+**Verify Automatic Sync** (continue this test):
+1. **Reconnect to internet**
+2. Wait a few seconds (automatic sync should trigger)
+3. Check application logs for "Sync completed" message
+4. Re-query SQLite database:
+```sql
+SELECT FirebaseUid, NeedsSync FROM User WHERE Email = 'offlineuser@example.com';
+```
+- ✅ `FirebaseUid` should now be populated
+- ✅ `NeedsSync` should now be `0` (false)
+
+**Verify in Firebase**:
+- **Authentication → Users**: offlineuser@example.com should now appear
+- **Realtime Database → users**: Profile should exist
+
+---
+
+### Test 4: Other Validation Errors
+
+**Goal**: Verify proper handling of various Firebase authentication errors
+
+**Test Cases**:
+
+**A. Weak Password**
+- Enter password with less than 6 characters: "test"
+- ✅ Error: "Password is too weak. Please use at least 6 characters."
+- ✅ No SQLite account created
+
+**B. Invalid Email Format**
+- Enter invalid email: "notanemail"
+- ✅ Error: "The email address is invalid."
+- ✅ No SQLite account created
+
+**C. Mismatched Confirm Password**
+- Enter different passwords in Password and Confirm Password fields
+- ✅ Error: "Passwords do not match. Please try again."
+- ✅ Form validation catches this before attempting Firebase/SQLite
+
+---
+
+## Password Change Testing
 
 ### Scenario 1: Online Password Change (Happy Path)
 
@@ -431,6 +585,15 @@ WHERE Email = 'your-test-email@example.com';
 
 Use this checklist to track your testing progress:
 
+**User Registration:**
+- [ ] Test 1: Normal registration (happy path)
+- [ ] Test 2: EMAIL_EXISTS error handling
+- [ ] Test 3: Offline registration with automatic sync
+- [ ] Test 4: Validation errors (weak password, invalid email)
+- [ ] Verify FirebaseUid populated correctly
+- [ ] Verify NeedsSync flag accuracy
+
+**Password Change:**
 - [ ] Scenario 1: Online password change
 - [ ] Scenario 2: Offline password change
 - [ ] Scenario 3: Password sync dialog (happy path)
@@ -444,6 +607,8 @@ Use this checklist to track your testing progress:
 - [ ] Scenario 11: All validation errors
 - [ ] Edge Case 1: Network drops during change
 - [ ] Edge Case 2: Multiple offline password changes
+
+**Verification:**
 - [ ] Database verification for all scenarios
 - [ ] Firebase verification for all scenarios
 
@@ -467,8 +632,19 @@ I'm ready to fix any issues you discover!
 
 ## Success Criteria
 
-The feature is working correctly if:
+The features are working correctly if:
 
+**User Registration:**
+✅ Online registration creates users in both Firebase and SQLite
+✅ FirebaseUid is correctly populated in SQLite after online registration
+✅ NeedsSync = 0 (false) after successful online registration
+✅ EMAIL_EXISTS error provides clear message and prevents SQLite account creation
+✅ Other Firebase auth errors (weak password, invalid email) are handled properly
+✅ Offline registration creates local SQLite account with NeedsSync = 1
+✅ Automatic sync syncs offline-created users to Firebase when online
+✅ RegistrationDate is set correctly for all users
+
+**Password Change:**
 ✅ Online password changes update both Firebase and SQLite immediately
 ✅ Offline password changes are stored locally with proper flags
 ✅ Password sync dialog appears automatically on next online login
@@ -477,7 +653,10 @@ The feature is working correctly if:
 ✅ Users can skip sync and retry later
 ✅ Automatic sync works on app startup and connectivity restore
 ✅ Automatic sync SKIPS password changes (requires user interaction)
+
+**General:**
 ✅ All validation errors provide clear, helpful messages
+✅ No orphaned accounts created due to error conditions
 ✅ No crashes, no data loss, no security vulnerabilities
 
 Good luck with testing! Let me know what you find.
