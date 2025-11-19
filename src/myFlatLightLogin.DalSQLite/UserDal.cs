@@ -67,11 +67,16 @@ namespace myFlatLightLogin.DalSQLite
                 RegistrationDate = DateTime.UtcNow.ToString("o"), // Set once during registration
                 LastModified = DateTime.UtcNow.ToString("o"),
                 NeedsSync = true, // Mark for sync to Firebase
-                RoleId = (int)userDto.Role // Direct cast: enum values match role IDs
+                RoleId = (int)userDto.Role, // Direct cast: enum values match role IDs
+
+                // Store plain-text password temporarily for users without FirebaseUid
+                // This allows sync to create Firebase Auth account later
+                PendingPassword = string.IsNullOrEmpty(userDto.FirebaseUid) ? userDto.Password : null
             };
 
             bool result = DbCore.Insert(user);
-            _logger.Information("Insert result: {Result}, User ID: {UserId}", result, user.Id);
+            _logger.Information("Insert result: {Result}, User ID: {UserId}, PendingPassword stored: {HasPendingPassword}",
+                result, user.Id, !string.IsNullOrEmpty(user.PendingPassword));
             return result;
         }
 
@@ -178,6 +183,7 @@ namespace myFlatLightLogin.DalSQLite
 
         /// <summary>
         /// Gets all users that need to be synced to Firebase.
+        /// For users without FirebaseUid, includes the PendingPassword for Firebase Auth account creation.
         /// </summary>
         public List<UserDto> GetUsersNeedingSync()
         {
@@ -194,13 +200,16 @@ namespace myFlatLightLogin.DalSQLite
                     Username = u.Username,
                     Email = u.Email,
                     FirebaseUid = u.FirebaseUid,
-                    Role = (UserRole)u.RoleId // Direct cast: role IDs match enum values
+                    Role = (UserRole)u.RoleId, // Direct cast: role IDs match enum values
+
+                    // Include PendingPassword for users without FirebaseUid (needed for Firebase Auth creation)
+                    Password = string.IsNullOrEmpty(u.FirebaseUid) ? u.PendingPassword : null
                 }).ToList();
             }
         }
 
         /// <summary>
-        /// Marks a user as synced with Firebase.
+        /// Marks a user as synced with Firebase and clears the pending password.
         /// </summary>
         public bool MarkAsSynced(int id)
         {
@@ -213,6 +222,14 @@ namespace myFlatLightLogin.DalSQLite
                     return false;
 
                 user.NeedsSync = false;
+
+                // Clear pending password after successful sync (security)
+                if (!string.IsNullOrEmpty(user.PendingPassword))
+                {
+                    _logger.Information("Clearing PendingPassword for user {UserId} after successful sync", id);
+                    user.PendingPassword = null;
+                }
+
                 return conn.Update(user) > 0;
             }
         }

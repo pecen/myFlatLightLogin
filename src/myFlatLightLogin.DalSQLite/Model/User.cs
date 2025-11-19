@@ -29,6 +29,14 @@ namespace myFlatLightLogin.DalSQLite.Model
         public string Password { get; set; }
 
         /// <summary>
+        /// Temporarily stores plain-text password for users created offline.
+        /// Used to create Firebase Authentication account during sync.
+        /// SECURITY NOTE: This is cleared immediately after successful sync to Firebase.
+        /// Only populated for new users that haven't been synced yet (FirebaseUid is null).
+        /// </summary>
+        public string PendingPassword { get; set; }
+
+        /// <summary>
         /// Email address for Firebase authentication.
         /// </summary>
         public string Email { get; set; }
