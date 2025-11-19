@@ -58,8 +58,14 @@ namespace myFlatLightLogin.Core.Services
 
                     if (firebaseSuccess)
                     {
-                        // Mark as synced in SQLite
-                        _sqliteDal.MarkAsSynced(user.Id);
+                        // Fetch the user to get the SQLite-assigned ID
+                        var insertedUser = _sqliteDal.FindByEmail(user.Email);
+
+                        if (insertedUser != null)
+                        {
+                            // Mark as synced in SQLite with the correct ID
+                            _sqliteDal.MarkAsSynced(insertedUser.Id);
+                        }
                     }
                     // If Firebase fails, that's okay - it will sync later
                 }
@@ -330,10 +336,35 @@ namespace myFlatLightLogin.Core.Services
 
                     if (success)
                     {
-                        _logger.Information("Firebase registration successful for {Email}", user.Email);
+                        _logger.Information("Firebase registration successful for {Email}, FirebaseUid: {Uid}", user.Email, user.FirebaseUid);
+
                         // Firebase registration successful - save to SQLite
-                        _sqliteDal.Insert(user);
-                        _sqliteDal.MarkAsSynced(user.Id); // Already in Firebase
+                        // The user.FirebaseUid has been populated by Firebase Insert
+                        bool sqliteInserted = _sqliteDal.Insert(user);
+
+                        if (sqliteInserted)
+                        {
+                            // Fetch the user from SQLite to get the database-assigned ID
+                            var insertedUser = _sqliteDal.FindByEmail(user.Email);
+
+                            if (insertedUser != null)
+                            {
+                                _logger.Information("User inserted to SQLite with ID: {UserId}", insertedUser.Id);
+
+                                // Mark as synced since it's already in Firebase
+                                _sqliteDal.MarkAsSynced(insertedUser.Id);
+                                _logger.Information("User marked as synced in SQLite");
+                            }
+                            else
+                            {
+                                _logger.Warning("Could not find user in SQLite after insert: {Email}", user.Email);
+                            }
+                        }
+                        else
+                        {
+                            _logger.Warning("SQLite insert failed after successful Firebase registration");
+                        }
+
                         return RegistrationResult.FirebaseSuccess();
                     }
                     else

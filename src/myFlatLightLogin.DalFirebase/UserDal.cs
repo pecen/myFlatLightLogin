@@ -131,6 +131,7 @@ namespace myFlatLightLogin.DalFirebase
 
         /// <summary>
         /// Registers a new user with Firebase Authentication and stores profile.
+        /// Updates the UserDto with the Firebase UID upon successful creation.
         /// </summary>
         private async Task<bool> InsertAsync(UserDto user)
         {
@@ -143,6 +144,9 @@ namespace myFlatLightLogin.DalFirebase
 
                 if (credential?.User == null)
                     return false;
+
+                // IMPORTANT: Update the DTO with the Firebase UID so it can be stored in SQLite
+                user.FirebaseUid = credential.User.Uid;
 
                 // Store user profile in Realtime Database
                 var profile = new FirebaseUserProfile
