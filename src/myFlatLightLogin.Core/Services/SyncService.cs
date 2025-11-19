@@ -156,8 +156,8 @@ namespace myFlatLightLogin.Core.Services
                 {
                     try
                     {
-                        _logger.Information("Processing sync for user: {Email}, FirebaseUid: {Uid}, NeedsSync: {NeedsSync}",
-                            user.Email, user.FirebaseUid ?? "NULL", user.NeedsSync);
+                        _logger.Information("Processing sync for user: {Email}, FirebaseUid: {Uid}",
+                            user.Email, user.FirebaseUid ?? "NULL");
 
                         // Check if user already exists in Firebase
                         if (string.IsNullOrEmpty(user.FirebaseUid))
