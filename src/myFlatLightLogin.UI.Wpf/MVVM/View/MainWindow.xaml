@@ -32,6 +32,10 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <converter:BoolToVisibilityPwdText x:Key="BoolToVisPwd" />
+
+        <!-- Connection status colors -->
+        <SolidColorBrush x:Key="OnlineColor" Color="#4CAF50" />
+        <SolidColorBrush x:Key="OfflineColor" Color="#F44336" />
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -110,14 +114,54 @@
             BorderThickness="0,2,0,0"
             CornerRadius="0 0 5 5">
             <Grid>
-                <!--  Copyright Text  -->
-                <TextBlock
+                <!--  Connection Status Indicator  -->
+                <StackPanel
                     Margin="15,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
-                    FontSize="13"
-                    Foreground="#909090"
-                    Text="Copyright 2025. All rights reserved." />
+                    Orientation="Horizontal">
+                    <!--  Status Circle with 3D effect  -->
+                    <Ellipse
+                        Width="12"
+                        Height="12"
+                        Margin="0,0,8,0">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="{StaticResource OfflineColor}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsOnline}" Value="True">
+                                        <Setter Property="Fill" Value="{StaticResource OnlineColor}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                        <Ellipse.Effect>
+                            <DropShadowEffect
+                                BlurRadius="4"
+                                Direction="315"
+                                Opacity="0.5"
+                                ShadowDepth="1"
+                                Color="Black" />
+                        </Ellipse.Effect>
+                    </Ellipse>
+                    <!--  Status Text  -->
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        Text="{Binding ConnectionStatusText}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{StaticResource OfflineColor}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsOnline}" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource OnlineColor}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
 
                 <!--  Menu Buttons  -->
                 <StackPanel
@@ -357,8 +401,8 @@
                     </Menu>
 
                     <Button
-                        Command="{Binding NavigateToLoginCommand}"
-                        Content="Login"
+                        Command="{Binding LoginLogoutCommand}"
+                        Content="{Binding LoginLogoutButtonText}"
                         Foreground="#ff131e"
                         Style="{StaticResource bottomButton}" />
                 </StackPanel>

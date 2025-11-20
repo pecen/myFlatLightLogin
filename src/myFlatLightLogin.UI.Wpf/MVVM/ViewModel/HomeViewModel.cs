@@ -1,7 +1,6 @@
 using myFlatLightLogin.Core.MVVM;
 using myFlatLightLogin.Core.Services;
 using myFlatLightLogin.Dal.Dto;
-using Serilog;
 
 namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
@@ -11,9 +10,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
     /// </summary>
     public class HomeViewModel : ViewModelBase
     {
-        private static readonly ILogger _logger = Log.ForContext<HomeViewModel>();
-        private readonly HybridUserDal _hybridUserDal;
-
         private string welcomeText = string.Empty;
         public string WelcomeText
         {
@@ -30,12 +26,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         public RelayCommand NavigateToRoleManagementCommand { get; }
         public RelayCommand NavigateToChangePasswordCommand { get; }
-        public RelayCommand LogoutCommand { get; }
 
-        public HomeViewModel(INavigationService navigationService, HybridUserDal hybridUserDal)
+        public HomeViewModel(INavigationService navigationService)
         {
             Navigation = navigationService;
-            _hybridUserDal = hybridUserDal;
 
             // Initialize commands
             NavigateToRoleManagementCommand = new RelayCommand(
@@ -44,8 +38,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
             NavigateToChangePasswordCommand = new RelayCommand(
                 o => Navigation.NavigateTo<ChangePasswordViewModel>());
-
-            LogoutCommand = new RelayCommand(o => Logout());
 
             // Subscribe to user changes to update welcome text
             CurrentUserService.Instance.OnUserChanged += OnUserChanged;
@@ -80,26 +72,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         {
             var currentUser = CurrentUserService.Instance.CurrentUser;
             IsUserAdmin = currentUser?.Role == UserRole.Admin;
-        }
-
-        /// <summary>
-        /// Logs out the current user and navigates to the login screen.
-        /// </summary>
-        private void Logout()
-        {
-            var currentUser = CurrentUserService.Instance.CurrentUser;
-            _logger.Information("User logging out: {Email}", currentUser?.Email ?? "Unknown");
-
-            // Sign out from Firebase if online
-            _hybridUserDal.SignOut();
-
-            // Clear current user
-            CurrentUserService.Instance.ClearCurrentUser();
-
-            _logger.Information("User logged out successfully");
-
-            // Navigate to login screen
-            Navigation.NavigateTo<LoginViewModel>();
         }
     }
 }

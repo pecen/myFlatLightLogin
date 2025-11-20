@@ -3,6 +3,7 @@ using MahApps.Metro.Controls.Dialogs;
 using myFlatLightLogin.Core.MVVM;
 using myFlatLightLogin.Core.Services;
 using myFlatLightLogin.Core.Utilities;
+using Serilog;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -17,14 +18,18 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
     public class MainWindowViewModel : ViewModelBase
     {
+        private static readonly ILogger _logger = Log.ForContext<MainWindowViewModel>();
         private readonly LoginViewModel _loginViewModel;
         private readonly HybridUserDal _hybridUserDal;
         private readonly SyncService _syncService;
+        private readonly NetworkConnectivityService _connectivityService;
 
         public RelayCommand ShutdownWindowCommand { get; set; }
         public RelayCommand MoveWindowCommand { get; set; }
         public RelayCommand ResizeWindowCommand { get; set; }
         public RelayCommand NavigateToLoginCommand { get; set; }
+        public RelayCommand LogoutCommand { get; set; }
+        public RelayCommand LoginLogoutCommand { get; set; }
         public RelayCommand NavigateToRegisterUserCommand { get; set; }
         public AsyncRelayCommand OpenLogsFolderCommand { get; set; }
         public AsyncRelayCommand ViewCurrentLogCommand { get; set; }
@@ -71,13 +76,29 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             set => SetProperty(ref _isSyncing, value);
         }
 
+        /// <summary>
+        /// Gets whether the system is currently online.
+        /// </summary>
+        public bool IsOnline => _connectivityService?.IsOnline ?? false;
+
+        /// <summary>
+        /// Gets the connection status text for display.
+        /// </summary>
+        public string ConnectionStatusText => IsOnline ? "Online" : "Offline";
+
+        /// <summary>
+        /// Gets the text for the Login/Logout button.
+        /// </summary>
+        public string LoginLogoutButtonText => IsUserLoggedIn ? "Logout" : "Login";
+
         public MainWindowViewModel(INavigationService navigationService, LoginViewModel loginViewModel,
-            HybridUserDal hybridUserDal, SyncService syncService)
+            HybridUserDal hybridUserDal, SyncService syncService, NetworkConnectivityService connectivityService)
         {
             Navigation = navigationService;
             _loginViewModel = loginViewModel;
             _hybridUserDal = hybridUserDal;
             _syncService = syncService;
+            _connectivityService = connectivityService;
             Navigation.NavigateTo<LoginViewModel>();
 
             MoveWindowCommand = new RelayCommand(o => { Application.Current.MainWindow.DragMove(); });
@@ -104,6 +125,22 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 Navigation.NavigateTo<LoginViewModel>();
             }, o => true);
 
+            LogoutCommand = new RelayCommand(o => Logout());
+
+            // Combined Login/Logout command that switches behavior based on login state
+            LoginLogoutCommand = new RelayCommand(o =>
+            {
+                if (IsUserLoggedIn)
+                {
+                    Logout();
+                }
+                else
+                {
+                    _loginViewModel.ClearForm();
+                    Navigation.NavigateTo<LoginViewModel>();
+                }
+            });
+
             // Admin-only commands for log access
             OpenLogsFolderCommand = new AsyncRelayCommand(OpenLogsFolderAsync, () => IsUserAdministrator);
             ViewCurrentLogCommand = new AsyncRelayCommand(ViewCurrentLogAsync, () => IsUserAdministrator);
@@ -120,6 +157,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 // Notify UI that IsUserAdministrator and IsUserLoggedIn may have changed
                 OnPropertyChanged(nameof(IsUserAdministrator));
                 OnPropertyChanged(nameof(IsUserLoggedIn));
+                OnPropertyChanged(nameof(LoginLogoutButtonText));
 
                 // Update CanExecute for admin commands
                 OpenLogsFolderCommand?.RaiseCanExecuteChanged();
@@ -130,8 +168,39 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 RefreshSyncStatus();
             };
 
+            // Subscribe to connectivity changes to update UI
+            _connectivityService.ConnectivityChanged += (sender, isOnline) =>
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    OnPropertyChanged(nameof(IsOnline));
+                    OnPropertyChanged(nameof(ConnectionStatusText));
+                });
+            };
+
             // Initialize sync status
             RefreshSyncStatus();
+        }
+
+        /// <summary>
+        /// Logs out the current user and navigates to the login screen.
+        /// </summary>
+        private void Logout()
+        {
+            var currentUser = CurrentUserService.Instance.CurrentUser;
+            _logger.Information("User logging out: {Email}", currentUser?.Email ?? "Unknown");
+
+            // Sign out from Firebase if online
+            _hybridUserDal.SignOut();
+
+            // Clear current user
+            CurrentUserService.Instance.ClearCurrentUser();
+
+            _logger.Information("User logged out successfully");
+
+            // Clear login form and navigate to login screen
+            _loginViewModel.ClearForm();
+            Navigation.NavigateTo<LoginViewModel>();
         }
 
         #region Methods
