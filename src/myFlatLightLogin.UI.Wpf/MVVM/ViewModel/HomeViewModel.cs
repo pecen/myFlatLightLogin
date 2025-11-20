@@ -94,7 +94,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             _hybridUserDal.SignOut();
 
             // Clear current user
-            CurrentUserService.Instance.CurrentUser = null;
+            CurrentUserService.Instance.ClearCurrentUser();
 
             _logger.Information("User logged out successfully");
 
