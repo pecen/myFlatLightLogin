@@ -335,8 +335,12 @@ namespace myFlatLightLogin.DalFirebase
         /// </summary>
         public void SignOut()
         {
-            _authClient?.SignOut();
-            _currentUser = null;
+            // Only sign out if there's actually a user signed in
+            if (_currentUser != null)
+            {
+                _authClient?.SignOut();
+                _currentUser = null;
+            }
         }
 
         /// <summary>
