@@ -67,6 +67,13 @@
                 Content="Manage Roles (Admin)"
                 Style="{StaticResource mainButtonPrimary}"
                 Visibility="{Binding IsUserAdmin, Converter={StaticResource BoolToVis}}" />
+
+            <!--  Logout Button  -->
+            <Button
+                Margin="0,30,0,0"
+                Command="{Binding LogoutCommand}"
+                Content="Logout"
+                Style="{StaticResource mainButton}" />
         </StackPanel>
     </Grid>
 </UserControl>
