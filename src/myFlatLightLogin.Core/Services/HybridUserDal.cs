@@ -559,7 +559,24 @@ namespace myFlatLightLogin.Core.Services
 
                 // 3. Update Firebase password
                 _logger.Information("Updating Firebase password for user: {Email}", user.Email);
-                bool firebaseSuccess = await _firebaseDal.UpdatePasswordAsync(newPassword);
+                bool firebaseSuccess;
+
+                // Check if Firebase has an active session
+                if (_firebaseDal.GetCurrentUser() == null)
+                {
+                    // User logged in offline or Firebase was unreachable during login
+                    // Need to authenticate with Firebase using current password first
+                    _logger.Information("No active Firebase session - authenticating with current password first for user: {Email}", user.Email);
+                    firebaseSuccess = await _firebaseDal.UpdatePasswordWithOldPasswordAsync(
+                        user.Email,
+                        currentPassword,
+                        newPassword);
+                }
+                else
+                {
+                    // Firebase has active session - can use direct password update
+                    firebaseSuccess = await _firebaseDal.UpdatePasswordAsync(newPassword);
+                }
 
                 if (!firebaseSuccess)
                 {
