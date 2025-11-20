@@ -1,3 +1,4 @@
+using Firebase.Auth;
 using myFlatLightLogin.Dal;
 using myFlatLightLogin.Dal.Dto;
 using Serilog;
@@ -58,8 +59,14 @@ namespace myFlatLightLogin.Core.Services
 
                     if (firebaseSuccess)
                     {
-                        // Mark as synced in SQLite
-                        _sqliteDal.MarkAsSynced(user.Id);
+                        // Fetch the user to get the SQLite-assigned ID
+                        var insertedUser = _sqliteDal.FindByEmail(user.Email);
+
+                        if (insertedUser != null)
+                        {
+                            // Mark as synced in SQLite with the correct ID
+                            _sqliteDal.MarkAsSynced(insertedUser.Id);
+                        }
                     }
                     // If Firebase fails, that's okay - it will sync later
                 }
@@ -179,6 +186,17 @@ namespace myFlatLightLogin.Core.Services
                             user.Password = password; // Store for offline auth
                             _sqliteDal.Insert(user);
                             _logger.Information("User cached successfully");
+
+                            // Re-fetch to get the SQLite-assigned ID
+                            existingUser = _sqliteDal.FindByEmail(email);
+                            if (existingUser != null)
+                            {
+                                // Return the SQLite user with correct ID, but preserve Firebase data
+                                existingUser.FirebaseUid = user.FirebaseUid;
+                                existingUser.FirebaseAuthToken = user.FirebaseAuthToken;
+                                existingUser.Role = user.Role;
+                                return existingUser;
+                            }
                         }
                         else
                         {
@@ -187,9 +205,24 @@ namespace myFlatLightLogin.Core.Services
                             existingUser.Name = user.Name;
                             existingUser.Lastname = user.Lastname;
                             existingUser.FirebaseUid = user.FirebaseUid;
-                            existingUser.Password = password; // Update password
+                            existingUser.FirebaseAuthToken = user.FirebaseAuthToken;
+                            existingUser.Password = password; // Update password (will be hashed by SQLite Update)
+                            existingUser.Role = user.Role;
                             _sqliteDal.Update(existingUser);
                             _logger.Information("Cache updated successfully");
+
+                            // Re-fetch from database to get the hashed password
+                            // This ensures the in-memory object matches what's stored in SQLite
+                            var updatedUser = _sqliteDal.Fetch(existingUser.Id);
+                            if (updatedUser != null)
+                            {
+                                updatedUser.FirebaseUid = existingUser.FirebaseUid;
+                                updatedUser.FirebaseAuthToken = existingUser.FirebaseAuthToken;
+                                return updatedUser;
+                            }
+
+                            // Fallback: return existingUser (shouldn't happen)
+                            return existingUser;
                         }
 
                         return user;
@@ -304,10 +337,35 @@ namespace myFlatLightLogin.Core.Services
 
                     if (success)
                     {
-                        _logger.Information("Firebase registration successful for {Email}", user.Email);
+                        _logger.Information("Firebase registration successful for {Email}, FirebaseUid: {Uid}", user.Email, user.FirebaseUid);
+
                         // Firebase registration successful - save to SQLite
-                        _sqliteDal.Insert(user);
-                        _sqliteDal.MarkAsSynced(user.Id); // Already in Firebase
+                        // The user.FirebaseUid has been populated by Firebase Insert
+                        bool sqliteInserted = _sqliteDal.Insert(user);
+
+                        if (sqliteInserted)
+                        {
+                            // Fetch the user from SQLite to get the database-assigned ID
+                            var insertedUser = _sqliteDal.FindByEmail(user.Email);
+
+                            if (insertedUser != null)
+                            {
+                                _logger.Information("User inserted to SQLite with ID: {UserId}", insertedUser.Id);
+
+                                // Mark as synced since it's already in Firebase
+                                _sqliteDal.MarkAsSynced(insertedUser.Id);
+                                _logger.Information("User marked as synced in SQLite");
+                            }
+                            else
+                            {
+                                _logger.Warning("Could not find user in SQLite after insert: {Email}", user.Email);
+                            }
+                        }
+                        else
+                        {
+                            _logger.Warning("SQLite insert failed after successful Firebase registration");
+                        }
+
                         return RegistrationResult.FirebaseSuccess();
                     }
                     else
@@ -318,16 +376,65 @@ namespace myFlatLightLogin.Core.Services
                 }
                 catch (Exception ex)
                 {
-                    // Catch ALL exceptions from Firebase - do NOT let them propagate to VS debugger
-                    // This prevents VS from breaking on FirebaseAuthException
+                    // Check if this is a Firebase authentication error wrapped in Exception
+                    var innerAuthEx = ex.InnerException as FirebaseAuthException;
+
+                    if (innerAuthEx != null)
+                    {
+                        // This is a user-related error (EMAIL_EXISTS, weak password, etc.)
+                        // Do NOT fall back to SQLite - fail the registration with clear message
+                        _logger.Warning("Firebase registration failed with auth error: {Reason} - {Message}",
+                            innerAuthEx.Reason, ex.Message);
+
+                        // Check specific error reasons that should NOT create local accounts
+                        switch (innerAuthEx.Reason)
+                        {
+                            case AuthErrorReason.EmailExists:
+                                // Log detailed technical explanation for troubleshooting
+                                _logger.Warning(
+                                    "EMAIL_EXISTS error: An account with this email already exists in Firebase. " +
+                                    "If you previously deleted this account, please also delete it from " +
+                                    "Firebase Authentication (not just Realtime Database). Email: {Email}",
+                                    user.Email);
+
+                                // User-friendly message directing to support
+                                return RegistrationResult.Failure(
+                                    "An account with this email already exists in Firebase. " +
+                                    "Please contact Support for further assistance in how to solve this.");
+
+                            case AuthErrorReason.InvalidEmailAddress:
+                                _logger.Warning("Invalid email address provided: {Email}", user.Email);
+                                return RegistrationResult.Failure("The email address is invalid.");
+
+                            case AuthErrorReason.WeakPassword:
+                                _logger.Warning("Weak password rejected for user: {Email}", user.Email);
+                                return RegistrationResult.Failure("Password is too weak. Please use at least 6 characters.");
+
+                            case AuthErrorReason.UserDisabled:
+                                _logger.Warning("Attempt to register with disabled account: {Email}", user.Email);
+                                return RegistrationResult.Failure("This account has been disabled.");
+
+                            case AuthErrorReason.OperationNotAllowed:
+                                _logger.Warning("Email/password registration not enabled in Firebase");
+                                return RegistrationResult.Failure("Email/password registration is not enabled in Firebase.");
+
+                            default:
+                                // Other auth errors - don't create local account
+                                _logger.Warning("Firebase auth error ({Reason}): {Message}", innerAuthEx.Reason, ex.Message);
+                                return RegistrationResult.Failure($"Firebase authentication error: {ex.Message}");
+                        }
+                    }
+
+                    // Not a FirebaseAuthException - likely a network/connectivity error
+                    // Fall back to SQLite registration
                     firebaseErrorDetails = ex.Message;
 
 #if DEBUG
                     // DEBUG MODE: Log full exception details for development/troubleshooting
-                    _logger.Warning(ex, "Firebase registration failed with exception, falling back to offline registration");
+                    _logger.Warning(ex, "Firebase registration failed with network error, falling back to offline registration");
 #else
                     // RELEASE MODE: Do NOT log ex.Message - it contains passwords!
-                    _logger.Warning("Firebase registration failed (network error or invalid data), falling back to offline registration");
+                    _logger.Warning("Firebase registration failed (network error), falling back to offline registration");
 #endif
                 }
             }
@@ -398,6 +505,117 @@ namespace myFlatLightLogin.Core.Services
         {
             var pending = _sqliteDal.GetUsersNeedingSync();
             return pending?.Count ?? 0;
+        }
+
+        /// <summary>
+        /// Changes user password with online/offline support and Firebase synchronization.
+        /// Online: Updates Firebase immediately, then SQLite.
+        /// Offline: Updates SQLite with old password hash stored for later sync.
+        /// </summary>
+        /// <param name="userId">User ID</param>
+        /// <param name="currentPassword">Current password (plain text)</param>
+        /// <param name="newPassword">New password (plain text)</param>
+        /// <returns>PasswordChangeResult with success/failure details</returns>
+        public async Task<PasswordChangeResult> ChangePasswordAsync(
+            int userId,
+            string currentPassword,
+            string newPassword)
+        {
+            _logger.Information("Password change requested for user ID: {UserId}, IsOnline: {IsOnline}", userId, IsOnline);
+
+            if (_connectivityService.IsOnline)
+            {
+                return await ChangePasswordOnlineAsync(userId, currentPassword, newPassword);
+            }
+            else
+            {
+                return ChangePasswordOffline(userId, currentPassword, newPassword);
+            }
+        }
+
+        /// <summary>
+        /// Changes password when online - updates Firebase immediately.
+        /// </summary>
+        private async Task<PasswordChangeResult> ChangePasswordOnlineAsync(
+            int userId,
+            string currentPassword,
+            string newPassword)
+        {
+            try
+            {
+                _logger.Information("Changing password online for user ID: {UserId}", userId);
+
+                // 1. Get user from SQLite
+                var user = _sqliteDal.Fetch(userId);
+                if (user == null)
+                    return PasswordChangeResult.Failure("User not found");
+
+                // 2. Verify current password against SQLite hash
+                if (!_sqliteDal.VerifyUserPassword(userId, currentPassword))
+                {
+                    _logger.Warning("Current password verification failed for user ID: {UserId}", userId);
+                    return PasswordChangeResult.Failure("Current password is incorrect");
+                }
+
+                // 3. Update Firebase password
+                _logger.Information("Updating Firebase password for user: {Email}", user.Email);
+                bool firebaseSuccess = await _firebaseDal.UpdatePasswordAsync(newPassword);
+
+                if (!firebaseSuccess)
+                {
+                    _logger.Warning("Firebase password update failed for user ID: {UserId}", userId);
+                    return PasswordChangeResult.Failure("Failed to update password in Firebase");
+                }
+
+                // 4. Update SQLite password hash (Firebase already updated)
+                _logger.Information("Updating SQLite password hash for user ID: {UserId}", userId);
+                bool sqliteSuccess = _sqliteDal.ChangePasswordOnline(userId, newPassword);
+
+                if (!sqliteSuccess)
+                {
+                    _logger.Warning("SQLite password update failed for user ID: {UserId}", userId);
+                    return PasswordChangeResult.Failure("Failed to update password in local database");
+                }
+
+                _logger.Information("Password changed successfully online for user ID: {UserId}", userId);
+                return PasswordChangeResult.OnlineSuccess();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error changing password online for user ID: {UserId}", userId);
+                return PasswordChangeResult.Failure($"Failed to change password: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Changes password when offline - stores old password hash for later sync.
+        /// </summary>
+        private PasswordChangeResult ChangePasswordOffline(
+            int userId,
+            string currentPassword,
+            string newPassword)
+        {
+            try
+            {
+                _logger.Information("Changing password offline for user ID: {UserId}", userId);
+
+                // Update SQLite with old password hash stored
+                bool success = _sqliteDal.ChangePasswordOffline(userId, currentPassword, newPassword);
+
+                if (!success)
+                {
+                    _logger.Warning("SQLite offline password change failed for user ID: {UserId}", userId);
+                    return PasswordChangeResult.Failure("Failed to change password. Please verify your current password is correct.");
+                }
+
+                _logger.Information("Password changed offline successfully for user ID: {UserId}", userId);
+                return PasswordChangeResult.OfflineSuccess();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error changing password offline for user ID: {UserId}", userId);
+                return PasswordChangeResult.Failure($"Failed to change password: {ex.Message}");
+            }
         }
 
         #endregion

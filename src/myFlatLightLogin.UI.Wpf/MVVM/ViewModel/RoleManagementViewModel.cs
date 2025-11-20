@@ -128,7 +128,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 // Ensure Firebase is initialized
                 await _roleDal.InitializeAsync();
 
-                var roles = await Task.Run(() => _roleDal.GetAllRoles());
+                var roles = await Task.Run(() => _roleDal.Fetch());
 
                 Log.Information($"Retrieved {roles?.Count ?? 0} roles from Firebase");
 
@@ -196,8 +196,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                 await Task.Run(() =>
                 {
-                    _roleDal.InsertRole(userRole);
-                    _roleDal.InsertRole(adminRole);
+                    _roleDal.Insert(userRole);
+                    _roleDal.Insert(adminRole);
                 });
 
                 StatusMessage = "Default roles seeded successfully!";
@@ -247,7 +247,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     Description = EditRoleDescription
                 };
 
-                bool success = await Task.Run(() => _roleDal.InsertRole(newRole));
+                bool success = await Task.Run(() => _roleDal.Insert(newRole));
 
                 if (success)
                 {
@@ -305,7 +305,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     Description = EditRoleDescription
                 };
 
-                bool success = await Task.Run(() => _roleDal.UpdateRole(updatedRole));
+                bool success = await Task.Run(() => _roleDal.Update(updatedRole));
 
                 if (success)
                 {
@@ -359,7 +359,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 StatusMessage = "Deleting role...";
                 Log.Information($"Deleting role: {SelectedRole.Name}");
 
-                bool success = await Task.Run(() => _roleDal.DeleteRole(SelectedRole.Id));
+                bool success = await Task.Run(() => _roleDal.Delete(SelectedRole.Id));
 
                 if (success)
                 {

@@ -11,31 +11,31 @@ namespace myFlatLightLogin.Dal
         /// <summary>
         /// Gets a role by its ID.
         /// </summary>
-        RoleDto GetRoleById(int id);
+        RoleDto Fetch(int id);
 
         /// <summary>
         /// Gets a role by its name.
         /// </summary>
-        RoleDto GetRoleByName(string name);
+        RoleDto Fetch(string name);
 
         /// <summary>
         /// Gets all roles.
         /// </summary>
-        List<RoleDto> GetAllRoles();
+        List<RoleDto> Fetch();
 
         /// <summary>
         /// Adds a new role.
         /// </summary>
-        bool InsertRole(RoleDto role);
+        bool Insert(RoleDto role);
 
         /// <summary>
         /// Updates an existing role.
         /// </summary>
-        bool UpdateRole(RoleDto role);
+        bool Update(RoleDto role);
 
         /// <summary>
         /// Deletes a role by ID.
         /// </summary>
-        bool DeleteRole(int id);
+        bool Delete(int id);
     }
 }

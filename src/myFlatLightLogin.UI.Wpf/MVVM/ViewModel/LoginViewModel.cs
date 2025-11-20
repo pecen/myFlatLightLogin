@@ -3,6 +3,8 @@ using MahApps.Metro.Controls.Dialogs;
 using myFlatLightLogin.Core.MVVM;
 using myFlatLightLogin.Core.Services;
 using myFlatLightLogin.Dal;
+using myFlatLightLogin.Dal.Dto;
+using myFlatLightLogin.UI.Wpf.MVVM.View;
 using Serilog;
 using System;
 using System.Threading.Tasks;
@@ -19,6 +21,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         private static readonly ILogger _logger = Log.ForContext<LoginViewModel>();
         private readonly HybridUserDal _hybridDal;
         private readonly NetworkConnectivityService _connectivityService;
+        private readonly SyncService _syncService;
 
         #region Properties
 
@@ -99,7 +102,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public RelayCommand NavigateToRegisterUserCommand { get; set; }
         public AsyncRelayCommand LoginCommand { get; set; }
         public RelayCommand TogglePasswordVisibilityCommand { get; set; }
-        public AsyncRelayCommand MigrateUserRolesCommand { get; set; }
 
         #endregion
 
@@ -117,10 +119,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             _connectivityService.ConnectivityChanged += OnConnectivityChanged;
 
             // Initialize sync service
-            var syncService = new SyncService(_connectivityService);
+            _syncService = new SyncService(_connectivityService);
 
             // Initialize Hybrid DAL (manages Firebase and SQLite)
-            _hybridDal = new HybridUserDal(_connectivityService, syncService);
+            _hybridDal = new HybridUserDal(_connectivityService, _syncService);
 
             // Initialize commands
             NavigateToRegisterUserCommand = new RelayCommand(
@@ -136,8 +138,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             TogglePasswordVisibilityCommand = new RelayCommand(
                 o => IsPasswordVisible = !IsPasswordVisible,
                 o => true);
-
-            MigrateUserRolesCommand = new AsyncRelayCommand(MigrateUserRolesAsync, () => !IsLoading);
 
             // Clear form when view loads (in case returning from another view)
             ClearForm();
@@ -219,6 +219,13 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                         });
 
                     _logger.Information("========== LOGIN ATTEMPT COMPLETED SUCCESSFULLY ==========");
+
+                    // Check for pending password changes (offline password change that needs sync)
+                    if (user.PendingPasswordChange && _connectivityService.IsOnline)
+                    {
+                        _logger.Information("Pending password change detected for user: {Email}. Showing password sync dialog.", user.Email);
+                        await ShowPasswordSyncDialogAsync(user, window);
+                    }
 
                     // Navigate to Home view after successful login
                     Navigation.NavigateTo<HomeViewModel>();
@@ -345,70 +352,44 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         }
 
         /// <summary>
-        /// Migrates user roles from old enum values to new enum values.
-        /// OLD: User=0, Admin=1 -> NEW: User=1, Admin=2
+        /// Shows the password sync dialog to sync an offline password change to Firebase.
         /// </summary>
-        private async Task MigrateUserRolesAsync()
+        private async Task ShowPasswordSyncDialogAsync(UserDto user, MetroWindow window)
         {
-            var window = (MetroWindow)Application.Current.MainWindow;
-
             try
             {
-                IsLoading = true;
-                StatusMessage = "Migrating user roles...";
-                _logger.Information("Starting user role migration...");
+                _logger.Information("Showing password sync dialog for user: {Email}", user.Email);
 
-                var result = await Utilities.UserRoleMigrationUtility.MigrateUserRolesAsync();
+                // Create the dialog view and ViewModel
+                var dialogView = new myFlatLightLogin.UI.Wpf.MVVM.View.PasswordSyncDialog();
+                var dialogViewModel = new PasswordSyncDialogViewModel(
+                    _syncService,
+                    user,
+                    window);
 
-                if (result.success)
+                dialogView.DataContext = dialogViewModel;
+
+                // Create a task completion source to wait for dialog closure
+                var tcs = new TaskCompletionSource<bool>();
+                dialogViewModel.OnDialogClosed += (sender, e) => tcs.TrySetResult(dialogViewModel.DialogResult);
+
+                // Show the dialog as a Metro dialog
+                await window.ShowMetroDialogAsync(new MahApps.Metro.Controls.Dialogs.CustomDialog
                 {
-                    StatusMessage = result.message;
-                    _logger.Information("Migration completed: {Message}", result.message);
+                    Content = dialogView
+                });
 
-                    await window.ShowMessageAsync("Migration Successful",
-                        result.message,
-                        MessageDialogStyle.Affirmative,
-                        new MetroDialogSettings
-                        {
-                            AffirmativeButtonText = "OK",
-                            AnimateShow = true,
-                            AnimateHide = true
-                        });
-                }
-                else
-                {
-                    StatusMessage = $"Migration failed: {result.message}";
-                    _logger.Error("Migration failed: {Message}", result.message);
+                // Wait for the dialog to close
+                bool result = await tcs.Task;
 
-                    await window.ShowMessageAsync("Migration Failed",
-                        result.message,
-                        MessageDialogStyle.Affirmative,
-                        new MetroDialogSettings
-                        {
-                            AffirmativeButtonText = "OK",
-                            AnimateShow = true,
-                            AnimateHide = true
-                        });
-                }
+                // Hide the dialog
+                await window.HideMetroDialogAsync(await window.GetCurrentDialogAsync<MahApps.Metro.Controls.Dialogs.BaseMetroDialog>());
+
+                _logger.Information("Password sync dialog closed. Result: {Result}", result);
             }
             catch (Exception ex)
             {
-                StatusMessage = $"Migration error: {ex.Message}";
-                _logger.Error(ex, "Migration failed with exception");
-
-                await window.ShowMessageAsync("Migration Error",
-                    $"An error occurred during migration: {ex.Message}",
-                    MessageDialogStyle.Affirmative,
-                    new MetroDialogSettings
-                    {
-                        AffirmativeButtonText = "OK",
-                        AnimateShow = true,
-                        AnimateHide = true
-                    });
-            }
-            finally
-            {
-                IsLoading = false;
+                _logger.Error(ex, "Error showing password sync dialog");
             }
         }
 

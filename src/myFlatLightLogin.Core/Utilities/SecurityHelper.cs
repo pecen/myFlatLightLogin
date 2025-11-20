@@ -1,5 +1,7 @@
 using System;
+using System.Security.Cryptography;
 using System.Security.Principal;
+using System.Text;
 
 namespace myFlatLightLogin.Core.Utilities
 {
@@ -43,6 +45,38 @@ namespace myFlatLightLogin.Core.Utilities
             {
                 return "Unknown";
             }
+        }
+
+        /// <summary>
+        /// Hashes a password using SHA256.
+        /// </summary>
+        /// <param name="password">The password to hash</param>
+        /// <returns>Base64-encoded hash of the password</returns>
+        public static string HashPassword(string password)
+        {
+            if (string.IsNullOrEmpty(password))
+                return string.Empty;
+
+            using (var sha256 = SHA256.Create())
+            {
+                var bytes = Encoding.UTF8.GetBytes(password);
+                var hash = sha256.ComputeHash(bytes);
+                return Convert.ToBase64String(hash);
+            }
+        }
+
+        /// <summary>
+        /// Verifies a password against a hash.
+        /// </summary>
+        /// <param name="password">The password to verify</param>
+        /// <param name="hash">The hash to verify against</param>
+        /// <returns>True if the password matches the hash, false otherwise</returns>
+        public static bool VerifyPassword(string password, string hash)
+        {
+            if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(hash))
+                return false;
+
+            return HashPassword(password) == hash;
         }
     }
 }

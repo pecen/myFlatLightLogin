@@ -30,6 +30,10 @@
                 <view:RoleManagement />
             </DataTemplate>
 
+            <DataTemplate DataType="{x:Type vm:ChangePasswordViewModel}">
+                <view:ChangePassword />
+            </DataTemplate>
+
             <Style x:Key="topButton" TargetType="Button">
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="Foreground" Value="#ff131e" />

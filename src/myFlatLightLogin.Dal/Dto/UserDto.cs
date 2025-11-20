@@ -52,9 +52,32 @@
         public string? FirebaseAuthToken { get; set; }
 
         /// <summary>
+        /// Registration date timestamp in UTC when the account was created (ISO 8601).
+        /// This is set once during registration and never changed.
+        /// </summary>
+        public string? RegistrationDate { get; set; }
+
+        /// <summary>
         /// User's role for application-level authorization.
         /// Default is User (0). First registered user becomes Admin (1).
         /// </summary>
         public UserRole Role { get; set; } = UserRole.User;
+
+        /// <summary>
+        /// Indicates if the user's password was changed while offline.
+        /// When true, sync requires old password for Firebase authentication.
+        /// </summary>
+        public bool PendingPasswordChange { get; set; }
+
+        /// <summary>
+        /// Hash of the old password (before offline change).
+        /// Used to verify old password during sync. Cleared after successful sync.
+        /// </summary>
+        public string? OldPasswordHash { get; set; }
+
+        /// <summary>
+        /// Timestamp when password was last changed (UTC, ISO 8601).
+        /// </summary>
+        public string? PasswordChangedDate { get; set; }
     }
 }

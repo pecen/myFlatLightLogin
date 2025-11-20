@@ -168,14 +168,6 @@
             <!--  Long Button  -->
             <Button Content="Login as Guest" Style="{StaticResource mainButtonLong}" />
 
-            <!--  Migration Button (One-time fix for role enum change)  -->
-            <Button
-                Margin="0,10,0,0"
-                Command="{Binding MigrateUserRolesCommand}"
-                Content="⚠️ Migrate User Roles"
-                Style="{StaticResource mainButton}"
-                ToolTip="Click once to update user roles from old values (0,1) to new values (1,2). This fixes the 'Manage Roles' button visibility issue." />
-
         </StackPanel>
     </Border>
 </UserControl>

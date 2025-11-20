@@ -23,25 +23,8 @@ namespace myFlatLightLogin.DalSQLite
 
         public UserDal()
         {
+            // RoleDal available for querying role details if needed
             _roleDal = new RoleDal();
-        }
-
-        /// <summary>
-        /// Converts UserRole enum to RoleId.
-        /// </summary>
-        private int GetRoleId(UserRole role)
-        {
-            // Map enum to role ID (User=1, Admin=2)
-            return role == UserRole.Admin ? 2 : 1;
-        }
-
-        /// <summary>
-        /// Converts RoleId to UserRole enum.
-        /// </summary>
-        private UserRole GetUserRole(int roleId)
-        {
-            // Map role ID to enum (1=User, 2=Admin)
-            return roleId == 2 ? UserRole.Admin : UserRole.User;
         }
 
         public UserDto Fetch(int id)
@@ -62,7 +45,8 @@ namespace myFlatLightLogin.DalSQLite
                     Username = user.Username,
                     Email = user.Email,
                     FirebaseUid = user.FirebaseUid,
-                    Role = GetUserRole(user.RoleId) // Convert role ID to enum
+                    RegistrationDate = user.RegistrationDate,
+                    Role = (UserRole)user.RoleId // Direct cast: role IDs match enum values
                 };
             }
         }
@@ -80,13 +64,19 @@ namespace myFlatLightLogin.DalSQLite
                 Email = userDto.Email,
                 Password = HashPassword(userDto.Password),
                 FirebaseUid = userDto.FirebaseUid,
+                RegistrationDate = DateTime.UtcNow.ToString("o"), // Set once during registration
                 LastModified = DateTime.UtcNow.ToString("o"),
                 NeedsSync = true, // Mark for sync to Firebase
-                RoleId = GetRoleId(userDto.Role) // Convert enum to role ID
+                RoleId = (int)userDto.Role, // Direct cast: enum values match role IDs
+
+                // Store plain-text password temporarily for users without FirebaseUid
+                // This allows sync to create Firebase Auth account later
+                PendingPassword = string.IsNullOrEmpty(userDto.FirebaseUid) ? userDto.Password : null
             };
 
             bool result = DbCore.Insert(user);
-            _logger.Information("Insert result: {Result}, User ID: {UserId}", result, user.Id);
+            _logger.Information("Insert result: {Result}, User ID: {UserId}, PendingPassword stored: {HasPendingPassword}",
+                result, user.Id, !string.IsNullOrEmpty(user.PendingPassword));
             return result;
         }
 
@@ -113,7 +103,7 @@ namespace myFlatLightLogin.DalSQLite
                 user.FirebaseUid = userDto.FirebaseUid;
                 user.LastModified = DateTime.UtcNow.ToString("o");
                 user.NeedsSync = true; // Mark for sync to Firebase
-                user.RoleId = GetRoleId(userDto.Role); // Update role ID
+                user.RoleId = (int)userDto.Role; // Direct cast: enum values match role IDs
 
                 // Only update password if provided
                 if (!string.IsNullOrEmpty(userDto.Password))
@@ -185,13 +175,15 @@ namespace myFlatLightLogin.DalSQLite
                     Username = user.Username,
                     Email = user.Email,
                     FirebaseUid = user.FirebaseUid,
-                    Role = GetUserRole(user.RoleId) // Convert role ID to enum
+                    RegistrationDate = user.RegistrationDate,
+                    Role = (UserRole)user.RoleId // Direct cast: role IDs match enum values
                 };
             }
         }
 
         /// <summary>
         /// Gets all users that need to be synced to Firebase.
+        /// For users without FirebaseUid, includes the PendingPassword for Firebase Auth account creation.
         /// </summary>
         public List<UserDto> GetUsersNeedingSync()
         {
@@ -208,13 +200,16 @@ namespace myFlatLightLogin.DalSQLite
                     Username = u.Username,
                     Email = u.Email,
                     FirebaseUid = u.FirebaseUid,
-                    Role = GetUserRole(u.RoleId) // Convert role ID to enum
+                    Role = (UserRole)u.RoleId, // Direct cast: role IDs match enum values
+
+                    // Include PendingPassword for users without FirebaseUid (needed for Firebase Auth creation)
+                    Password = string.IsNullOrEmpty(u.FirebaseUid) ? u.PendingPassword : null
                 }).ToList();
             }
         }
 
         /// <summary>
-        /// Marks a user as synced with Firebase.
+        /// Marks a user as synced with Firebase and clears the pending password.
         /// </summary>
         public bool MarkAsSynced(int id)
         {
@@ -227,6 +222,14 @@ namespace myFlatLightLogin.DalSQLite
                     return false;
 
                 user.NeedsSync = false;
+
+                // Clear pending password after successful sync (security)
+                if (!string.IsNullOrEmpty(user.PendingPassword))
+                {
+                    _logger.Information("Clearing PendingPassword for user {UserId} after successful sync", id);
+                    user.PendingPassword = null;
+                }
+
                 return conn.Update(user) > 0;
             }
         }
@@ -252,7 +255,8 @@ namespace myFlatLightLogin.DalSQLite
                     Username = user.Username,
                     Email = user.Email,
                     FirebaseUid = user.FirebaseUid,
-                    Role = GetUserRole(user.RoleId) // Convert role ID to enum
+                    RegistrationDate = user.RegistrationDate,
+                    Role = (UserRole)user.RoleId // Direct cast: role IDs match enum values
                 };
             }
         }
@@ -278,7 +282,8 @@ namespace myFlatLightLogin.DalSQLite
                     Username = user.Username,
                     Email = user.Email,
                     FirebaseUid = user.FirebaseUid,
-                    Role = GetUserRole(user.RoleId) // Convert role ID to enum
+                    RegistrationDate = user.RegistrationDate,
+                    Role = (UserRole)user.RoleId // Direct cast: role IDs match enum values
                 };
             }
         }
@@ -312,7 +317,7 @@ namespace myFlatLightLogin.DalSQLite
                         FirebaseUid = firebaseUid,
                         LastModified = lastModified,
                         NeedsSync = false,
-                        RoleId = GetRoleId(userDto.Role) // Convert enum to role ID
+                        RoleId = (int)userDto.Role // Direct cast: enum values match role IDs
                     };
                     return conn.Insert(user) > 0;
                 }
@@ -326,10 +331,135 @@ namespace myFlatLightLogin.DalSQLite
                     user.FirebaseUid = firebaseUid;
                     user.LastModified = lastModified;
                     user.NeedsSync = false; // Don't sync back
-                    user.RoleId = GetRoleId(userDto.Role); // Update role ID from Firebase
+                    user.RoleId = (int)userDto.Role; // Direct cast: enum values match role IDs from Firebase
 
                     return conn.Update(user) > 0;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets all users with pending password changes that need interactive sync.
+        /// </summary>
+        public List<UserDto> GetUsersWithPendingPasswordChanges()
+        {
+            using (var conn = new SQLiteConnection(dbFile))
+            {
+                conn.CreateTable<User>();
+                var users = conn.Table<User>()
+                    .Where(u => u.PendingPasswordChange == true)
+                    .ToList();
+
+                return users.Select(u => new UserDto
+                {
+                    Id = u.Id,
+                    Name = u.Name,
+                    Lastname = u.Lastname,
+                    Username = u.Username,
+                    Email = u.Email,
+                    FirebaseUid = u.FirebaseUid,
+                    PendingPasswordChange = u.PendingPasswordChange,
+                    OldPasswordHash = u.OldPasswordHash,
+                    PasswordChangedDate = u.PasswordChangedDate,
+                    Role = (UserRole)u.RoleId // Direct cast: role IDs match enum values
+                }).ToList();
+            }
+        }
+
+        /// <summary>
+        /// Clears pending password change flag after successful sync.
+        /// </summary>
+        public bool ClearPendingPasswordChange(int userId)
+        {
+            using (var conn = new SQLiteConnection(dbFile))
+            {
+                conn.CreateTable<User>();
+                var user = conn.Find<User>(userId);
+
+                if (user != null)
+                {
+                    user.PendingPasswordChange = false;
+                    user.OldPasswordHash = null;
+                    user.NeedsSync = false; // Also clear needs sync
+                    return conn.Update(user) > 0;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Changes user password offline, storing old password hash for later sync.
+        /// </summary>
+        public bool ChangePasswordOffline(int userId, string currentPassword, string newPassword)
+        {
+            using (var conn = new SQLiteConnection(dbFile))
+            {
+                conn.CreateTable<User>();
+                var user = conn.Find<User>(userId);
+
+                if (user == null)
+                    return false;
+
+                // Verify current password
+                if (!VerifyPassword(currentPassword, user.Password))
+                    return false;
+
+                // Store old password hash for sync verification
+                user.OldPasswordHash = user.Password;
+
+                // Update to new password hash
+                user.Password = HashPassword(newPassword);
+                user.PendingPasswordChange = true;
+                user.PasswordChangedDate = DateTime.UtcNow.ToString("o");
+                user.LastModified = DateTime.UtcNow.ToString("o");
+                user.NeedsSync = true;
+
+                return conn.Update(user) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Changes user password online (updates password hash only).
+        /// </summary>
+        public bool ChangePasswordOnline(int userId, string newPassword)
+        {
+            using (var conn = new SQLiteConnection(dbFile))
+            {
+                conn.CreateTable<User>();
+                var user = conn.Find<User>(userId);
+
+                if (user == null)
+                    return false;
+
+                // Update to new password hash
+                user.Password = HashPassword(newPassword);
+                user.PasswordChangedDate = DateTime.UtcNow.ToString("o");
+                user.LastModified = DateTime.UtcNow.ToString("o");
+
+                // Don't set NeedsSync - password was already changed in Firebase
+
+                return conn.Update(user) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Verifies a user's password against the stored hash.
+        /// </summary>
+        /// <param name="userId">User ID</param>
+        /// <param name="password">Plain text password to verify</param>
+        /// <returns>True if password matches, false otherwise</returns>
+        public bool VerifyUserPassword(int userId, string password)
+        {
+            using (var conn = new SQLiteConnection(dbFile))
+            {
+                conn.CreateTable<User>();
+                var user = conn.Find<User>(userId);
+
+                if (user == null)
+                    return false;
+
+                return VerifyPassword(password, user.Password);
             }
         }
 

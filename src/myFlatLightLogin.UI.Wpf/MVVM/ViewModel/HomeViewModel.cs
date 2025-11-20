@@ -25,6 +25,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         }
 
         public RelayCommand NavigateToRoleManagementCommand { get; }
+        public RelayCommand NavigateToChangePasswordCommand { get; }
 
         public HomeViewModel(INavigationService navigationService)
         {
@@ -34,6 +35,9 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             NavigateToRoleManagementCommand = new RelayCommand(
                 o => Navigation.NavigateTo<RoleManagementViewModel>(),
                 o => IsUserAdmin);
+
+            NavigateToChangePasswordCommand = new RelayCommand(
+                o => Navigation.NavigateTo<ChangePasswordViewModel>());
 
             // Subscribe to user changes to update welcome text
             CurrentUserService.Instance.OnUserChanged += OnUserChanged;

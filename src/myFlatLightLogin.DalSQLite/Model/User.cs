@@ -29,6 +29,14 @@ namespace myFlatLightLogin.DalSQLite.Model
         public string Password { get; set; }
 
         /// <summary>
+        /// Temporarily stores plain-text password for users created offline.
+        /// Used to create Firebase Authentication account during sync.
+        /// SECURITY NOTE: This is cleared immediately after successful sync to Firebase.
+        /// Only populated for new users that haven't been synced yet (FirebaseUid is null).
+        /// </summary>
+        public string PendingPassword { get; set; }
+
+        /// <summary>
         /// Email address for Firebase authentication.
         /// </summary>
         public string Email { get; set; }
@@ -37,6 +45,13 @@ namespace myFlatLightLogin.DalSQLite.Model
         /// Firebase User ID for synchronization.
         /// </summary>
         public string FirebaseUid { get; set; }
+
+        /// <summary>
+        /// Registration date timestamp in UTC when the account was created.
+        /// Format: ISO 8601 (yyyy-MM-ddTHH:mm:ss.fffZ)
+        /// This is set once during registration and never changed.
+        /// </summary>
+        public string RegistrationDate { get; set; }
 
         /// <summary>
         /// Last modified timestamp in UTC for conflict resolution.
@@ -54,5 +69,23 @@ namespace myFlatLightLogin.DalSQLite.Model
         /// References the user's role for application-level authorization.
         /// </summary>
         public int RoleId { get; set; }
+
+        /// <summary>
+        /// Indicates if the user's password was changed while offline and needs special sync handling.
+        /// When true, the user will be prompted for their old password during sync.
+        /// </summary>
+        public bool PendingPasswordChange { get; set; }
+
+        /// <summary>
+        /// Temporarily stores the hash of the old password before an offline password change.
+        /// Used to verify the old password when syncing with Firebase.
+        /// Cleared after successful sync.
+        /// </summary>
+        public string OldPasswordHash { get; set; }
+
+        /// <summary>
+        /// Timestamp when password was last changed (UTC, ISO 8601 format).
+        /// </summary>
+        public string PasswordChangedDate { get; set; }
     }
 }

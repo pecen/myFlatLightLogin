@@ -1,5 +1,6 @@
 using Serilog;
 using System;
+using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 
@@ -87,20 +88,44 @@ namespace myFlatLightLogin.Core.Services
 
         /// <summary>
         /// Checks if the device can reach Firebase servers.
+        /// Uses HTTP request instead of ping to avoid ICMP blocking issues.
         /// </summary>
         public async Task<bool> CanReachFirebaseAsync()
         {
             if (!CheckConnectivity())
+            {
+                _logger.Debug("CanReachFirebaseAsync: CheckConnectivity returned false");
                 return false;
+            }
 
             try
             {
-                using var ping = new Ping();
-                var reply = await ping.SendPingAsync("firebase.google.com", 3000);
-                return reply.Status == IPStatus.Success;
+                _logger.Debug("CanReachFirebaseAsync: Attempting HTTP request to Firebase...");
+                using var httpClient = new HttpClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(5);
+
+                // Try to reach Firebase Auth REST API endpoint
+                // This is a real endpoint that responds to HEAD/GET requests
+                var response = await httpClient.GetAsync("https://identitytoolkit.googleapis.com/");
+
+                // Any response (even 400/404) means we can reach Firebase servers
+                // We just want to know if the network path is working
+                _logger.Information("Firebase reachability test - Status: {StatusCode}, Success: true", response.StatusCode);
+                return true;
             }
-            catch
+            catch (TaskCanceledException ex)
             {
+                _logger.Warning("Firebase reachability test failed: Request timed out after 5 seconds");
+                return false;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.Warning(ex, "Firebase reachability test failed: HTTP error - {Message}", ex.Message);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.Warning(ex, "Firebase reachability test failed: Unexpected error - {Message}", ex.Message);
                 return false;
             }
         }

@@ -6,6 +6,9 @@ using myFlatLightLogin.Dal;
 using myFlatLightLogin.Dal.Dto;
 using System;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace myFlatLightLogin.DalFirebase
@@ -113,6 +116,7 @@ namespace myFlatLightLogin.DalFirebase
                         Lastname = profile.Lastname,
                         Username = profile.Email,
                         Password = null, // Never return passwords
+                        RegistrationDate = profile.CreatedAt,
                         Role = (UserRole)profile.Role // Convert integer to enum
                     };
                 }
@@ -127,6 +131,7 @@ namespace myFlatLightLogin.DalFirebase
 
         /// <summary>
         /// Registers a new user with Firebase Authentication and stores profile.
+        /// Updates the UserDto with the Firebase UID upon successful creation.
         /// </summary>
         private async Task<bool> InsertAsync(UserDto user)
         {
@@ -139,6 +144,9 @@ namespace myFlatLightLogin.DalFirebase
 
                 if (credential?.User == null)
                     return false;
+
+                // IMPORTANT: Update the DTO with the Firebase UID so it can be stored in SQLite
+                user.FirebaseUid = credential.User.Uid;
 
                 // Store user profile in Realtime Database
                 var profile = new FirebaseUserProfile
@@ -182,6 +190,14 @@ namespace myFlatLightLogin.DalFirebase
                 if (_currentUser?.User == null)
                     throw new InvalidOperationException("No authenticated user");
 
+                var dbClient = GetAuthenticatedClient(_currentUser.User.Credential.IdToken);
+
+                // Fetch existing profile to preserve CreatedAt
+                var existingProfile = await dbClient
+                    .Child("users")
+                    .Child(_currentUser.User.Uid)
+                    .OnceSingleAsync<FirebaseUserProfile>();
+
                 var profile = new FirebaseUserProfile
                 {
                     LocalId = user.Id,
@@ -189,11 +205,11 @@ namespace myFlatLightLogin.DalFirebase
                     Name = user.Name,
                     Lastname = user.Lastname,
                     Email = user.Username,
+                    CreatedAt = existingProfile?.CreatedAt ?? DateTime.UtcNow.ToString("o"), // Preserve CreatedAt or set if missing
                     UpdatedAt = DateTime.UtcNow.ToString("o"),
                     Role = (int)user.Role // Store role as integer
                 };
 
-                var dbClient = GetAuthenticatedClient(_currentUser.User.Credential.IdToken);
                 await dbClient
                     .Child("users")
                     .Child(_currentUser.User.Uid)
@@ -301,6 +317,7 @@ namespace myFlatLightLogin.DalFirebase
                         Email = profile.Email,
                         FirebaseUid = profile.FirebaseUid,
                         FirebaseAuthToken = _currentUser.User.Credential.IdToken, // Store auth token for authenticated API calls
+                        RegistrationDate = profile.CreatedAt,
                         Role = (UserRole)profile.Role // Convert integer to enum
                     };
                 }
@@ -330,9 +347,103 @@ namespace myFlatLightLogin.DalFirebase
             return _currentUser;
         }
 
+        /// <summary>
+        /// Updates the current user's password in Firebase Authentication.
+        /// Requires an active authenticated session.
+        /// </summary>
+        /// <param name="newPassword">New password (plain text)</param>
+        /// <returns>True if password was updated successfully</returns>
+        public async Task<bool> UpdatePasswordAsync(string newPassword)
+        {
+            try
+            {
+                if (_currentUser?.User == null)
+                    throw new InvalidOperationException("No authenticated user. Please sign in first.");
+
+                // Use Firebase Authentication REST API to update password
+                await ChangePasswordViaRestApiAsync(_currentUser.User.Credential.IdToken, newPassword);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to update password: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Updates user password using old password for authentication.
+        /// Used for syncing password changes made offline.
+        /// </summary>
+        /// <param name="email">User's email address</param>
+        /// <param name="oldPassword">Old password (for re-authentication)</param>
+        /// <param name="newPassword">New password to set</param>
+        /// <returns>True if password was updated successfully</returns>
+        public async Task<bool> UpdatePasswordWithOldPasswordAsync(
+            string email,
+            string oldPassword,
+            string newPassword)
+        {
+            try
+            {
+                // 1. Sign in with old password to get fresh credentials
+                var credential = await _authClient.SignInWithEmailAndPasswordAsync(email, oldPassword);
+
+                if (credential?.User == null)
+                    return false;
+
+                // 2. Update to new password using Firebase REST API
+                await ChangePasswordViaRestApiAsync(credential.User.Credential.IdToken, newPassword);
+
+                // 3. Update current user session
+                _currentUser = credential;
+
+                return true;
+            }
+            catch (FirebaseAuthException ex)
+            {
+                throw new Exception($"Failed to update password: {GetFriendlyErrorMessage(ex)}", ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to update password: {ex.Message}", ex);
+            }
+        }
+
         #endregion
 
         #region Helper Methods
+
+        /// <summary>
+        /// Changes user password using Firebase Authentication REST API.
+        /// </summary>
+        /// <param name="idToken">User's ID token</param>
+        /// <param name="newPassword">New password to set</param>
+        private async Task ChangePasswordViaRestApiAsync(string idToken, string newPassword)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var requestUrl = $"https://identitytoolkit.googleapis.com/v1/accounts:update?key={FirebaseConfig.ApiKey}";
+
+                var requestBody = new
+                {
+                    idToken = idToken,
+                    password = newPassword,
+                    returnSecureToken = true
+                };
+
+                var json = JsonSerializer.Serialize(requestBody);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await httpClient.PostAsync(requestUrl, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Firebase password update failed: {errorContent}");
+                }
+            }
+        }
 
         /// <summary>
         /// Converts Firebase authentication exceptions to user-friendly messages.

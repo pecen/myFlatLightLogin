@@ -147,7 +147,7 @@ namespace myFlatLightLogin.DalFirebase
         /// <summary>
         /// Gets a role by its ID.
         /// </summary>
-        public RoleDto GetRoleById(int id)
+        public RoleDto Fetch(int id)
         {
             return GetRoleByIdAsync(id).GetAwaiter().GetResult();
         }
@@ -155,7 +155,7 @@ namespace myFlatLightLogin.DalFirebase
         /// <summary>
         /// Gets a role by its name.
         /// </summary>
-        public RoleDto GetRoleByName(string name)
+        public RoleDto Fetch(string name)
         {
             return GetRoleByNameAsync(name).GetAwaiter().GetResult();
         }
@@ -163,7 +163,7 @@ namespace myFlatLightLogin.DalFirebase
         /// <summary>
         /// Gets all roles.
         /// </summary>
-        public List<RoleDto> GetAllRoles()
+        public List<RoleDto> Fetch()
         {
             return GetAllRolesAsync().GetAwaiter().GetResult();
         }
@@ -171,7 +171,7 @@ namespace myFlatLightLogin.DalFirebase
         /// <summary>
         /// Adds a new role.
         /// </summary>
-        public bool InsertRole(RoleDto role)
+        public bool Insert(RoleDto role)
         {
             return InsertRoleAsync(role).GetAwaiter().GetResult();
         }
@@ -179,7 +179,7 @@ namespace myFlatLightLogin.DalFirebase
         /// <summary>
         /// Updates an existing role.
         /// </summary>
-        public bool UpdateRole(RoleDto role)
+        public bool Update(RoleDto role)
         {
             return UpdateRoleAsync(role).GetAwaiter().GetResult();
         }
@@ -187,7 +187,7 @@ namespace myFlatLightLogin.DalFirebase
         /// <summary>
         /// Deletes a role by ID.
         /// </summary>
-        public bool DeleteRole(int id)
+        public bool Delete(int id)
         {
             return DeleteRoleAsync(id).GetAwaiter().GetResult();
         }
