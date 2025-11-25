@@ -9,6 +9,8 @@ namespace myFlatLightLogin.Core.Controls
     /// </summary>
     public partial class TogglePwdBox : UserControl
     {
+        private bool _isUpdating;
+
         public TogglePwdBox()
         {
             InitializeComponent();
@@ -38,21 +40,39 @@ namespace myFlatLightLogin.Core.Controls
         private static void OnPasswordChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var control = (TogglePwdBox)d;
+            if (control._isUpdating) return;
+
             var newPassword = e.NewValue as string ?? string.Empty;
+            var isEmpty = string.IsNullOrEmpty(newPassword);
 
             // Update IsPasswordEmpty
-            control.IsPasswordEmpty = string.IsNullOrEmpty(newPassword);
+            control.IsPasswordEmpty = isEmpty;
+
+            // Reset to hidden mode when password is cleared (e.g., when form is reset)
+            if (isEmpty && control.IsPasswordVisible)
+            {
+                control.IsPasswordVisible = false;
+            }
 
             // Sync with internal controls only if they don't already have the same value
-            if (control.IsPasswordVisible)
+            try
             {
-                if (control.textBox.Text != newPassword)
-                    control.textBox.Text = newPassword;
+                control._isUpdating = true;
+
+                if (control.IsPasswordVisible)
+                {
+                    if (control.textBox.Text != newPassword)
+                        control.textBox.Text = newPassword;
+                }
+                else
+                {
+                    if (control.passwordBox.Password != newPassword)
+                        control.passwordBox.Password = newPassword;
+                }
             }
-            else
+            finally
             {
-                if (control.passwordBox.Password != newPassword)
-                    control.passwordBox.Password = newPassword;
+                control._isUpdating = false;
             }
         }
 
@@ -125,22 +145,31 @@ namespace myFlatLightLogin.Core.Controls
             var control = (TogglePwdBox)d;
             var isVisible = (bool)e.NewValue;
 
-            if (isVisible)
+            try
             {
-                // Switch to TextBox
-                control.textBox.Text = control.Password;
-                control.textBox.Visibility = Visibility.Visible;
-                control.passwordBox.Visibility = Visibility.Collapsed;
-                control.textBox.Focus();
-                control.textBox.CaretIndex = control.textBox.Text.Length;
+                control._isUpdating = true;
+
+                if (isVisible)
+                {
+                    // Switch to TextBox
+                    control.textBox.Text = control.Password;
+                    control.textBox.Visibility = Visibility.Visible;
+                    control.passwordBox.Visibility = Visibility.Collapsed;
+                    control.textBox.Focus();
+                    control.textBox.CaretIndex = control.textBox.Text.Length;
+                }
+                else
+                {
+                    // Switch to PasswordBox
+                    control.passwordBox.Password = control.Password;
+                    control.passwordBox.Visibility = Visibility.Visible;
+                    control.textBox.Visibility = Visibility.Collapsed;
+                    control.passwordBox.Focus();
+                }
             }
-            else
+            finally
             {
-                // Switch to PasswordBox
-                control.passwordBox.Password = control.Password;
-                control.passwordBox.Visibility = Visibility.Visible;
-                control.textBox.Visibility = Visibility.Collapsed;
-                control.passwordBox.Focus();
+                control._isUpdating = false;
             }
         }
 
@@ -166,6 +195,8 @@ namespace myFlatLightLogin.Core.Controls
 
         private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
+            if (_isUpdating) return;
+
             if (!IsPasswordVisible)
             {
                 Password = passwordBox.Password;
@@ -174,6 +205,8 @@ namespace myFlatLightLogin.Core.Controls
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
+            if (_isUpdating) return;
+
             if (IsPasswordVisible)
             {
                 Password = textBox.Text;

@@ -60,7 +60,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             set
             {
                 SetProperty(ref _password, value);
-                PwdIsEmpty = string.IsNullOrEmpty(value);
                 ((AsyncRelayCommand)RegisterUserCommand)?.RaiseCanExecuteChanged();
             }
         }
@@ -72,37 +71,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             set
             {
                 SetProperty(ref _confirmPassword, value);
-                ConfirmPwdIsEmpty = string.IsNullOrEmpty(value);
                 ((AsyncRelayCommand)RegisterUserCommand)?.RaiseCanExecuteChanged();
             }
-        }
-
-        private bool _pwdIsEmpty = true;
-        public bool PwdIsEmpty
-        {
-            get => _pwdIsEmpty;
-            set => SetProperty(ref _pwdIsEmpty, value);
-        }
-
-        private bool _confirmPwdIsEmpty = true;
-        public bool ConfirmPwdIsEmpty
-        {
-            get => _confirmPwdIsEmpty;
-            set => SetProperty(ref _confirmPwdIsEmpty, value);
-        }
-
-        private bool _isPasswordVisible;
-        public bool IsPasswordVisible
-        {
-            get => _isPasswordVisible;
-            set => SetProperty(ref _isPasswordVisible, value);
-        }
-
-        private bool _isConfirmPasswordVisible;
-        public bool IsConfirmPasswordVisible
-        {
-            get => _isConfirmPasswordVisible;
-            set => SetProperty(ref _isConfirmPasswordVisible, value);
         }
 
         private bool _isLoading;
@@ -144,8 +114,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         public RelayCommand NavigateToLoginCommand { get; set; }
         public AsyncRelayCommand RegisterUserCommand { get; set; }
-        public RelayCommand TogglePasswordVisibilityCommand { get; set; }
-        public RelayCommand ToggleConfirmPasswordVisibilityCommand { get; set; }
 
         #endregion
 
@@ -178,14 +146,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 o => true);
 
             RegisterUserCommand = new AsyncRelayCommand(RegisterUserAsync, CanRegister);
-
-            TogglePasswordVisibilityCommand = new RelayCommand(
-                o => IsPasswordVisible = !IsPasswordVisible,
-                o => true);
-
-            ToggleConfirmPasswordVisibilityCommand = new RelayCommand(
-                o => IsConfirmPasswordVisible = !IsConfirmPasswordVisible,
-                o => true);
 
             // Clear form when view loads (in case returning from another view)
             ClearForm();
@@ -342,9 +302,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             Email = string.Empty;
             Password = string.Empty;
             ConfirmPassword = string.Empty;
-            IsPasswordVisible = false;
-            IsConfirmPasswordVisible = false;
             StatusMessage = string.Empty;
+            // Note: Password visibility is managed by TogglePwdBox control and auto-resets when cleared
         }
 
         /// <summary>
