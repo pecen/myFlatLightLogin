@@ -57,7 +57,7 @@ namespace myFlatLightLogin.Dal
             {
                 Success = false,
                 Mode = RegistrationMode.Failed,
-                Message = "Registration failed. Please try again.",
+                Message = errorMessage,
                 ErrorDetails = errorMessage
             };
         }
