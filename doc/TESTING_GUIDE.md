@@ -164,9 +164,10 @@ SELECT FirebaseUid, NeedsSync FROM User WHERE Email = 'offlineuser@example.com';
 
 **Test Cases**:
 
-**A. Weak Password**
+**A. Weak Password (Client-Side Validation)**
 - Enter password with less than 6 characters: "test"
-- ✅ Error: "Password is too weak. Please use at least 6 characters."
+- ✅ **Register button remains disabled** (client-side validation prevents submission)
+- ✅ This is better UX than allowing submission and getting Firebase error
 - ✅ No SQLite account created
 
 **B. Invalid Email Format**
