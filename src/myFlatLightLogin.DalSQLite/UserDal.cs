@@ -46,7 +46,9 @@ namespace myFlatLightLogin.DalSQLite
                     Email = user.Email,
                     FirebaseUid = user.FirebaseUid,
                     RegistrationDate = user.RegistrationDate,
-                    Role = (UserRole)user.RoleId // Direct cast: role IDs match enum values
+                    Role = (UserRole)user.RoleId, // Direct cast: role IDs match enum values
+                    PendingPasswordChange = user.PendingPasswordChange,
+                    OldPasswordHash = user.OldPasswordHash
                 };
             }
         }
@@ -176,7 +178,9 @@ namespace myFlatLightLogin.DalSQLite
                     Email = user.Email,
                     FirebaseUid = user.FirebaseUid,
                     RegistrationDate = user.RegistrationDate,
-                    Role = (UserRole)user.RoleId // Direct cast: role IDs match enum values
+                    Role = (UserRole)user.RoleId, // Direct cast: role IDs match enum values
+                    PendingPasswordChange = user.PendingPasswordChange,
+                    OldPasswordHash = user.OldPasswordHash
                 };
             }
         }
@@ -256,7 +260,9 @@ namespace myFlatLightLogin.DalSQLite
                     Email = user.Email,
                     FirebaseUid = user.FirebaseUid,
                     RegistrationDate = user.RegistrationDate,
-                    Role = (UserRole)user.RoleId // Direct cast: role IDs match enum values
+                    Role = (UserRole)user.RoleId, // Direct cast: role IDs match enum values
+                    PendingPasswordChange = user.PendingPasswordChange,
+                    OldPasswordHash = user.OldPasswordHash
                 };
             }
         }
@@ -283,7 +289,9 @@ namespace myFlatLightLogin.DalSQLite
                     Email = user.Email,
                     FirebaseUid = user.FirebaseUid,
                     RegistrationDate = user.RegistrationDate,
-                    Role = (UserRole)user.RoleId // Direct cast: role IDs match enum values
+                    Role = (UserRole)user.RoleId, // Direct cast: role IDs match enum values
+                    PendingPasswordChange = user.PendingPasswordChange,
+                    OldPasswordHash = user.OldPasswordHash
                 };
             }
         }
