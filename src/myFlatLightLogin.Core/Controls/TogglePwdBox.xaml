@@ -23,6 +23,7 @@
         <PasswordBox
             x:Name="passwordBox"
             Height="{Binding Height, ElementName=root}"
+            Margin="0"
             FontSize="{Binding FontSize, ElementName=root}"
             PasswordChanged="PasswordBox_PasswordChanged" />
 
@@ -30,6 +31,7 @@
         <TextBox
             x:Name="textBox"
             Height="{Binding Height, ElementName=root}"
+            Margin="0"
             FontSize="{Binding FontSize, ElementName=root}"
             Text="{Binding Password, ElementName=root, UpdateSourceTrigger=PropertyChanged}"
             TextChanged="TextBox_TextChanged"
