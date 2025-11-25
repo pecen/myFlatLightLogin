@@ -1,0 +1,80 @@
+<UserControl
+    x:Class="myFlatLightLogin.Core.Controls.TogglePwdBox"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks"
+    x:Name="root">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <Grid>
+        <!--  Placeholder text  -->
+        <TextBlock
+            Margin="35,0,40,0"
+            VerticalAlignment="Center"
+            Panel.ZIndex="1"
+            Foreground="#bdbdbd"
+            IsHitTestVisible="False"
+            Text="{Binding Placeholder, ElementName=root}"
+            Visibility="{Binding IsPasswordEmpty, ElementName=root, Converter={StaticResource BoolToVis}}" />
+
+        <!--  PasswordBox (hidden password) - Visible when IsPasswordVisible is False  -->
+        <PasswordBox
+            x:Name="passwordBox"
+            Height="{Binding Height, ElementName=root}"
+            FontSize="{Binding FontSize, ElementName=root}"
+            PasswordChanged="PasswordBox_PasswordChanged" />
+
+        <!--  TextBox (visible password) - Visible when IsPasswordVisible is True  -->
+        <TextBox
+            x:Name="textBox"
+            Height="{Binding Height, ElementName=root}"
+            FontSize="{Binding FontSize, ElementName=root}"
+            Text="{Binding Password, ElementName=root, UpdateSourceTrigger=PropertyChanged}"
+            TextChanged="TextBox_TextChanged"
+            Visibility="Collapsed" />
+
+        <!--  Left Icon (optional, e.g., lock icon)  -->
+        <icon:PackIconMaterial
+            Width="15"
+            Margin="10,0,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            Panel.ZIndex="2"
+            Foreground="#c7c7c7"
+            Kind="{Binding LeftIconKind, ElementName=root}"
+            Visibility="{Binding ShowLeftIcon, ElementName=root, Converter={StaticResource BoolToVis}}" />
+
+        <!--  Eye Icon Toggle Button (right side, inside field)  -->
+        <Button
+            Width="24"
+            Height="24"
+            Margin="0,0,5,0"
+            Padding="0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Center"
+            Panel.ZIndex="2"
+            Background="Transparent"
+            BorderThickness="0"
+            Click="ToggleButton_Click"
+            Cursor="Hand"
+            ToolTip="Show/Hide Password">
+            <icon:PackIconMaterial
+                Width="16"
+                Height="16"
+                Foreground="#5a5a5a">
+                <icon:PackIconMaterial.Style>
+                    <Style TargetType="icon:PackIconMaterial">
+                        <Setter Property="Kind" Value="EyeOutline" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsPasswordVisible, ElementName=root}" Value="True">
+                                <Setter Property="Kind" Value="EyeOffOutline" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </icon:PackIconMaterial.Style>
+            </icon:PackIconMaterial>
+        </Button>
+    </Grid>
+</UserControl>
