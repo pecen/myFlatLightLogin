@@ -9,7 +9,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
     public interface IAuthenticateUser
     {
         bool IsAuthenticated { get; }
-        bool PwdIsEmpty { get; set; }
         string Password { get; set; }
     }
 }
