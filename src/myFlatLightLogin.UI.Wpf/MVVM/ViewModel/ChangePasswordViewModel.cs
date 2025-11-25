@@ -15,6 +15,9 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         public AsyncRelayCommand ChangePasswordCommand { get; set; }
         public RelayCommand CancelCommand { get; set; }
+        public RelayCommand ToggleCurrentPasswordVisibilityCommand { get; set; }
+        public RelayCommand ToggleNewPasswordVisibilityCommand { get; set; }
+        public RelayCommand ToggleConfirmPasswordVisibilityCommand { get; set; }
 
         private string _currentPassword;
         public string CurrentPassword
@@ -49,6 +52,27 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             }
         }
 
+        private bool _isCurrentPasswordVisible;
+        public bool IsCurrentPasswordVisible
+        {
+            get => _isCurrentPasswordVisible;
+            set => SetProperty(ref _isCurrentPasswordVisible, value);
+        }
+
+        private bool _isNewPasswordVisible;
+        public bool IsNewPasswordVisible
+        {
+            get => _isNewPasswordVisible;
+            set => SetProperty(ref _isNewPasswordVisible, value);
+        }
+
+        private bool _isConfirmPasswordVisible;
+        public bool IsConfirmPasswordVisible
+        {
+            get => _isConfirmPasswordVisible;
+            set => SetProperty(ref _isConfirmPasswordVisible, value);
+        }
+
         public bool IsOnline => _connectivityService.IsOnline;
         public string ConnectionStatus => IsOnline ? "🟢 Online" : "🔴 Offline";
 
@@ -63,6 +87,13 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
             ChangePasswordCommand = new AsyncRelayCommand(ChangePasswordAsync, CanChangePassword);
             CancelCommand = new RelayCommand(o => Navigation.NavigateTo<HomeViewModel>());
+
+            ToggleCurrentPasswordVisibilityCommand = new RelayCommand(
+                o => IsCurrentPasswordVisible = !IsCurrentPasswordVisible);
+            ToggleNewPasswordVisibilityCommand = new RelayCommand(
+                o => IsNewPasswordVisible = !IsNewPasswordVisible);
+            ToggleConfirmPasswordVisibilityCommand = new RelayCommand(
+                o => IsConfirmPasswordVisible = !IsConfirmPasswordVisible);
 
             // Subscribe to connectivity changes to update UI
             _connectivityService.ConnectivityChanged += (sender, isOnline) =>
@@ -208,6 +239,9 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             CurrentPassword = string.Empty;
             NewPassword = string.Empty;
             ConfirmPassword = string.Empty;
+            IsCurrentPasswordVisible = false;
+            IsNewPasswordVisible = false;
+            IsConfirmPasswordVisible = false;
         }
     }
 }
