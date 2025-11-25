@@ -74,6 +74,12 @@ WHERE Email = 'testuser@example.com';
    - Go to **Realtime Database → users**
    - Delete the user's profile node
    - **DO NOT** delete from Authentication (leave it there)
+3. In SQLite Database (using DB Browser or similar):
+   - Delete the user from the User table:
+   ```sql
+   DELETE FROM User WHERE Email = 'existinguser@example.com';
+   ```
+   - This simulates a scenario where Firebase Auth has the user but local database doesn't
 
 **Steps**:
 1. Ensure internet connection is active
