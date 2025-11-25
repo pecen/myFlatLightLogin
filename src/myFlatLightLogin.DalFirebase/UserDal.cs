@@ -444,9 +444,53 @@ namespace myFlatLightLogin.DalFirebase
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    throw new Exception($"Firebase password update failed: {errorContent}");
+                    var friendlyError = ParseFirebaseRestApiError(errorContent);
+                    throw new Exception(friendlyError);
                 }
             }
+        }
+
+        /// <summary>
+        /// Parses Firebase REST API error JSON and returns a user-friendly message.
+        /// </summary>
+        private string ParseFirebaseRestApiError(string jsonError)
+        {
+            try
+            {
+                using (JsonDocument doc = JsonDocument.Parse(jsonError))
+                {
+                    if (doc.RootElement.TryGetProperty("error", out JsonElement errorElement))
+                    {
+                        if (errorElement.TryGetProperty("message", out JsonElement messageElement))
+                        {
+                            string errorCode = messageElement.GetString() ?? "";
+
+                            return errorCode switch
+                            {
+                                "TOKEN_EXPIRED" => "TOKEN_EXPIRED",  // Special case - will be handled by caller
+                                "INVALID_ID_TOKEN" => "Your session is invalid. Please sign in again.",
+                                "USER_NOT_FOUND" => "User account not found.",
+                                "INVALID_PASSWORD" => "The password provided is invalid.",
+                                "WEAK_PASSWORD" => "Password is too weak. Please use at least 6 characters.",
+                                "EMAIL_EXISTS" => "An account with this email already exists.",
+                                "EMAIL_NOT_FOUND" => "No account found with this email address.",
+                                "INVALID_EMAIL" => "The email address is invalid.",
+                                "MISSING_PASSWORD" => "Please provide a password.",
+                                "TOO_MANY_ATTEMPTS_TRY_LATER" => "Too many unsuccessful attempts. Please try again later.",
+                                "USER_DISABLED" => "This account has been disabled.",
+                                "OPERATION_NOT_ALLOWED" => "This operation is not allowed.",
+                                _ => $"Authentication error: {errorCode}"
+                            };
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // If parsing fails, return a generic message
+            }
+
+            return "An error occurred while updating your password. Please try again.";
         }
 
         /// <summary>

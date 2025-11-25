@@ -574,8 +574,20 @@ namespace myFlatLightLogin.Core.Services
                 }
                 else
                 {
-                    // Firebase has active session - can use direct password update
-                    firebaseSuccess = await _firebaseDal.UpdatePasswordAsync(newPassword);
+                    // Firebase has active session - try direct password update
+                    try
+                    {
+                        firebaseSuccess = await _firebaseDal.UpdatePasswordAsync(newPassword);
+                    }
+                    catch (Exception ex) when (ex.Message.Contains("TOKEN_EXPIRED"))
+                    {
+                        // Token expired - re-authenticate and try again
+                        _logger.Information("Firebase token expired - re-authenticating with current password for user: {Email}", user.Email);
+                        firebaseSuccess = await _firebaseDal.UpdatePasswordWithOldPasswordAsync(
+                            user.Email,
+                            currentPassword,
+                            newPassword);
+                    }
                 }
 
                 if (!firebaseSuccess)
