@@ -190,7 +190,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                 if (IsOnline)
                 {
-                    StatusMessage = "Creating account with Firebase...";
+                    StatusMessage = "Creating account with the Cloud storage...";
                 }
                 else
                 {
@@ -315,7 +315,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
             if (isOnline)
             {
-                StatusMessage = "Connection restored! You can now register with Firebase.";
+                StatusMessage = "Connection restored! You can now register with the Cloud storage.";
             }
             else
             {

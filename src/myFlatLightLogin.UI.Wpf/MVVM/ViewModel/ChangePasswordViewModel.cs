@@ -194,7 +194,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 "Offline Password Change",
                 "You are currently offline.\n\n" +
                 "If you change your password now, you will need to remember your OLD password " +
-                "when you come back online to sync with Firebase.\n\n" +
+                "when you come back online to sync with the Cloud storage.\n\n" +
                 "Recommendation: Wait until you're online to change your password.\n\n" +
                 "Do you want to proceed?",
                 MessageDialogStyle.AffirmativeAndNegative,

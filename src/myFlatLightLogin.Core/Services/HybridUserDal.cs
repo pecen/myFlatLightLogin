@@ -416,12 +416,12 @@ namespace myFlatLightLogin.Core.Services
 
                             case AuthErrorReason.OperationNotAllowed:
                                 _logger.Warning("Email/password registration not enabled in Firebase");
-                                return RegistrationResult.Failure("Email/password registration is not enabled in Firebase.");
+                                return RegistrationResult.Failure("Email/password registration is not enabled in the Cloud storage database.");
 
                             default:
                                 // Other auth errors - don't create local account
                                 _logger.Warning("Firebase auth error ({Reason}): {Message}", innerAuthEx.Reason, ex.Message);
-                                return RegistrationResult.Failure($"Firebase authentication error: {ex.Message}");
+                                return RegistrationResult.Failure($"Cloud storage authentication error: {ex.Message}");
                         }
                     }
 
@@ -448,7 +448,7 @@ namespace myFlatLightLogin.Core.Services
                 {
                     _logger.Information("Firebase unreachable - registering locally to SQLite only");
                     firebaseAttempted = true;
-                    firebaseErrorDetails = "Firebase server unreachable (ping failed)";
+                    firebaseErrorDetails = "The Cloud server unreachable (ping failed)";
                 }
             }
 
@@ -465,7 +465,7 @@ namespace myFlatLightLogin.Core.Services
             }
 
             _logger.Error("Both Firebase and SQLite registration failed for {Email}", user.Email);
-            return RegistrationResult.Failure("Registration failed in both Firebase and local database. Please try again.");
+            return RegistrationResult.Failure("Registration failed in both the Cloud storage and local database. Please try again.");
         }
 
         /// <summary>

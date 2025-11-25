@@ -148,7 +148,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                 if (wasOnlineAtStart)
                 {
-                    StatusMessage = "Signing in with Firebase...";
+                    StatusMessage = "Signing in with the Cloud storage...";
                 }
                 else
                 {
@@ -323,7 +323,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
             if (isOnline)
             {
-                StatusMessage = "Connection restored! You can now sign in with Firebase.";
+                StatusMessage = "Connection restored! You can now sign in with the Cloud storage.";
             }
             else
             {

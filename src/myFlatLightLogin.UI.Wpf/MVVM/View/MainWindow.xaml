@@ -32,7 +32,7 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <converter:BoolToVisibilityPwdText x:Key="BoolToVisPwd" />
 
-        <!-- Connection status colors -->
+        <!--  Connection status colors  -->
         <SolidColorBrush x:Key="OnlineColor" Color="#4CAF50" />
         <SolidColorBrush x:Key="OfflineColor" Color="#F44336" />
     </Window.Resources>
@@ -189,9 +189,7 @@
                         Style="{StaticResource bottomButton}" />
 
                     <!--  Admin-Only Sync Menu  -->
-                    <Menu
-                        Background="Transparent"
-                        Visibility="{Binding IsUserAdministrator, Converter={StaticResource BoolToVis}}">
+                    <Menu Background="Transparent" Visibility="{Binding IsUserAdministrator, Converter={StaticResource BoolToVis}}">
                         <MenuItem
                             Height="37"
                             Padding="10,0"
@@ -208,7 +206,7 @@
                                         VerticalAlignment="Center"
                                         Kind="Sync"
                                         Spin="{Binding IsSyncing}" />
-                                    <TextBlock Text="Sync" VerticalAlignment="Center" />
+                                    <TextBlock VerticalAlignment="Center" Text="Sync" />
                                 </StackPanel>
                             </MenuItem.Header>
                             <MenuItem.Style>
@@ -285,7 +283,7 @@
                                 Command="{Binding SyncNowCommand}"
                                 FontSize="12"
                                 Header="Sync Now"
-                                ToolTip="Manually sync pending users to Firebase">
+                                ToolTip="Manually sync pending users to the Cloud">
                                 <MenuItem.Icon>
                                     <icon:PackIconMaterial
                                         Width="14"
@@ -297,9 +295,7 @@
                     </Menu>
 
                     <!--  Admin-Only Logs Menu  -->
-                    <Menu
-                        Background="Transparent"
-                        Visibility="{Binding IsUserAdministrator, Converter={StaticResource BoolToVis}}">
+                    <Menu Background="Transparent" Visibility="{Binding IsUserAdministrator, Converter={StaticResource BoolToVis}}">
                         <MenuItem
                             Height="37"
                             Padding="10,0"
@@ -315,7 +311,7 @@
                                         Margin="0,0,5,0"
                                         VerticalAlignment="Center"
                                         Kind="FileDocument" />
-                                    <TextBlock Text="Logs" VerticalAlignment="Center" />
+                                    <TextBlock VerticalAlignment="Center" Text="Logs" />
                                 </StackPanel>
                             </MenuItem.Header>
                             <MenuItem.Style>
