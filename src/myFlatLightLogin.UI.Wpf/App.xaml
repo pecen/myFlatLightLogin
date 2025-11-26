@@ -14,12 +14,24 @@
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Blue.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <DataTemplate DataType="{x:Type TypeName=vm:LoginViewModel}">
+            <DataTemplate DataType="{x:Type vm:LoginViewModel}">
                 <view:Login />
             </DataTemplate>
 
-            <DataTemplate DataType="{x:Type TypeName=vm:RegisterUserViewModel}">
+            <DataTemplate DataType="{x:Type vm:RegisterUserViewModel}">
                 <view:RegisterUser />
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type vm:HomeViewModel}">
+                <view:Home />
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type vm:RoleManagementViewModel}">
+                <view:RoleManagement />
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type vm:ChangePasswordViewModel}">
+                <view:ChangePassword />
             </DataTemplate>
 
             <Style x:Key="topButton" TargetType="Button">
@@ -183,6 +195,43 @@
                         <Setter Property="Background" Value="#ff131e" />
                         <Setter Property="Foreground" Value="#ffffff" />
                         <Setter Property="BorderBrush" Value="#ff131e" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!--  Primary action button style - dims on hover (for the main action on the page)  -->
+            <Style x:Key="mainButtonPrimary" TargetType="Button">
+                <Setter Property="Background" Value="#ff131e" />
+                <Setter Property="Foreground" Value="#ffffff" />
+                <Setter Property="Height" Value="40" />
+                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                <Setter Property="BorderBrush" Value="#ff131e" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="20">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Background" Value="#e0e0e0" />
+                        <Setter Property="Foreground" Value="#9e9e9e" />
+                        <Setter Property="BorderBrush" Value="#d0d0d0" />
+                        <Setter Property="Opacity" Value="0.6" />
+                    </Trigger>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#e6e6e6" />
+                        <Setter Property="Foreground" Value="#3a3a3a" />
+                        <Setter Property="BorderBrush" Value="#bdbdbd" />
                     </Trigger>
                 </Style.Triggers>
             </Style>

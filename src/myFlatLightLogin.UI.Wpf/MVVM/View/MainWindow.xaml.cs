@@ -57,5 +57,15 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.View
                 Application.Current.Shutdown();
             }
         }
+
+        /// <summary>
+        /// Closes the window without showing the shutdown confirmation dialog.
+        /// Use this when closing after a successful operation like login.
+        /// </summary>
+        public void CloseWithoutConfirmation()
+        {
+            _shutdown = true;
+            Close();
+        }
     }
 }

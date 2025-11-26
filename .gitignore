@@ -261,3 +261,9 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+
+# Configuration files with sensitive information
+# Keep appsettings.template.json but ignore actual appsettings.json
+**/appsettings.json
+**/appsettings.*.json
+!**/appsettings.template.json
