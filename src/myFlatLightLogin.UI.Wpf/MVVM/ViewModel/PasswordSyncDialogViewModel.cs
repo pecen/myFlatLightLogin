@@ -15,6 +15,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
     /// </summary>
     public class PasswordSyncDialogViewModel : ViewModelBase
     {
+        public event EventHandler OnDialogClosed;
+
         private readonly SyncService _syncService;
         private readonly UserDto _user;
         private readonly MetroWindow _window;
@@ -119,7 +121,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                 if (success)
                 {
-                    await _window.ShowMessageAsync("Success", "Password synced to Firebase successfully!",
+                    await _window.ShowMessageAsync("Success", "Password synced to the Cloud successfully!",
                         MessageDialogStyle.Affirmative,
                         new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
 
@@ -158,7 +160,5 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             // Signal that dialog should close
             OnDialogClosed?.Invoke(this, EventArgs.Empty);
         }
-
-        public event EventHandler OnDialogClosed;
     }
 }
