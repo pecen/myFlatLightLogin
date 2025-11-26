@@ -206,7 +206,19 @@ namespace myFlatLightLogin.Core.Services
                             existingUser.Lastname = user.Lastname;
                             existingUser.FirebaseUid = user.FirebaseUid;
                             existingUser.FirebaseAuthToken = user.FirebaseAuthToken;
-                            existingUser.Password = password; // Update password (will be hashed by SQLite Update)
+
+                            // Don't update password if there's a pending offline password change
+                            // The new password and OldPasswordHash must be preserved for the sync dialog
+                            if (!existingUser.PendingPasswordChange)
+                            {
+                                existingUser.Password = password; // Update password (will be hashed by SQLite Update)
+                                _logger.Debug("Password updated in SQLite cache");
+                            }
+                            else
+                            {
+                                _logger.Information("Skipping password update - pending offline password change detected");
+                            }
+
                             existingUser.Role = user.Role;
                             _sqliteDal.Update(existingUser);
                             _logger.Information("Cache updated successfully");
