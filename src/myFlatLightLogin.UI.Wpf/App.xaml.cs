@@ -108,16 +108,6 @@ namespace FlatLightLogin
                     var roleDal = new RoleDal();
                     await roleDal.InitializeAsync();
                     Log.Information("Firebase Roles initialized successfully");
-
-                    // OPTIONAL: Uncomment to migrate existing Firebase users to add Role field
-                    // This only needs to be run once for existing users created before Role system
-                    // After running once, you can comment it out again
-                    /*
-                    Log.Information("Running Firebase user migration...");
-                    var migrationUtility = new FirebaseMigrationUtility();
-                    int usersUpdated = await migrationUtility.MigrateUsersWithRoleFieldAsync();
-                    Log.Information($"Migration complete. {usersUpdated} users updated with Role field.");
-                    */
                 }
                 catch (Exception ex)
                 {
