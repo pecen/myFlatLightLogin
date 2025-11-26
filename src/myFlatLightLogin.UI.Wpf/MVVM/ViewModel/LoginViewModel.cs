@@ -29,22 +29,14 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public string Email
         {
             get => _email;
-            set
-            {
-                SetProperty(ref _email, value);
-                ((AsyncRelayCommand)LoginCommand)?.RaiseCanExecuteChanged();
-            }
+            set => SetProperty(ref _email, value);
         }
 
         private string _password = string.Empty;
         public string Password
         {
             get => _password;
-            set
-            {
-                SetProperty(ref _password, value);
-                ((AsyncRelayCommand)LoginCommand)?.RaiseCanExecuteChanged();
-            }
+            set => SetProperty(ref _password, value);
         }
 
         private bool _isLoading;

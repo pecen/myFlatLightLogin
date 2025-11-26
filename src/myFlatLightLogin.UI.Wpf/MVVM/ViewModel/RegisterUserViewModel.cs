@@ -24,55 +24,35 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public string Name
         {
             get => _name;
-            set
-            {
-                SetProperty(ref _name, value);
-                ((AsyncRelayCommand)RegisterUserCommand)?.RaiseCanExecuteChanged();
-            }
+            set => SetProperty(ref _name, value);
         }
 
         private string _lastname = string.Empty;
         public string Lastname
         {
             get => _lastname;
-            set
-            {
-                SetProperty(ref _lastname, value);
-                ((AsyncRelayCommand)RegisterUserCommand)?.RaiseCanExecuteChanged();
-            }
+            set => SetProperty(ref _lastname, value);
         }
 
         private string _email = string.Empty;
         public string Email
         {
             get => _email;
-            set
-            {
-                SetProperty(ref _email, value);
-                ((AsyncRelayCommand)RegisterUserCommand)?.RaiseCanExecuteChanged();
-            }
+            set => SetProperty(ref _email, value);
         }
 
         private string _password = string.Empty;
         public string Password
         {
             get => _password;
-            set
-            {
-                SetProperty(ref _password, value);
-                ((AsyncRelayCommand)RegisterUserCommand)?.RaiseCanExecuteChanged();
-            }
+            set => SetProperty(ref _password, value);
         }
 
         private string _confirmPassword = string.Empty;
         public string ConfirmPassword
         {
             get => _confirmPassword;
-            set
-            {
-                SetProperty(ref _confirmPassword, value);
-                ((AsyncRelayCommand)RegisterUserCommand)?.RaiseCanExecuteChanged();
-            }
+            set => SetProperty(ref _confirmPassword, value);
         }
 
         private bool _isLoading;

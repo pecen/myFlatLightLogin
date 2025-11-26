@@ -24,33 +24,21 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public string OldPassword
         {
             get => _oldPassword;
-            set
-            {
-                SetProperty(ref _oldPassword, value);
-                SyncPasswordCommand?.RaiseCanExecuteChanged();
-            }
+            set => SetProperty(ref _oldPassword, value);
         }
 
         private string _newPassword;
         public string NewPassword
         {
             get => _newPassword;
-            set
-            {
-                SetProperty(ref _newPassword, value);
-                SyncPasswordCommand?.RaiseCanExecuteChanged();
-            }
+            set => SetProperty(ref _newPassword, value);
         }
 
         private string _confirmPassword;
         public string ConfirmPassword
         {
             get => _confirmPassword;
-            set
-            {
-                SetProperty(ref _confirmPassword, value);
-                SyncPasswordCommand?.RaiseCanExecuteChanged();
-            }
+            set => SetProperty(ref _confirmPassword, value);
         }
 
         private bool _isProcessing;
