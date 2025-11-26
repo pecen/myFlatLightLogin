@@ -47,6 +47,7 @@ namespace myFlatLightLogin.DalSQLite
                     FirebaseUid = user.FirebaseUid,
                     RegistrationDate = user.RegistrationDate,
                     Role = (UserRole)user.RoleId, // Direct cast: role IDs match enum values
+                    Password = user.Password, // Include password hash for verification
                     PendingPasswordChange = user.PendingPasswordChange,
                     OldPasswordHash = user.OldPasswordHash
                 };
@@ -179,6 +180,7 @@ namespace myFlatLightLogin.DalSQLite
                     FirebaseUid = user.FirebaseUid,
                     RegistrationDate = user.RegistrationDate,
                     Role = (UserRole)user.RoleId, // Direct cast: role IDs match enum values
+                    Password = user.Password, // Include password hash for verification
                     PendingPasswordChange = user.PendingPasswordChange,
                     OldPasswordHash = user.OldPasswordHash
                 };
@@ -261,6 +263,7 @@ namespace myFlatLightLogin.DalSQLite
                     FirebaseUid = user.FirebaseUid,
                     RegistrationDate = user.RegistrationDate,
                     Role = (UserRole)user.RoleId, // Direct cast: role IDs match enum values
+                    Password = user.Password, // Include password hash for verification
                     PendingPasswordChange = user.PendingPasswordChange,
                     OldPasswordHash = user.OldPasswordHash
                 };
@@ -290,6 +293,7 @@ namespace myFlatLightLogin.DalSQLite
                     FirebaseUid = user.FirebaseUid,
                     RegistrationDate = user.RegistrationDate,
                     Role = (UserRole)user.RoleId, // Direct cast: role IDs match enum values
+                    Password = user.Password, // Include password hash for verification
                     PendingPasswordChange = user.PendingPasswordChange,
                     OldPasswordHash = user.OldPasswordHash
                 };
