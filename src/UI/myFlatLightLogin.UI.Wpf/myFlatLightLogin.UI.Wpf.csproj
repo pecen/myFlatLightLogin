@@ -23,9 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\myFlatLightLogin.Core\myFlatLightLogin.Core.csproj" />
-    <ProjectReference Include="..\myFlatLightLogin.Dal\myFlatLightLogin.Dal.csproj" />
-    <ProjectReference Include="..\myFlatLightLogin.DalFirebase\myFlatLightLogin.DalFirebase.csproj" />
+    <ProjectReference Include="..\..\DAL\myFlatLightLogin.DalFirebase\myFlatLightLogin.DalFirebase.csproj" />
+    <ProjectReference Include="..\..\DAL\myFlatLightLogin.Dal\myFlatLightLogin.Dal.csproj" />
+    <ProjectReference Include="..\..\myFlatLightLogin.Core\myFlatLightLogin.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
