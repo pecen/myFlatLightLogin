@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33424.131
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "myFlatLightLogin.UI.Wpf", "myFlatLightLogin.UI.Wpf\myFlatLightLogin.UI.Wpf.csproj", "{EAABF5E7-968E-4126-8A44-C8BA6A31841E}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3A547610-7230-488F-A0AC-6501D0FA5BD1}"
 	ProjectSection(SolutionItems) = preProject
 		..\.gitignore = ..\.gitignore
@@ -21,13 +19,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\doc\TESTING_GUIDE.md = ..\doc\TESTING_GUIDE.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "myFlatLightLogin.Dal", "myFlatLightLogin.Dal\myFlatLightLogin.Dal.csproj", "{654EF7ED-D615-4B5B-B21C-1AA912472EE1}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "myFlatLightLogin.DalSQLite", "myFlatLightLogin.DalSQLite\myFlatLightLogin.DalSQLite.csproj", "{069DF3FD-58F4-4D38-BA0D-D3EFFFB2CE6A}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "myFlatLightLogin.Core", "myFlatLightLogin.Core\myFlatLightLogin.Core.csproj", "{61F7749D-55CA-449B-99D4-07176F6F2CC4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "myFlatLightLogin.DalFirebase", "myFlatLightLogin.DalFirebase\myFlatLightLogin.DalFirebase.csproj", "{A8C3D5F2-9B74-4E8A-A1C9-3F6E7D8B5A4C}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UI", "UI", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DAL", "DAL", "{DBE637D5-4A04-4323-9F6D-566367096E74}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "myFlatLightLogin.Dal", "DAL\myFlatLightLogin.Dal\myFlatLightLogin.Dal.csproj", "{B7288E7A-78BB-CBBB-BCD3-47C001891A35}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "myFlatLightLogin.DalFirebase", "DAL\myFlatLightLogin.DalFirebase\myFlatLightLogin.DalFirebase.csproj", "{030DE60E-DFB2-84FD-593F-5E6372490891}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "myFlatLightLogin.DalSQLite", "DAL\myFlatLightLogin.DalSQLite\myFlatLightLogin.DalSQLite.csproj", "{1241D2E3-6DBA-A332-889E-249AC5FBFC63}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "myFlatLightLogin.UI.Wpf", "UI\myFlatLightLogin.UI.Wpf\myFlatLightLogin.UI.Wpf.csproj", "{AD877F5A-E429-37A0-45B9-B9F4D9958B36}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,29 +39,35 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{EAABF5E7-968E-4126-8A44-C8BA6A31841E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EAABF5E7-968E-4126-8A44-C8BA6A31841E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EAABF5E7-968E-4126-8A44-C8BA6A31841E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EAABF5E7-968E-4126-8A44-C8BA6A31841E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{654EF7ED-D615-4B5B-B21C-1AA912472EE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{654EF7ED-D615-4B5B-B21C-1AA912472EE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{654EF7ED-D615-4B5B-B21C-1AA912472EE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{654EF7ED-D615-4B5B-B21C-1AA912472EE1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{069DF3FD-58F4-4D38-BA0D-D3EFFFB2CE6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{069DF3FD-58F4-4D38-BA0D-D3EFFFB2CE6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{069DF3FD-58F4-4D38-BA0D-D3EFFFB2CE6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{069DF3FD-58F4-4D38-BA0D-D3EFFFB2CE6A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{61F7749D-55CA-449B-99D4-07176F6F2CC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{61F7749D-55CA-449B-99D4-07176F6F2CC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{61F7749D-55CA-449B-99D4-07176F6F2CC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{61F7749D-55CA-449B-99D4-07176F6F2CC4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A8C3D5F2-9B74-4E8A-A1C9-3F6E7D8B5A4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A8C3D5F2-9B74-4E8A-A1C9-3F6E7D8B5A4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A8C3D5F2-9B74-4E8A-A1C9-3F6E7D8B5A4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A8C3D5F2-9B74-4E8A-A1C9-3F6E7D8B5A4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7288E7A-78BB-CBBB-BCD3-47C001891A35}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7288E7A-78BB-CBBB-BCD3-47C001891A35}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7288E7A-78BB-CBBB-BCD3-47C001891A35}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7288E7A-78BB-CBBB-BCD3-47C001891A35}.Release|Any CPU.Build.0 = Release|Any CPU
+		{030DE60E-DFB2-84FD-593F-5E6372490891}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{030DE60E-DFB2-84FD-593F-5E6372490891}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{030DE60E-DFB2-84FD-593F-5E6372490891}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{030DE60E-DFB2-84FD-593F-5E6372490891}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1241D2E3-6DBA-A332-889E-249AC5FBFC63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1241D2E3-6DBA-A332-889E-249AC5FBFC63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1241D2E3-6DBA-A332-889E-249AC5FBFC63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1241D2E3-6DBA-A332-889E-249AC5FBFC63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD877F5A-E429-37A0-45B9-B9F4D9958B36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD877F5A-E429-37A0-45B9-B9F4D9958B36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD877F5A-E429-37A0-45B9-B9F4D9958B36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD877F5A-E429-37A0-45B9-B9F4D9958B36}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B7288E7A-78BB-CBBB-BCD3-47C001891A35} = {DBE637D5-4A04-4323-9F6D-566367096E74}
+		{030DE60E-DFB2-84FD-593F-5E6372490891} = {DBE637D5-4A04-4323-9F6D-566367096E74}
+		{1241D2E3-6DBA-A332-889E-249AC5FBFC63} = {DBE637D5-4A04-4323-9F6D-566367096E74}
+		{AD877F5A-E429-37A0-45B9-B9F4D9958B36} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3DC59321-0A92-4FBC-B79C-ED1338B1DE76}
