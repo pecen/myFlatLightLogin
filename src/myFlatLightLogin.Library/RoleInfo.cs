@@ -1,4 +1,5 @@
 using Csla;
+using Csla.Core;
 using myFlatLightLogin.Dal;
 using myFlatLightLogin.Dal.Dto;
 using System;
