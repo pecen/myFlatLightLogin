@@ -131,7 +131,7 @@ namespace myFlatLightLogin.Core.Services
             // Prefer BLL user info
             if (_currentUserInfo != null)
             {
-                return _currentUserInfo.Name ?? _currentUserInfo.Email ?? "Unknown User";
+                return _currentUserInfo.FirstName ?? _currentUserInfo.Email ?? "Unknown User";
             }
 
             // Fallback to legacy
