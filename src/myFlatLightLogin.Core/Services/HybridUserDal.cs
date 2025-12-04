@@ -191,6 +191,10 @@ namespace myFlatLightLogin.Core.Services
                             existingUser = _sqliteDal.FindByEmail(email);
                             if (existingUser != null)
                             {
+                                // Mark as synced since this data came from Firebase
+                                _sqliteDal.MarkAsSynced(existingUser.Id);
+                                _logger.Information("User marked as synced (ID: {UserId})", existingUser.Id);
+
                                 // Return the SQLite user with correct ID, but preserve Firebase data
                                 existingUser.FirebaseUid = user.FirebaseUid;
                                 existingUser.FirebaseAuthToken = user.FirebaseAuthToken;
@@ -222,6 +226,10 @@ namespace myFlatLightLogin.Core.Services
                             existingUser.Role = user.Role;
                             _sqliteDal.Update(existingUser);
                             _logger.Information("Cache updated successfully");
+
+                            // Mark as synced since this data came from Firebase
+                            _sqliteDal.MarkAsSynced(existingUser.Id);
+                            _logger.Information("User marked as synced (ID: {UserId})", existingUser.Id);
 
                             // Re-fetch from database to get the hashed password
                             // This ensures the in-memory object matches what's stored in SQLite
