@@ -258,8 +258,21 @@ namespace myFlatLightLogin.Core.Services
             {
                 _logger.Information("DownloadRolesFromFirebaseAsync: Starting role download from Firebase");
 
+                // Get the current user's auth token for authenticated Firebase access
+                var authToken = CurrentUserService.Instance.CurrentUserInfo?.FirebaseAuthToken;
+                if (string.IsNullOrEmpty(authToken))
+                {
+                    _logger.Warning("No Firebase auth token available - skipping role download");
+                    result.Count = 0;
+                    result.Success = true;
+                    return result;
+                }
+
+                // Create authenticated Firebase RoleDal
+                var authenticatedRoleDal = new FirebaseRoleDal(authToken);
+
                 // Get all roles from Firebase
-                var firebaseRoles = await Task.Run(() => _firebaseRoleDal.Fetch());
+                var firebaseRoles = await Task.Run(() => authenticatedRoleDal.Fetch());
 
                 if (firebaseRoles == null || firebaseRoles.Count == 0)
                 {
@@ -330,6 +343,19 @@ namespace myFlatLightLogin.Core.Services
             {
                 _logger.Information("UploadRolesToFirebaseAsync: Starting role upload to Firebase");
 
+                // Get the current user's auth token for authenticated Firebase access
+                var authToken = CurrentUserService.Instance.CurrentUserInfo?.FirebaseAuthToken;
+                if (string.IsNullOrEmpty(authToken))
+                {
+                    _logger.Warning("No Firebase auth token available - skipping role upload");
+                    result.Count = 0;
+                    result.Success = true;
+                    return result;
+                }
+
+                // Create authenticated Firebase RoleDal
+                var authenticatedRoleDal = new FirebaseRoleDal(authToken);
+
                 // Get all roles from SQLite
                 var sqliteRoles = _sqliteRoleDal.Fetch();
 
@@ -350,14 +376,14 @@ namespace myFlatLightLogin.Core.Services
                     try
                     {
                         // Check if role exists in Firebase
-                        var firebaseRole = await Task.Run(() => _firebaseRoleDal.Fetch(sqliteRole.Id));
+                        var firebaseRole = await Task.Run(() => authenticatedRoleDal.Fetch(sqliteRole.Id));
 
                         if (firebaseRole == null)
                         {
                             // New role - insert into Firebase
                             _logger.Information("Inserting new role into Firebase: {RoleName} (ID: {RoleId})",
                                 sqliteRole.Name, sqliteRole.Id);
-                            await Task.Run(() => _firebaseRoleDal.Insert(sqliteRole));
+                            await Task.Run(() => authenticatedRoleDal.Insert(sqliteRole));
                             syncedCount++;
                         }
                         else
@@ -365,7 +391,7 @@ namespace myFlatLightLogin.Core.Services
                             // Existing role - update in Firebase
                             _logger.Information("Updating existing role in Firebase: {RoleName} (ID: {RoleId})",
                                 sqliteRole.Name, sqliteRole.Id);
-                            await Task.Run(() => _firebaseRoleDal.Update(sqliteRole));
+                            await Task.Run(() => authenticatedRoleDal.Update(sqliteRole));
                             syncedCount++;
                         }
                     }

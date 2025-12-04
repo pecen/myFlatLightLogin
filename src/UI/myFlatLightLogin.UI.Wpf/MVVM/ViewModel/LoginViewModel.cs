@@ -166,7 +166,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                         FirstName = identity.FirstName,
                         Email = identity.Email,
                         Role = identity.Role,
-                        IsOnline = identity.IsOnline
+                        IsOnline = identity.IsOnline,
+                        FirebaseAuthToken = identity.FirebaseAuthToken
                     };
                     CurrentUserService.Instance.SetCurrentUserInfo(currentUserInfo);
                     _logger.Information("Current user info set in CurrentUserService with role: {Role}", identity.Role);

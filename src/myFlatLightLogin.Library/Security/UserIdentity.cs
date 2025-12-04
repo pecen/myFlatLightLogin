@@ -78,6 +78,16 @@ namespace myFlatLightLogin.Library.Security
             private set => LoadProperty(FirebaseUidProperty, value);
         }
 
+        public static readonly PropertyInfo<string> FirebaseAuthTokenProperty = RegisterProperty<string>(c => c.FirebaseAuthToken);
+        /// <summary>
+        /// Firebase Authentication Token for making authenticated API calls.
+        /// </summary>
+        public string FirebaseAuthToken
+        {
+            get => GetProperty(FirebaseAuthTokenProperty);
+            private set => LoadProperty(FirebaseAuthTokenProperty, value);
+        }
+
         public static readonly PropertyInfo<bool> IsOnlineProperty = RegisterProperty<bool>(c => c.IsOnline);
         /// <summary>
         /// Indicates if user logged in while online or offline.
@@ -176,6 +186,7 @@ namespace myFlatLightLogin.Library.Security
             LoadProperty(EmailProperty, dto.Email ?? string.Empty);
             LoadProperty(RoleProperty, dto.Role);
             LoadProperty(FirebaseUidProperty, dto.FirebaseUid ?? string.Empty);
+            LoadProperty(FirebaseAuthTokenProperty, dto.FirebaseAuthToken ?? string.Empty);
             LoadProperty(IsOnlineProperty, isOnline);
 
             // Set the base class Name property for IIdentity interface
