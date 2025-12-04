@@ -45,7 +45,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// <summary>
         /// Gets whether a user is currently logged in.
         /// </summary>
-        public bool IsUserLoggedIn => CurrentUserService.Instance.CurrentUser != null;
+        public bool IsUserLoggedIn => CurrentUserService.Instance.IsLoggedIn;
 
         private int _pendingSyncCount;
         /// <summary>
@@ -153,7 +153,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             _syncService.SyncProgress += OnSyncProgress;
 
             // Subscribe to user changes to update admin-only features visibility
-            CurrentUserService.Instance.OnUserChanged += (sender, user) =>
+            CurrentUserService.Instance.OnUserInfoChanged += (sender, userInfo) =>
             {
                 // Notify UI that IsUserAdministrator and IsUserLoggedIn may have changed
                 OnPropertyChanged(nameof(IsUserAdministrator));
