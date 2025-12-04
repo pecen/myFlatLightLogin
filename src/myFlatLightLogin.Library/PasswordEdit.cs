@@ -1,4 +1,5 @@
 using Csla;
+using Csla.Core;
 using Csla.Rules;
 using Csla.Rules.CommonRules;
 using myFlatLightLogin.Core.Services;
