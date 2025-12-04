@@ -28,14 +28,14 @@ namespace myFlatLightLogin.Library.Security
             private set => LoadProperty(UserIdProperty, value);
         }
 
-        public static readonly PropertyInfo<string> NameProperty = RegisterProperty<string>(c => c.Name);
+        public static readonly PropertyInfo<string> FirstNameProperty = RegisterProperty<string>(c => c.FirstName);
         /// <summary>
         /// User's first name.
         /// </summary>
-        public new string Name
+        public string FirstName
         {
-            get => GetProperty(NameProperty);
-            private set => LoadProperty(NameProperty, value);
+            get => GetProperty(FirstNameProperty);
+            private set => LoadProperty(FirstNameProperty, value);
         }
 
         public static readonly PropertyInfo<string> LastNameProperty = RegisterProperty<string>(c => c.LastName);
@@ -91,7 +91,7 @@ namespace myFlatLightLogin.Library.Security
         /// <summary>
         /// Full name of the user.
         /// </summary>
-        public string FullName => $"{Name} {LastName}".Trim();
+        public string FullName => $"{FirstName} {LastName}".Trim();
 
         #endregion
 
@@ -171,7 +171,7 @@ namespace myFlatLightLogin.Library.Security
         private void LoadFromDto(UserDto dto, bool isOnline)
         {
             LoadProperty(UserIdProperty, dto.Id);
-            LoadProperty(NameProperty, dto.Name ?? string.Empty);
+            LoadProperty(FirstNameProperty, dto.Name ?? string.Empty);
             LoadProperty(LastNameProperty, dto.Lastname ?? string.Empty);
             LoadProperty(EmailProperty, dto.Email ?? string.Empty);
             LoadProperty(RoleProperty, dto.Role);

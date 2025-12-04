@@ -155,7 +155,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     var identity = _currentPrincipal.Identity;
 
                     _logger.Information("User authenticated - Email: {Email}, Name: {Name}, Role: {Role}",
-                        identity.Email, identity.Name, identity.Role);
+                        identity.Email, identity.FirstName, identity.Role);
 
                     IsAuthenticated = true;
 
@@ -163,7 +163,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     var currentUserInfo = new CurrentUserInfo
                     {
                         UserId = identity.UserId,
-                        Name = identity.Name,
+                        FirstName = identity.FirstName,
                         Email = identity.Email,
                         Role = identity.Role,
                         IsOnline = identity.IsOnline
@@ -176,7 +176,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     _logger.Information("Fresh connectivity check after auth: {IsOnline}", isCurrentlyOnline);
 
                     string loginMode = identity.IsOnline ? "online" : "offline";
-                    string displayName = identity.Name ?? identity.Email ?? "Unknown User";
+                    string displayName = identity.FirstName ?? identity.Email ?? "Unknown User";
                     StatusMessage = $"Welcome back, {displayName}! (Logged in {loginMode})";
 
                     _logger.Information("Display name: {DisplayName}, Login mode: {LoginMode}", displayName, loginMode);
