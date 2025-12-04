@@ -1,3 +1,4 @@
+using myFlatLightLogin.Dal;
 using myFlatLightLogin.Dal.Dto;
 using myFlatLightLogin.DalFirebase;
 using myFlatLightLogin.DalSQLite;
@@ -8,18 +9,22 @@ using System.Linq;
 using System.Threading.Tasks;
 using FirebaseUserDal = myFlatLightLogin.DalFirebase.UserDal;
 using SQLiteUserDal = myFlatLightLogin.DalSQLite.UserDal;
+using FirebaseRoleDal = myFlatLightLogin.DalFirebase.RoleDal;
+using SQLiteRoleDal = myFlatLightLogin.DalSQLite.RoleDal;
 
 namespace myFlatLightLogin.Core.Services
 {
     /// <summary>
     /// Service for synchronizing data between Firebase and SQLite.
-    /// Implements bi-directional sync with conflict resolution.
+    /// Implements bi-directional sync with conflict resolution for Users and Roles.
     /// </summary>
     public class SyncService
     {
         private static readonly ILogger _logger = Log.ForContext<SyncService>();
-        private readonly FirebaseUserDal _firebaseDal;
-        private readonly SQLiteUserDal _sqliteDal;
+        private readonly FirebaseUserDal _firebaseUserDal;
+        private readonly SQLiteUserDal _sqliteUserDal;
+        private readonly FirebaseRoleDal _firebaseRoleDal;
+        private readonly SQLiteRoleDal _sqliteRoleDal;
         private readonly NetworkConnectivityService _connectivityService;
 
         /// <summary>
@@ -39,8 +44,10 @@ namespace myFlatLightLogin.Core.Services
 
         public SyncService(NetworkConnectivityService connectivityService)
         {
-            _firebaseDal = new FirebaseUserDal();
-            _sqliteDal = new SQLiteUserDal();
+            _firebaseUserDal = new FirebaseUserDal();
+            _sqliteUserDal = new SQLiteUserDal();
+            _firebaseRoleDal = new FirebaseRoleDal();
+            _sqliteRoleDal = new SQLiteRoleDal();
             _connectivityService = connectivityService;
         }
 
@@ -67,15 +74,25 @@ namespace myFlatLightLogin.Core.Services
 
                 SyncStarted?.Invoke(this, EventArgs.Empty);
 
-                // Step 1: Download from Firebase to SQLite (Firebase → SQLite)
-                RaiseProgress("Downloading from Firebase...", 0, 2);
-                var downloadResult = await DownloadFromFirebaseAsync();
-                result.UsersDownloaded = downloadResult.Count;
+                // Step 1: Download users from Firebase to SQLite (Firebase → SQLite)
+                RaiseProgress("Downloading users from Firebase...", 0, 4);
+                var downloadUsersResult = await DownloadUsersFromFirebaseAsync();
+                result.UsersDownloaded = downloadUsersResult.Count;
 
-                // Step 2: Upload from SQLite to Firebase (SQLite → Firebase)
-                RaiseProgress("Uploading to Firebase...", 1, 2);
-                var uploadResult = await UploadToFirebaseAsync();
-                result.UsersUploaded = uploadResult.Count;
+                // Step 2: Upload users from SQLite to Firebase (SQLite → Firebase)
+                RaiseProgress("Uploading users to Firebase...", 1, 4);
+                var uploadUsersResult = await UploadUsersToFirebaseAsync();
+                result.UsersUploaded = uploadUsersResult.Count;
+
+                // Step 3: Download roles from Firebase to SQLite (Firebase → SQLite)
+                RaiseProgress("Downloading roles from Firebase...", 2, 4);
+                var downloadRolesResult = await DownloadRolesFromFirebaseAsync();
+                result.RolesDownloaded = downloadRolesResult.Count;
+
+                // Step 4: Upload roles from SQLite to Firebase (SQLite → Firebase)
+                RaiseProgress("Uploading roles to Firebase...", 3, 4);
+                var uploadRolesResult = await UploadRolesToFirebaseAsync();
+                result.RolesUploaded = uploadRolesResult.Count;
 
                 result.Success = true;
                 result.EndTime = DateTime.UtcNow;
@@ -100,7 +117,7 @@ namespace myFlatLightLogin.Core.Services
         /// Downloads all users from Firebase and updates SQLite.
         /// Firebase is the source of truth for this operation.
         /// </summary>
-        private async Task<SyncOperationResult> DownloadFromFirebaseAsync()
+        private async Task<SyncOperationResult> DownloadUsersFromFirebaseAsync()
         {
             var result = new SyncOperationResult();
 
@@ -129,16 +146,16 @@ namespace myFlatLightLogin.Core.Services
         }
 
         /// <summary>
-        /// Uploads pending changes from SQLite to Firebase.
+        /// Uploads pending user changes from SQLite to Firebase.
         /// </summary>
-        private async Task<SyncOperationResult> UploadToFirebaseAsync()
+        private async Task<SyncOperationResult> UploadUsersToFirebaseAsync()
         {
             var result = new SyncOperationResult();
 
             try
             {
                 // Get all users that need to be synced
-                var usersNeedingSync = _sqliteDal.GetUsersNeedingSync();
+                var usersNeedingSync = _sqliteUserDal.GetUsersNeedingSync();
 
                 _logger.Information("UploadToFirebaseAsync: Found {Count} users needing sync", usersNeedingSync?.Count ?? 0);
 
@@ -165,7 +182,7 @@ namespace myFlatLightLogin.Core.Services
                             // This is a new user created offline - register in Firebase
                             _logger.Information("User {Email} has no FirebaseUid - registering in Firebase", user.Email);
 
-                            bool registered = await Task.Run(() => _firebaseDal.Insert(user));
+                            bool registered = await Task.Run(() => _firebaseUserDal.Insert(user));
 
                             if (registered)
                             {
@@ -173,16 +190,16 @@ namespace myFlatLightLogin.Core.Services
 
                                 // CRITICAL: Update SQLite with the new FirebaseUid
                                 // The Firebase Insert populated user.FirebaseUid, but we need to save it to SQLite
-                                var updatedUser = _sqliteDal.Fetch(user.Id);
+                                var updatedUser = _sqliteUserDal.Fetch(user.Id);
                                 if (updatedUser != null)
                                 {
                                     updatedUser.FirebaseUid = user.FirebaseUid;
-                                    _sqliteDal.Update(updatedUser);
+                                    _sqliteUserDal.Update(updatedUser);
                                     _logger.Information("Updated SQLite with FirebaseUid: {Uid}", user.FirebaseUid);
                                 }
 
                                 // Mark as synced in SQLite
-                                _sqliteDal.MarkAsSynced(user.Id);
+                                _sqliteUserDal.MarkAsSynced(user.Id);
                                 _logger.Information("Marked user {Email} as synced in SQLite", user.Email);
                                 successCount++;
                             }
@@ -199,7 +216,7 @@ namespace myFlatLightLogin.Core.Services
                             // Updates will happen when the user signs in
                             // For now, just mark as synced to avoid repeated attempts
                             _logger.Information("User {Email} already has FirebaseUid - skipping (updates require auth session)", user.Email);
-                            _sqliteDal.MarkAsSynced(user.Id);
+                            _sqliteUserDal.MarkAsSynced(user.Id);
                             successCount++;
                         }
                     }
@@ -230,6 +247,150 @@ namespace myFlatLightLogin.Core.Services
         }
 
         /// <summary>
+        /// Downloads all roles from Firebase and updates SQLite.
+        /// Firebase is the source of truth for this operation.
+        /// </summary>
+        private async Task<SyncOperationResult> DownloadRolesFromFirebaseAsync()
+        {
+            var result = new SyncOperationResult();
+
+            try
+            {
+                _logger.Information("DownloadRolesFromFirebaseAsync: Starting role download from Firebase");
+
+                // Get all roles from Firebase
+                var firebaseRoles = await Task.Run(() => _firebaseRoleDal.Fetch());
+
+                if (firebaseRoles == null || firebaseRoles.Count == 0)
+                {
+                    _logger.Information("No roles found in Firebase");
+                    result.Count = 0;
+                    result.Success = true;
+                    return result;
+                }
+
+                _logger.Information("Found {Count} roles in Firebase", firebaseRoles.Count);
+
+                int syncedCount = 0;
+
+                foreach (var firebaseRole in firebaseRoles)
+                {
+                    try
+                    {
+                        // Check if role exists in SQLite
+                        var existingRole = _sqliteRoleDal.Fetch(firebaseRole.Id);
+
+                        if (existingRole == null)
+                        {
+                            // New role - insert into SQLite
+                            _logger.Information("Inserting new role into SQLite: {RoleName} (ID: {RoleId})",
+                                firebaseRole.Name, firebaseRole.Id);
+                            _sqliteRoleDal.Insert(firebaseRole);
+                            syncedCount++;
+                        }
+                        else
+                        {
+                            // Existing role - update in SQLite
+                            _logger.Information("Updating existing role in SQLite: {RoleName} (ID: {RoleId})",
+                                firebaseRole.Name, firebaseRole.Id);
+                            _sqliteRoleDal.Update(firebaseRole);
+                            syncedCount++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error(ex, "Failed to sync role {RoleId} from Firebase", firebaseRole.Id);
+                    }
+                }
+
+                _logger.Information("Role download complete: {Count} roles synced", syncedCount);
+
+                result.Count = syncedCount;
+                result.Success = true;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "DownloadRolesFromFirebaseAsync failed");
+                result.Success = false;
+                result.ErrorMessage = ex.Message;
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Uploads all roles from SQLite to Firebase.
+        /// Ensures Firebase has all roles defined in SQLite.
+        /// </summary>
+        private async Task<SyncOperationResult> UploadRolesToFirebaseAsync()
+        {
+            var result = new SyncOperationResult();
+
+            try
+            {
+                _logger.Information("UploadRolesToFirebaseAsync: Starting role upload to Firebase");
+
+                // Get all roles from SQLite
+                var sqliteRoles = _sqliteRoleDal.Fetch();
+
+                if (sqliteRoles == null || sqliteRoles.Count == 0)
+                {
+                    _logger.Information("No roles found in SQLite");
+                    result.Count = 0;
+                    result.Success = true;
+                    return result;
+                }
+
+                _logger.Information("Found {Count} roles in SQLite", sqliteRoles.Count);
+
+                int syncedCount = 0;
+
+                foreach (var sqliteRole in sqliteRoles)
+                {
+                    try
+                    {
+                        // Check if role exists in Firebase
+                        var firebaseRole = await Task.Run(() => _firebaseRoleDal.Fetch(sqliteRole.Id));
+
+                        if (firebaseRole == null)
+                        {
+                            // New role - insert into Firebase
+                            _logger.Information("Inserting new role into Firebase: {RoleName} (ID: {RoleId})",
+                                sqliteRole.Name, sqliteRole.Id);
+                            await Task.Run(() => _firebaseRoleDal.Insert(sqliteRole));
+                            syncedCount++;
+                        }
+                        else
+                        {
+                            // Existing role - update in Firebase
+                            _logger.Information("Updating existing role in Firebase: {RoleName} (ID: {RoleId})",
+                                sqliteRole.Name, sqliteRole.Id);
+                            await Task.Run(() => _firebaseRoleDal.Update(sqliteRole));
+                            syncedCount++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error(ex, "Failed to sync role {RoleId} to Firebase", sqliteRole.Id);
+                    }
+                }
+
+                _logger.Information("Role upload complete: {Count} roles synced", syncedCount);
+
+                result.Count = syncedCount;
+                result.Success = true;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "UploadRolesToFirebaseAsync failed");
+                result.Success = false;
+                result.ErrorMessage = ex.Message;
+                return result;
+            }
+        }
+
+        /// <summary>
         /// Syncs a single user to Firebase after they register or update offline.
         /// </summary>
         public async Task<bool> SyncUserAsync(UserDto user)
@@ -242,12 +403,12 @@ namespace myFlatLightLogin.Core.Services
                 if (string.IsNullOrEmpty(user.FirebaseUid))
                 {
                     // New user - register in Firebase
-                    return await Task.Run(() => _firebaseDal.Insert(user));
+                    return await Task.Run(() => _firebaseUserDal.Insert(user));
                 }
                 else
                 {
                     // Existing user - update in Firebase
-                    return await Task.Run(() => _firebaseDal.Update(user));
+                    return await Task.Run(() => _firebaseUserDal.Update(user));
                 }
             }
             catch
@@ -272,7 +433,7 @@ namespace myFlatLightLogin.Core.Services
         /// </summary>
         public List<UserDto> GetUsersWithPendingPasswordChanges()
         {
-            return _sqliteDal.GetUsersWithPendingPasswordChanges();
+            return _sqliteUserDal.GetUsersWithPendingPasswordChanges();
         }
 
         /// <summary>
@@ -297,7 +458,7 @@ namespace myFlatLightLogin.Core.Services
                 }
 
                 // Update Firebase password with old password authentication
-                bool success = await _firebaseDal.UpdatePasswordWithOldPasswordAsync(
+                bool success = await _firebaseUserDal.UpdatePasswordWithOldPasswordAsync(
                     user.Email,
                     oldPassword,
                     newPassword);
@@ -305,7 +466,7 @@ namespace myFlatLightLogin.Core.Services
                 if (success)
                 {
                     // Clear pending password change in SQLite
-                    _sqliteDal.ClearPendingPasswordChange(user.Id);
+                    _sqliteUserDal.ClearPendingPasswordChange(user.Id);
                 }
 
                 return success;
@@ -327,9 +488,16 @@ namespace myFlatLightLogin.Core.Services
         public DateTime EndTime { get; set; }
         public int UsersDownloaded { get; set; }
         public int UsersUploaded { get; set; }
+        public int RolesDownloaded { get; set; }
+        public int RolesUploaded { get; set; }
         public string ErrorMessage { get; set; }
 
         public TimeSpan Duration => EndTime - StartTime;
+
+        /// <summary>
+        /// Gets the total number of items synced (users + roles).
+        /// </summary>
+        public int TotalSynced => UsersDownloaded + UsersUploaded + RolesDownloaded + RolesUploaded;
     }
 
     /// <summary>

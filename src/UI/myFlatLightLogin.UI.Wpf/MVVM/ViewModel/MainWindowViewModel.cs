@@ -332,7 +332,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 if (result.Success)
                 {
                     await window.ShowMessageAsync("Sync Complete",
-                        $"Sync completed successfully!\n\nUsers uploaded: {result.UsersUploaded}\nDuration: {result.Duration.TotalSeconds:F1}s",
+                        $"Sync completed successfully!\n\n" +
+                        $"Users: {result.UsersUploaded} uploaded, {result.UsersDownloaded} downloaded\n" +
+                        $"Roles: {result.RolesUploaded} uploaded, {result.RolesDownloaded} downloaded\n" +
+                        $"Duration: {result.Duration.TotalSeconds:F1}s",
                         MessageDialogStyle.Affirmative,
                         new MetroDialogSettings
                         {
