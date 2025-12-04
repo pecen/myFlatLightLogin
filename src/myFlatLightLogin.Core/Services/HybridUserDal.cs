@@ -632,6 +632,17 @@ namespace myFlatLightLogin.Core.Services
             catch (Exception ex)
             {
                 _logger.Error(ex, "Error changing password online for user ID: {UserId}", userId);
+
+                // Check if this is an authentication error (password mismatch)
+                if (ex.Message.Contains("INVALID_LOGIN_CREDENTIALS") ||
+                    ex.Message.Contains("INVALID_PASSWORD") ||
+                    ex.Message.Contains("Authentication error"))
+                {
+                    return PasswordChangeResult.Failure(
+                        "Current password is incorrect for your Firebase account. " +
+                        "If you logged in offline, you may need to log out and log in online first to sync your password.");
+                }
+
                 return PasswordChangeResult.Failure($"Failed to change password: {ex.Message}");
             }
         }
