@@ -1,7 +1,6 @@
 using myFlatLightLogin.Core.MVVM;
 using myFlatLightLogin.Core.Services;
-using myFlatLightLogin.Dal.Dto;
-using myFlatLightLogin.DalFirebase;
+using myFlatLightLogin.Library;
 using Serilog;
 using System;
 using System.Collections.ObjectModel;
@@ -12,23 +11,23 @@ using System.Windows;
 namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
     /// <summary>
-    /// ViewModel for managing Firebase roles (Admin functionality).
+    /// ViewModel for managing roles using BLL's RoleEdit and RoleList (Admin functionality).
     /// </summary>
     public class RoleManagementViewModel : ViewModelBase
     {
-        private readonly RoleDal _roleDal;
+        private static readonly ILogger _logger = Log.ForContext<RoleManagementViewModel>();
 
         #region Properties
 
-        private ObservableCollection<RoleDto> _roles = new ObservableCollection<RoleDto>();
-        public ObservableCollection<RoleDto> Roles
+        private ObservableCollection<RoleInfo> _roles = new ObservableCollection<RoleInfo>();
+        public ObservableCollection<RoleInfo> Roles
         {
             get => _roles;
             set => SetProperty(ref _roles, value);
         }
 
-        private RoleDto _selectedRole;
-        public RoleDto SelectedRole
+        private RoleInfo _selectedRole;
+        public RoleInfo SelectedRole
         {
             get => _selectedRole;
             set
@@ -96,10 +95,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         {
             Navigation = navigationService;
 
-            // Get auth token from current user for Firebase authentication
-            var authToken = CurrentUserService.Instance.CurrentUser?.FirebaseAuthToken;
-            _roleDal = new RoleDal(authToken);
-
             LoadRolesCommand = new AsyncRelayCommand(LoadRolesAsync, () => !IsLoading);
             SeedDefaultRolesCommand = new AsyncRelayCommand(SeedDefaultRolesAsync, () => !IsLoading);
             AddRoleCommand = new AsyncRelayCommand(AddRoleAsync, () => !IsLoading);
@@ -115,38 +110,36 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         #region Methods
 
         /// <summary>
-        /// Loads all roles from Firebase.
+        /// Loads all roles using BLL's RoleList.
         /// </summary>
         private async Task LoadRolesAsync()
         {
             try
             {
                 IsLoading = true;
-                StatusMessage = "Loading roles from Firebase...";
-                Log.Information("Loading roles from Firebase...");
+                StatusMessage = "Loading roles...";
+                _logger.Information("Loading roles using BLL...");
 
-                // Ensure Firebase is initialized
-                await _roleDal.InitializeAsync();
+                // Use BLL's RoleList to fetch all roles
+                var roleList = await RoleList.GetRolesAsync();
 
-                var roles = await Task.Run(() => _roleDal.Fetch());
-
-                Log.Information($"Retrieved {roles?.Count ?? 0} roles from Firebase");
+                _logger.Information($"Retrieved {roleList?.Count ?? 0} roles from BLL");
 
                 Roles.Clear();
-                if (roles != null && roles.Count > 0)
+                if (roleList != null && roleList.Count > 0)
                 {
-                    foreach (var role in roles)
+                    foreach (var role in roleList)
                     {
-                        Log.Information($"Adding role: ID={role.Id}, Name={role.Name}, Description={role.Description}");
+                        _logger.Information($"Adding role: ID={role.Id}, Name={role.Name}, Description={role.Description}");
                         Roles.Add(role);
                     }
                     StatusMessage = $"Loaded {Roles.Count} roles successfully.";
-                    Log.Information($"Successfully loaded {Roles.Count} roles into UI");
+                    _logger.Information($"Successfully loaded {Roles.Count} roles into UI");
                 }
                 else
                 {
-                    StatusMessage = "No roles found in Firebase. Click 'Seed Default Roles' to create them.";
-                    Log.Warning("No roles found in Firebase");
+                    StatusMessage = "No roles found. Click 'Seed Default Roles' to create them.";
+                    _logger.Warning("No roles found");
                 }
 
                 // Update the form to show next auto-generated ID
@@ -155,7 +148,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             catch (Exception ex)
             {
                 StatusMessage = $"Error loading roles: {ex.Message}";
-                Log.Error($"Error loading roles: {ex.Message}");
+                _logger.Error(ex, "Error loading roles");
                 MessageBox.Show($"Error loading roles: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -165,7 +158,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         }
 
         /// <summary>
-        /// Seeds default roles (User and Admin) in Firebase.
+        /// Seeds default roles (User and Admin) using BLL's RoleEdit.
         /// </summary>
         private async Task SeedDefaultRolesAsync()
         {
@@ -173,35 +166,22 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             {
                 IsLoading = true;
                 StatusMessage = "Seeding default roles...";
-                Log.Information("Seeding default roles...");
-
-                // Initialize Firebase
-                await _roleDal.InitializeAsync();
+                _logger.Information("Seeding default roles using BLL...");
 
                 // Create User role
-                var userRole = new RoleDto
-                {
-                    Id = 1,
-                    Name = "User",
-                    Description = "Standard user with basic permissions"
-                };
+                var userRole = await RoleEdit.NewRoleAsync();
+                userRole.Name = "User";
+                userRole.Description = "Standard user with basic permissions";
+                await userRole.SaveAsync();
 
                 // Create Admin role
-                var adminRole = new RoleDto
-                {
-                    Id = 2,
-                    Name = "Admin",
-                    Description = "Administrator with elevated permissions (e.g., view logs, manage users)"
-                };
-
-                await Task.Run(() =>
-                {
-                    _roleDal.Insert(userRole);
-                    _roleDal.Insert(adminRole);
-                });
+                var adminRole = await RoleEdit.NewRoleAsync();
+                adminRole.Name = "Admin";
+                adminRole.Description = "Administrator with elevated permissions (e.g., view logs, manage users)";
+                await adminRole.SaveAsync();
 
                 StatusMessage = "Default roles seeded successfully!";
-                Log.Information("Default roles seeded successfully");
+                _logger.Information("Default roles seeded successfully");
                 MessageBox.Show("Default roles (User and Admin) have been created successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 // Reload roles
@@ -210,7 +190,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             catch (Exception ex)
             {
                 StatusMessage = $"Error seeding roles: {ex.Message}";
-                Log.Error($"Error seeding roles: {ex.Message}");
+                _logger.Error(ex, "Error seeding roles");
                 MessageBox.Show($"Error seeding roles: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -220,53 +200,43 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         }
 
         /// <summary>
-        /// Adds a new role to Firebase.
+        /// Adds a new role using BLL's RoleEdit.
         /// </summary>
         private async Task AddRoleAsync()
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(EditRoleName))
+                IsLoading = true;
+                StatusMessage = "Adding new role...";
+                _logger.Information($"Adding new role: {EditRoleName}");
+
+                // Create a new RoleEdit business object
+                var newRole = await RoleEdit.NewRoleAsync();
+                newRole.Name = EditRoleName;
+                newRole.Description = EditRoleDescription;
+
+                // Validate using BLL business rules
+                if (!newRole.IsValid)
                 {
-                    MessageBox.Show("Role name is required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    var validationErrors = string.Join("\n", newRole.BrokenRulesCollection);
+                    _logger.Warning("Role validation failed: {Errors}", validationErrors);
+                    MessageBox.Show($"Please correct the following errors:\n\n{validationErrors}", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                IsLoading = true;
-                StatusMessage = "Adding new role...";
-                Log.Information($"Adding new role: {EditRoleName}");
+                // Save the role (this will call Insert in the Data Access region)
+                await newRole.SaveAsync();
 
-                // Auto-generate next Role ID
-                // Start from 3 since User=1 and Admin=2 are reserved
-                int nextId = Roles.Count > 0 ? Roles.Max(r => r.Id) + 1 : 3;
-
-                var newRole = new RoleDto
-                {
-                    Id = nextId,
-                    Name = EditRoleName,
-                    Description = EditRoleDescription
-                };
-
-                bool success = await Task.Run(() => _roleDal.Insert(newRole));
-
-                if (success)
-                {
-                    StatusMessage = $"Role '{EditRoleName}' added successfully!";
-                    Log.Information($"Role '{EditRoleName}' added successfully");
-                    MessageBox.Show($"Role '{EditRoleName}' has been added successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                    ClearForm();
-                    await LoadRolesAsync();
-                }
-                else
-                {
-                    StatusMessage = "Failed to add role.";
-                    MessageBox.Show("Failed to add role.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                StatusMessage = $"Role '{EditRoleName}' added successfully!";
+                _logger.Information($"Role '{EditRoleName}' added successfully");
+                MessageBox.Show($"Role '{EditRoleName}' has been added successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                ClearForm();
+                await LoadRolesAsync();
             }
             catch (Exception ex)
             {
                 StatusMessage = $"Error adding role: {ex.Message}";
-                Log.Error($"Error adding role: {ex.Message}");
+                _logger.Error(ex, "Error adding role");
                 MessageBox.Show($"Error adding role: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -276,7 +246,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         }
 
         /// <summary>
-        /// Updates an existing role in Firebase.
+        /// Updates an existing role using BLL's RoleEdit.
         /// </summary>
         private async Task UpdateRoleAsync()
         {
@@ -288,43 +258,37 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     return;
                 }
 
-                if (string.IsNullOrWhiteSpace(EditRoleName))
+                IsLoading = true;
+                StatusMessage = "Updating role...";
+                _logger.Information($"Updating role: {EditRoleName}");
+
+                // Get the role to edit
+                var roleEdit = await RoleEdit.GetRoleAsync(EditRoleId);
+                roleEdit.Name = EditRoleName;
+                roleEdit.Description = EditRoleDescription;
+
+                // Validate using BLL business rules
+                if (!roleEdit.IsValid)
                 {
-                    MessageBox.Show("Role name is required.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    var validationErrors = string.Join("\n", roleEdit.BrokenRulesCollection);
+                    _logger.Warning("Role validation failed: {Errors}", validationErrors);
+                    MessageBox.Show($"Please correct the following errors:\n\n{validationErrors}", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                IsLoading = true;
-                StatusMessage = "Updating role...";
-                Log.Information($"Updating role: {EditRoleName}");
+                // Save the role (this will call Update in the Data Access region)
+                await roleEdit.SaveAsync();
 
-                var updatedRole = new RoleDto
-                {
-                    Id = EditRoleId,
-                    Name = EditRoleName,
-                    Description = EditRoleDescription
-                };
-
-                bool success = await Task.Run(() => _roleDal.Update(updatedRole));
-
-                if (success)
-                {
-                    StatusMessage = $"Role '{EditRoleName}' updated successfully!";
-                    Log.Information($"Role '{EditRoleName}' updated successfully");
-                    MessageBox.Show($"Role '{EditRoleName}' has been updated successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                    ClearForm();
-                    await LoadRolesAsync();
-                }
-                else
-                {
-                    StatusMessage = "Failed to update role.";
-                    MessageBox.Show("Failed to update role.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                StatusMessage = $"Role '{EditRoleName}' updated successfully!";
+                _logger.Information($"Role '{EditRoleName}' updated successfully");
+                MessageBox.Show($"Role '{EditRoleName}' has been updated successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                ClearForm();
+                await LoadRolesAsync();
             }
             catch (Exception ex)
             {
                 StatusMessage = $"Error updating role: {ex.Message}";
-                Log.Error($"Error updating role: {ex.Message}");
+                _logger.Error(ex, "Error updating role");
                 MessageBox.Show($"Error updating role: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -334,7 +298,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         }
 
         /// <summary>
-        /// Deletes a role from Firebase.
+        /// Deletes a role using BLL's RoleEdit.
         /// </summary>
         private async Task DeleteRoleAsync()
         {
@@ -357,28 +321,21 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                 IsLoading = true;
                 StatusMessage = "Deleting role...";
-                Log.Information($"Deleting role: {SelectedRole.Name}");
+                _logger.Information($"Deleting role: {SelectedRole.Name}");
 
-                bool success = await Task.Run(() => _roleDal.Delete(SelectedRole.Id));
+                // Use BLL's static delete method
+                await RoleEdit.DeleteRoleAsync(SelectedRole.Id);
 
-                if (success)
-                {
-                    StatusMessage = $"Role '{SelectedRole.Name}' deleted successfully!";
-                    Log.Information($"Role '{SelectedRole.Name}' deleted successfully");
-                    MessageBox.Show($"Role '{SelectedRole.Name}' has been deleted successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                    ClearForm();
-                    await LoadRolesAsync();
-                }
-                else
-                {
-                    StatusMessage = "Failed to delete role.";
-                    MessageBox.Show("Failed to delete role.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                StatusMessage = $"Role '{SelectedRole.Name}' deleted successfully!";
+                _logger.Information($"Role '{SelectedRole.Name}' deleted successfully");
+                MessageBox.Show($"Role '{SelectedRole.Name}' has been deleted successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                ClearForm();
+                await LoadRolesAsync();
             }
             catch (Exception ex)
             {
                 StatusMessage = $"Error deleting role: {ex.Message}";
-                Log.Error($"Error deleting role: {ex.Message}");
+                _logger.Error(ex, "Error deleting role");
                 MessageBox.Show($"Error deleting role: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
