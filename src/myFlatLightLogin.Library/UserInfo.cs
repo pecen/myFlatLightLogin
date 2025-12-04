@@ -170,19 +170,16 @@ namespace myFlatLightLogin.Library
         /// </summary>
         private void LoadFromDto(UserDto dto)
         {
-            using (BypassPropertyChecks)
-            {
-                Id = dto.Id;
-                Name = dto.Name ?? string.Empty;
-                LastName = dto.Lastname ?? string.Empty;
-                UserName = dto.Username ?? string.Empty;
-                Email = dto.Email ?? string.Empty;
-                FirebaseUid = dto.FirebaseUid ?? string.Empty;
-                RegistrationDate = dto.RegistrationDate ?? string.Empty;
-                Role = dto.Role;
-                PendingPasswordChange = dto.PendingPasswordChange;
-                PasswordChangedDate = dto.PasswordChangedDate ?? string.Empty;
-            }
+            LoadProperty(IdProperty, dto.Id);
+            LoadProperty(NameProperty, dto.Name ?? string.Empty);
+            LoadProperty(LastNameProperty, dto.Lastname ?? string.Empty);
+            LoadProperty(UserNameProperty, dto.Username ?? string.Empty);
+            LoadProperty(EmailProperty, dto.Email ?? string.Empty);
+            LoadProperty(FirebaseUidProperty, dto.FirebaseUid ?? string.Empty);
+            LoadProperty(RegistrationDateProperty, dto.RegistrationDate ?? string.Empty);
+            LoadProperty(RoleProperty, dto.Role);
+            LoadProperty(PendingPasswordChangeProperty, dto.PendingPasswordChange);
+            LoadProperty(PasswordChangedDateProperty, dto.PasswordChangedDate ?? string.Empty);
         }
 
         #endregion

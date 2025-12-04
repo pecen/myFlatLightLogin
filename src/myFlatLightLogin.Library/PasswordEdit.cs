@@ -2,6 +2,7 @@ using Csla;
 using Csla.Rules;
 using Csla.Rules.CommonRules;
 using myFlatLightLogin.Core.Services;
+using myFlatLightLogin.Dal;
 using myFlatLightLogin.Dal.Dto;
 using System;
 using System.Threading.Tasks;
@@ -181,12 +182,7 @@ namespace myFlatLightLogin.Library
             // Validate business rules
             if (!IsValid)
             {
-                return new PasswordChangeResult
-                {
-                    Success = false,
-                    Message = "Please correct validation errors",
-                    ErrorType = PasswordChangeErrorType.ValidationError
-                };
+                return PasswordChangeResult.Failure("Please correct validation errors");
             }
 
             try
@@ -199,12 +195,7 @@ namespace myFlatLightLogin.Library
             }
             catch (Exception ex)
             {
-                return new PasswordChangeResult
-                {
-                    Success = false,
-                    Message = ex.Message,
-                    ErrorType = PasswordChangeErrorType.UnknownError
-                };
+                return PasswordChangeResult.Failure(ex.Message);
             }
         }
 

@@ -169,22 +169,19 @@ namespace myFlatLightLogin.Library.Security
         /// </summary>
         private void LoadFromDto(UserDto dto, bool isOnline)
         {
-            using (BypassPropertyChecks)
-            {
-                UserId = dto.Id;
-                Name = dto.Name ?? string.Empty;
-                LastName = dto.Lastname ?? string.Empty;
-                Email = dto.Email ?? string.Empty;
-                Role = dto.Role;
-                FirebaseUid = dto.FirebaseUid ?? string.Empty;
-                IsOnline = isOnline;
+            LoadProperty(UserIdProperty, dto.Id);
+            LoadProperty(NameProperty, dto.Name ?? string.Empty);
+            LoadProperty(LastNameProperty, dto.Lastname ?? string.Empty);
+            LoadProperty(EmailProperty, dto.Email ?? string.Empty);
+            LoadProperty(RoleProperty, dto.Role);
+            LoadProperty(FirebaseUidProperty, dto.FirebaseUid ?? string.Empty);
+            LoadProperty(IsOnlineProperty, isOnline);
 
-                // Set the base class Name property for IIdentity interface
-                base.Name = dto.Email ?? string.Empty;
+            // Set the base class Name property for IIdentity interface
+            base.Name = dto.Email ?? string.Empty;
 
-                // Mark as authenticated
-                IsAuthenticated = true;
-            }
+            // Mark as authenticated
+            IsAuthenticated = true;
         }
 
         #endregion

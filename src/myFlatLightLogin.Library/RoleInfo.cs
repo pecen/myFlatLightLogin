@@ -124,12 +124,9 @@ namespace myFlatLightLogin.Library
         /// </summary>
         private void LoadFromDto(RoleDto dto)
         {
-            using (BypassPropertyChecks)
-            {
-                Id = dto.Id;
-                Name = dto.Name ?? string.Empty;
-                Description = dto.Description ?? string.Empty;
-            }
+            LoadProperty(IdProperty, dto.Id);
+            LoadProperty(NameProperty, dto.Name ?? string.Empty);
+            LoadProperty(DescriptionProperty, dto.Description ?? string.Empty);
         }
 
         #endregion
