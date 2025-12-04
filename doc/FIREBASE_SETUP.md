@@ -155,6 +155,11 @@ The default test mode rules allow anyone to read/write your database. You should
         ".read": "$uid === auth.uid",
         ".write": "$uid === auth.uid"
       }
+    },
+    "roles": {
+      ".indexOn": ["$key"],
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('Role').val() === 1"
     }
   }
 }
@@ -165,6 +170,9 @@ The default test mode rules allow anyone to read/write your database. You should
 These rules ensure that:
 - Only authenticated users can access their own user data
 - Users cannot read or write other users' data
+- All authenticated users can read roles (needed to display role options)
+- Only admin users (Role === 1) can create, modify, or delete roles
+- The `.indexOn` on `$key` enables ordered queries on the roles collection
 
 **Important:** The application automatically includes the authentication token with all database requests by creating authenticated FirebaseClient instances (using `FirebaseOptions` with `AuthTokenAsyncFactory`), so these security rules will work correctly for both registration and login operations.
 
@@ -249,9 +257,11 @@ These rules ensure that:
 - Check database security rules
 
 **Error: "Permission denied"**
-- This happens when database security rules are enabled but requests aren't authenticated
+- This happens when database security rules don't allow the requested operation
+- **For roles access errors**: Ensure your Firebase rules include the `roles` section from Step 9. Admin users need the `roles` rules to manage roles.
+- **For user data errors**: Make sure the authenticated user is accessing their own data
 - Make sure you're on the latest version of the code (with FirebaseOptions authentication)
-- Check that your security rules in Firebase Console match Step 9
+- Check that your security rules in Firebase Console match Step 9 exactly (including both `users` and `roles` sections)
 
 **Error: "User already exists"**
 - This is expected if you try to register with an email that's already registered
