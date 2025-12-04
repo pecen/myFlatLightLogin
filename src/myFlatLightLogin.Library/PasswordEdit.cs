@@ -190,7 +190,7 @@ namespace myFlatLightLogin.Library
             {
                 // Use HybridUserDal for password change
                 var hybridDal = new HybridUserDal(connectivityService, syncService);
-                var result = await hybridDal.ChangePasswordAsync(Email, OldPassword, NewPassword);
+                var result = await hybridDal.ChangePasswordAsync(UserId, OldPassword, NewPassword);
 
                 return result;
             }
