@@ -136,10 +136,10 @@ namespace myFlatLightLogin.Library.Security
         [Serializable]
         private class LoginCredentials
         {
-            public string Email { get; set; }
-            public string Password { get; set; }
-            public NetworkConnectivityService ConnectivityService { get; set; }
-            public SyncService SyncService { get; set; }
+            public string? Email { get; set; }
+            public string? Password { get; set; }
+            public NetworkConnectivityService? ConnectivityService { get; set; }
+            public SyncService? SyncService { get; set; }
         }
 
         [Fetch]

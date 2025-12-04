@@ -259,7 +259,7 @@ namespace myFlatLightLogin.Library
         [Serializable]
         private class UserFetchCriteria
         {
-            public string Email { get; set; }
+            public string? Email { get; set; }
         }
 
         [Create]

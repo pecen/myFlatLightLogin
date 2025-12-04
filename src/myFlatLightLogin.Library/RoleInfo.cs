@@ -82,7 +82,7 @@ namespace myFlatLightLogin.Library
         [Serializable]
         private class RoleFetchCriteria
         {
-            public string Name { get; set; }
+            public string? Name { get; set; }
         }
 
         [Fetch]

@@ -208,7 +208,7 @@ namespace myFlatLightLogin.Library
         private class PasswordEditCriteria
         {
             public int UserId { get; set; }
-            public string Email { get; set; }
+            public string? Email { get; set; }
         }
 
         [Create]
