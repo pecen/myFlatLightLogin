@@ -28,6 +28,7 @@
     <ProjectReference Include="..\..\DAL\myFlatLightLogin.Dal\myFlatLightLogin.Dal.csproj" />
     <ProjectReference Include="..\..\myFlatLightLogin.Core\myFlatLightLogin.Core.csproj" />
     <ProjectReference Include="..\..\myFlatLightLogin.Library\myFlatLightLogin.Library.csproj" />
+    <ProjectReference Include="..\myFlatLightLogin.UI.Common\myFlatLightLogin.UI.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
