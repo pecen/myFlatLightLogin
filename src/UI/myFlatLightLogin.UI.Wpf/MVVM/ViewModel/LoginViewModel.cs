@@ -158,9 +158,17 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                     IsAuthenticated = true;
 
-                    // Set the current user principal in the application-wide service
-                    CurrentUserService.Instance.SetCurrentPrincipal(_currentPrincipal);
-                    _logger.Information("Current user principal set in CurrentUserService with role: {Role}", identity.Role);
+                    // Set the current user info in the application-wide service
+                    var currentUserInfo = new CurrentUserInfo
+                    {
+                        UserId = identity.UserId,
+                        Name = identity.Name,
+                        Email = identity.Email,
+                        Role = identity.Role,
+                        IsOnline = identity.IsOnline
+                    };
+                    CurrentUserService.Instance.SetCurrentUserInfo(currentUserInfo);
+                    _logger.Information("Current user info set in CurrentUserService with role: {Role}", identity.Role);
 
                     // Check connectivity AGAIN with fresh check (don't trust cached value)
                     bool isCurrentlyOnline = _connectivityService.CheckConnectivity();

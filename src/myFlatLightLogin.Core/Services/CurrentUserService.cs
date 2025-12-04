@@ -1,5 +1,4 @@
 using myFlatLightLogin.Dal.Dto;
-using myFlatLightLogin.Library.Security;
 using System;
 
 namespace myFlatLightLogin.Core.Services
@@ -7,14 +6,14 @@ namespace myFlatLightLogin.Core.Services
     /// <summary>
     /// Service to track the currently logged-in user throughout the application.
     /// Provides access to user information and role-based authorization.
-    /// Now supports both legacy UserDto and BLL's UserPrincipal.
+    /// Stores basic user info to avoid circular dependencies with BLL.
     /// </summary>
     public class CurrentUserService
     {
         private static CurrentUserService? _instance;
         private static readonly object _lock = new();
         private UserDto? _currentUser; // Legacy support
-        private UserPrincipal? _currentPrincipal; // BLL principal
+        private CurrentUserInfo? _currentUserInfo; // Lightweight user info from BLL
 
         /// <summary>
         /// Gets the singleton instance of CurrentUserService.
@@ -52,54 +51,54 @@ namespace myFlatLightLogin.Core.Services
         }
 
         /// <summary>
-        /// Gets the current UserPrincipal (BLL).
+        /// Gets the current user info from BLL.
         /// </summary>
-        public UserPrincipal? CurrentPrincipal
+        public CurrentUserInfo? CurrentUserInfo
         {
-            get => _currentPrincipal;
-            private set => _currentPrincipal = value;
+            get => _currentUserInfo;
+            private set => _currentUserInfo = value;
         }
 
         /// <summary>
         /// Gets whether a user is currently logged in.
         /// </summary>
-        public bool IsLoggedIn => _currentPrincipal?.Identity?.IsAuthenticated == true || _currentUser != null;
+        public bool IsLoggedIn => _currentUserInfo != null || _currentUser != null;
 
         /// <summary>
         /// Gets whether the current user has Admin role.
         /// </summary>
         public bool IsAdmin =>
-            _currentPrincipal?.IsAdmin == true ||
+            _currentUserInfo?.Role == UserRole.Admin ||
             _currentUser?.Role == UserRole.Admin;
 
         /// <summary>
         /// Gets whether the current user has User role.
         /// </summary>
         public bool IsUser =>
-            _currentPrincipal?.IsUser == true ||
+            _currentUserInfo?.Role == UserRole.User ||
             _currentUser?.Role == UserRole.User;
 
         /// <summary>
         /// Sets the current logged-in user (legacy method for backward compatibility).
         /// </summary>
         /// <param name="user">The user who has logged in</param>
-        [Obsolete("Use SetCurrentPrincipal instead")]
+        [Obsolete("Use SetCurrentUserInfo instead")]
         public void SetCurrentUser(UserDto user)
         {
             _currentUser = user;
-            _currentPrincipal = null; // Clear principal when using legacy method
+            _currentUserInfo = null; // Clear user info when using legacy method
             OnUserChanged?.Invoke(this, user);
         }
 
         /// <summary>
-        /// Sets the current UserPrincipal (BLL method).
+        /// Sets the current user info from BLL (avoids circular dependency with Library).
         /// </summary>
-        /// <param name="principal">The authenticated principal</param>
-        public void SetCurrentPrincipal(UserPrincipal principal)
+        /// <param name="userInfo">The authenticated user info</param>
+        public void SetCurrentUserInfo(CurrentUserInfo userInfo)
         {
-            _currentPrincipal = principal;
+            _currentUserInfo = userInfo;
             _currentUser = null; // Clear legacy user when using BLL
-            OnPrincipalChanged?.Invoke(this, principal);
+            OnUserInfoChanged?.Invoke(this, userInfo);
         }
 
         /// <summary>
@@ -108,32 +107,31 @@ namespace myFlatLightLogin.Core.Services
         public void ClearCurrentUser()
         {
             _currentUser = null;
-            _currentPrincipal = null;
+            _currentUserInfo = null;
             OnUserChanged?.Invoke(this, null);
-            OnPrincipalChanged?.Invoke(this, null);
+            OnUserInfoChanged?.Invoke(this, null);
         }
 
         /// <summary>
         /// Event raised when the current user changes (login/logout) - Legacy.
         /// </summary>
-        [Obsolete("Use OnPrincipalChanged instead")]
+        [Obsolete("Use OnUserInfoChanged instead")]
         public event EventHandler<UserDto?>? OnUserChanged;
 
         /// <summary>
-        /// Event raised when the current principal changes (login/logout).
+        /// Event raised when the current user info changes (login/logout).
         /// </summary>
-        public event EventHandler<UserPrincipal?>? OnPrincipalChanged;
+        public event EventHandler<CurrentUserInfo?>? OnUserInfoChanged;
 
         /// <summary>
         /// Gets the current user's display name.
         /// </summary>
         public string GetDisplayName()
         {
-            // Prefer BLL principal
-            if (_currentPrincipal?.Identity?.IsAuthenticated == true)
+            // Prefer BLL user info
+            if (_currentUserInfo != null)
             {
-                var identity = _currentPrincipal.Identity;
-                return identity.Name ?? identity.Email ?? "Unknown User";
+                return _currentUserInfo.Name ?? _currentUserInfo.Email ?? "Unknown User";
             }
 
             // Fallback to legacy
@@ -148,10 +146,10 @@ namespace myFlatLightLogin.Core.Services
         /// </summary>
         public string GetRoleDisplayName()
         {
-            // Prefer BLL principal
-            if (_currentPrincipal?.Identity?.IsAuthenticated == true)
+            // Prefer BLL user info
+            if (_currentUserInfo != null)
             {
-                return _currentPrincipal.Identity.Role == UserRole.Admin ? "Administrator" : "User";
+                return _currentUserInfo.Role == UserRole.Admin ? "Administrator" : "User";
             }
 
             // Fallback to legacy
@@ -166,10 +164,10 @@ namespace myFlatLightLogin.Core.Services
         /// </summary>
         public int GetUserId()
         {
-            // Prefer BLL principal
-            if (_currentPrincipal?.Identity?.IsAuthenticated == true)
+            // Prefer BLL user info
+            if (_currentUserInfo != null)
             {
-                return _currentPrincipal.Identity.UserId;
+                return _currentUserInfo.UserId;
             }
 
             // Fallback to legacy
@@ -181,14 +179,27 @@ namespace myFlatLightLogin.Core.Services
         /// </summary>
         public string GetUserEmail()
         {
-            // Prefer BLL principal
-            if (_currentPrincipal?.Identity?.IsAuthenticated == true)
+            // Prefer BLL user info
+            if (_currentUserInfo != null)
             {
-                return _currentPrincipal.Identity.Email ?? string.Empty;
+                return _currentUserInfo.Email ?? string.Empty;
             }
 
             // Fallback to legacy
             return _currentUser?.Email ?? string.Empty;
         }
+    }
+
+    /// <summary>
+    /// Lightweight user info class to avoid circular dependency with BLL.
+    /// Contains essential user information extracted from UserPrincipal.
+    /// </summary>
+    public class CurrentUserInfo
+    {
+        public int UserId { get; set; }
+        public string? Name { get; set; }
+        public string? Email { get; set; }
+        public UserRole Role { get; set; }
+        public bool IsOnline { get; set; }
     }
 }
