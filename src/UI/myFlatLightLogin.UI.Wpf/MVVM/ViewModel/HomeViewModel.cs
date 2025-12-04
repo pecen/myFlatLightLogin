@@ -1,5 +1,6 @@
 using myFlatLightLogin.UI.Common.MVVM;
 using myFlatLightLogin.Core.Services;
+using myFlatLightLogin.UI.Common.Services;
 using myFlatLightLogin.Dal.Dto;
 
 namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel

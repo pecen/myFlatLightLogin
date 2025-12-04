@@ -14,11 +14,4 @@
     <ProjectReference Include="..\..\myFlatLightLogin.Core\myFlatLightLogin.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Page Include="Controls\TogglePwdBox.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-
 </Project>
