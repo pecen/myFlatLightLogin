@@ -243,34 +243,63 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             {
                 IsAuthenticated = false;
 
+                // Extract user-friendly error message from CSLA DataPortalException
+                string errorMessage = ex.Message;
+
+                // Strip CSLA's "DataPortal.Fetch failed" wrapper to get the actual error
+                if (errorMessage.StartsWith("DataPortal.Fetch failed (") && errorMessage.EndsWith(")"))
+                {
+                    // Extract the inner message: "DataPortal.Fetch failed (Invalid email or password)" -> "Invalid email or password"
+                    errorMessage = errorMessage.Substring("DataPortal.Fetch failed (".Length);
+                    errorMessage = errorMessage.Substring(0, errorMessage.Length - 1);
+                }
+
 #if DEBUG
                 // DEBUG MODE: Show detailed error for development
-                StatusMessage = $"Error: {ex.Message}";
+                StatusMessage = $"Error: {errorMessage}";
                 _logger.Error(ex, "Login failed with exception");
 
                 await window.ShowMessageAsync("Login Error",
-                    $"Login Error: {ex.Message}",
+                    errorMessage,
                     MessageDialogStyle.Affirmative,
                     new MetroDialogSettings
                     {
-                        AffirmativeButtonText = "Continue",
+                        AffirmativeButtonText = "OK",
                         AnimateShow = true,
                         AnimateHide = true
                     });
 #else
-                // RELEASE MODE: Generic error (no technical details or passwords)
-                StatusMessage = "Login error occurred";
+                // RELEASE MODE: Show user-friendly error or generic fallback
+                StatusMessage = errorMessage;
                 _logger.Error("Login failed with exception: {ErrorType}", ex.GetType().Name);
 
-                await window.ShowMessageAsync("Login Error",
-                    "An error occurred during login. Please check your credentials and try again.",
-                    MessageDialogStyle.Affirmative,
-                    new MetroDialogSettings
-                    {
-                        AffirmativeButtonText = "Continue",
-                        AnimateShow = true,
-                        AnimateHide = true
-                    });
+                // Check if it's an authentication error (invalid credentials)
+                if (errorMessage.Contains("Invalid email or password", StringComparison.OrdinalIgnoreCase) ||
+                    errorMessage.Contains("invalid credentials", StringComparison.OrdinalIgnoreCase))
+                {
+                    await window.ShowMessageAsync("Login Failed",
+                        "Invalid email or password. Please check your credentials and try again.",
+                        MessageDialogStyle.Affirmative,
+                        new MetroDialogSettings
+                        {
+                            AffirmativeButtonText = "OK",
+                            AnimateShow = true,
+                            AnimateHide = true
+                        });
+                }
+                else
+                {
+                    // Generic error for other failures
+                    await window.ShowMessageAsync("Login Error",
+                        "An error occurred during login. Please try again.",
+                        MessageDialogStyle.Affirmative,
+                        new MetroDialogSettings
+                        {
+                            AffirmativeButtonText = "OK",
+                            AnimateShow = true,
+                            AnimateHide = true
+                        });
+                }
 #endif
 
                 _logger.Error("========== LOGIN ATTEMPT FAILED WITH EXCEPTION ==========");
