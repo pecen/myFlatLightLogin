@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DAL\myFlatLightLogin.Dal\myFlatLightLogin.Dal.csproj" />
+    <ProjectReference Include="..\myFlatLightLogin.Core\myFlatLightLogin.Core.csproj" />
   </ItemGroup>
 
 </Project>
