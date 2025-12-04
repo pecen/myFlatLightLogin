@@ -157,7 +157,6 @@ The default test mode rules allow anyone to read/write your database. You should
       }
     },
     "roles": {
-      ".indexOn": ["$key"],
       ".read": "auth != null",
       ".write": "auth != null && root.child('users').child(auth.uid).child('Role').val() === 1"
     }
@@ -172,7 +171,6 @@ These rules ensure that:
 - Users cannot read or write other users' data
 - All authenticated users can read roles (needed to display role options)
 - Only admin users (Role === 1) can create, modify, or delete roles
-- The `.indexOn` on `$key` enables ordered queries on the roles collection
 
 **Important:** The application automatically includes the authentication token with all database requests by creating authenticated FirebaseClient instances (using `FirebaseOptions` with `AuthTokenAsyncFactory`), so these security rules will work correctly for both registration and login operations.
 
