@@ -1,6 +1,6 @@
 ﻿using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
-using myFlatLightLogin.Core.MVVM;
+using myFlatLightLogin.UI.Common.MVVM;
 using myFlatLightLogin.Core.Services;
 using myFlatLightLogin.Core.Utilities;
 using Serilog;

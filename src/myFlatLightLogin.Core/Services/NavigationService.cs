@@ -1,4 +1,4 @@
-﻿using myFlatLightLogin.Core.MVVM;
+﻿using myFlatLightLogin.UI.Common.MVVM;
 using System;
 
 namespace myFlatLightLogin.Core.Services
