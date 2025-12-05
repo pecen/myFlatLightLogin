@@ -24,6 +24,9 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         private readonly HybridUserDal _hybridUserDal;
         private readonly SyncService _syncService;
         private readonly NetworkConnectivityService _connectivityService;
+        private readonly IDialogService _dialogService;
+
+        #region Commands
 
         public RelayCommand ShutdownWindowCommand { get; set; }
         public RelayCommand MoveWindowCommand { get; set; }
@@ -36,6 +39,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public AsyncRelayCommand ViewCurrentLogCommand { get; set; }
         public AsyncRelayCommand SyncNowCommand { get; set; }
 
+        #endregion
+
+        #region Properties
+
         /// <summary>
         /// Gets whether the current logged-in user has Admin role in the application.
         /// This is checked against application roles, not Windows administrator privileges.
@@ -47,30 +54,30 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// </summary>
         public bool IsUserLoggedIn => CurrentUserService.Instance.IsLoggedIn;
 
-        private int _pendingSyncCount;
         /// <summary>
         /// Gets the number of users pending sync to Firebase.
         /// </summary>
+        private int _pendingSyncCount;
         public int PendingSyncCount
         {
             get => _pendingSyncCount;
             set => SetProperty(ref _pendingSyncCount, value);
         }
 
-        private string _syncStatusMessage;
         /// <summary>
         /// Gets the current sync status message.
         /// </summary>
+        private string _syncStatusMessage;
         public string SyncStatusMessage
         {
             get => _syncStatusMessage;
             set => SetProperty(ref _syncStatusMessage, value);
         }
 
-        private bool _isSyncing;
         /// <summary>
         /// Gets whether a sync operation is currently in progress.
         /// </summary>
+        private bool _isSyncing;
         public bool IsSyncing
         {
             get => _isSyncing;
@@ -92,14 +99,19 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// </summary>
         public string LoginLogoutButtonText => IsUserLoggedIn ? "Logout" : "Login";
 
+        #endregion
+
         public MainWindowViewModel(INavigationService navigationService, LoginViewModel loginViewModel,
-            HybridUserDal hybridUserDal, SyncService syncService, NetworkConnectivityService connectivityService)
+            HybridUserDal hybridUserDal, SyncService syncService, NetworkConnectivityService connectivityService,
+            IDialogService dialogService)
         {
             Navigation = navigationService;
             _loginViewModel = loginViewModel;
             _hybridUserDal = hybridUserDal;
             _syncService = syncService;
             _connectivityService = connectivityService;
+            _dialogService = dialogService;
+
             Navigation.NavigateTo<LoginViewModel>();
 
             MoveWindowCommand = new RelayCommand(o => { Application.Current.MainWindow.DragMove(); });
@@ -211,8 +223,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// </summary>
         private async Task OpenLogsFolderAsync()
         {
-            var window = (MetroWindow)Application.Current.MainWindow;
-
             try
             {
                 var logsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
@@ -227,7 +237,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 }
                 else
                 {
-                    await window.ShowMessageAsync("Logs Folder",
+                    await _dialogService.ShowMessageAsync("Logs Folder",
                         "Logs folder does not exist yet. No logs have been created.",
                         MessageDialogStyle.Affirmative,
                         new MetroDialogSettings
@@ -240,7 +250,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             }
             catch (Exception ex)
             {
-                await window.ShowMessageAsync("Error",
+                await _dialogService.ShowMessageAsync("Error",
                     $"Failed to open logs folder: {ex.Message}",
                     MessageDialogStyle.Affirmative,
                     new MetroDialogSettings
@@ -257,14 +267,12 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// </summary>
         private async Task ViewCurrentLogAsync()
         {
-            var window = (MetroWindow)Application.Current.MainWindow;
-
             try
             {
                 var logsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
                 if (!Directory.Exists(logsPath))
                 {
-                    await window.ShowMessageAsync("View Logs",
+                    await _dialogService.ShowMessageAsync("View Logs",
                         "Logs folder does not exist yet. No logs have been created.",
                         MessageDialogStyle.Affirmative,
                         new MetroDialogSettings
@@ -292,7 +300,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 }
                 else
                 {
-                    await window.ShowMessageAsync("View Logs",
+                    await _dialogService.ShowMessageAsync("View Logs",
                         "No log files found.",
                         MessageDialogStyle.Affirmative,
                         new MetroDialogSettings
@@ -305,7 +313,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             }
             catch (Exception ex)
             {
-                await window.ShowMessageAsync("Error",
+                await _dialogService.ShowMessageAsync("Error",
                     $"Failed to open log file: {ex.Message}",
                     MessageDialogStyle.Affirmative,
                     new MetroDialogSettings
@@ -322,8 +330,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// </summary>
         private async Task SyncNowAsync()
         {
-            var window = (MetroWindow)Application.Current.MainWindow;
-
             try
             {
                 SyncStatusMessage = "Starting sync...";
@@ -331,7 +337,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                 if (result.Success)
                 {
-                    await window.ShowMessageAsync("Sync Complete",
+                    await _dialogService.ShowMessageAsync("Sync Complete",
                         $"Sync completed successfully!\n\n" +
                         $"Users: {result.UsersUploaded} uploaded, {result.UsersDownloaded} downloaded\n" +
                         $"Roles: {result.RolesUploaded} uploaded, {result.RolesDownloaded} downloaded\n" +
@@ -346,7 +352,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 }
                 else
                 {
-                    await window.ShowMessageAsync("Sync Failed",
+                    await _dialogService.ShowMessageAsync("Sync Failed",
                         $"Sync failed: {result.ErrorMessage}",
                         MessageDialogStyle.Affirmative,
                         new MetroDialogSettings
@@ -361,7 +367,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             }
             catch (Exception ex)
             {
-                await window.ShowMessageAsync("Error",
+                await _dialogService.ShowMessageAsync("Error",
                     $"Sync error: {ex.Message}",
                     MessageDialogStyle.Affirmative,
                     new MetroDialogSettings

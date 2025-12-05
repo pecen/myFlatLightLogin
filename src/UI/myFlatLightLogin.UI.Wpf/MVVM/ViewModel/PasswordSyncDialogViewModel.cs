@@ -16,28 +16,30 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
     /// </summary>
     public class PasswordSyncDialogViewModel : ViewModelBase
     {
-        public event EventHandler OnDialogClosed;
+        public event EventHandler? OnDialogClosed;
 
         private readonly SyncService _syncService;
         private readonly UserDto _user;
-        private readonly MetroWindow _window;
+        private readonly IDialogService _dialogService;
         private bool _dialogResult;
 
-        private string _oldPassword;
+        #region Properties
+
+        private string _oldPassword = string.Empty;
         public string OldPassword
         {
             get => _oldPassword;
             set => SetProperty(ref _oldPassword, value);
         }
 
-        private string _newPassword;
+        private string _newPassword = string.Empty;
         public string NewPassword
         {
             get => _newPassword;
             set => SetProperty(ref _newPassword, value);
         }
 
-        private string _confirmPassword;
+        private string _confirmPassword = string.Empty;
         public string ConfirmPassword
         {
             get => _confirmPassword;
@@ -51,17 +53,19 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             set => SetProperty(ref _isProcessing, value);
         }
 
-        public string UserEmail { get; }
+        public string? UserEmail { get; }
         public bool DialogResult => _dialogResult;
 
         public AsyncRelayCommand SyncPasswordCommand { get; }
         public RelayCommand SkipCommand { get; }
 
-        public PasswordSyncDialogViewModel(SyncService syncService, UserDto user, MetroWindow window)
+        #endregion
+
+        public PasswordSyncDialogViewModel(SyncService syncService, UserDto user, IDialogService dialogService)
         {
             _syncService = syncService;
             _user = user;
-            _window = window;
+            _dialogService = dialogService;
             UserEmail = user.Email;
 
             SyncPasswordCommand = new AsyncRelayCommand(SyncPasswordAsync, CanSyncPassword);
@@ -81,9 +85,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             // Validation
             if (NewPassword != ConfirmPassword)
             {
-                await _window.ShowMessageAsync("Validation Error", "New password and confirm password do not match.",
+                await _dialogService.ShowMessageAsync("Validation Error", "New password and confirm password do not match.",
                     MessageDialogStyle.Affirmative,
                     new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
+
                 return;
             }
 
@@ -96,7 +101,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 var oldPasswordHash = myFlatLightLogin.Core.Utilities.SecurityHelper.HashPassword(OldPassword);
                 if (oldPasswordHash != _user.OldPasswordHash)
                 {
-                    await _window.ShowMessageAsync("Error",
+                    await _dialogService.ShowMessageAsync("Error",
                         "Old password is incorrect. Please enter the password you used BEFORE the change.",
                         MessageDialogStyle.Affirmative,
                         new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
@@ -110,7 +115,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                 if (currentUser == null || currentUser.Password != newPasswordHash)
                 {
-                    await _window.ShowMessageAsync("Error",
+                    await _dialogService.ShowMessageAsync("Error",
                         "New password is incorrect. Please enter the password you changed to while offline.",
                         MessageDialogStyle.Affirmative,
                         new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
@@ -122,7 +127,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                 if (success)
                 {
-                    await _window.ShowMessageAsync("Success", "Password synced to the Cloud successfully!",
+                    await _dialogService.ShowMessageAsync("Success", "Password synced to the Cloud successfully!",
                         MessageDialogStyle.Affirmative,
                         new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
 
@@ -131,7 +136,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 }
                 else
                 {
-                    await _window.ShowMessageAsync("Error",
+                    await _dialogService.ShowMessageAsync("Error",
                         "Failed to sync password to Firebase. Please check your internet connection and try again.",
                         MessageDialogStyle.Affirmative,
                         new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
@@ -139,7 +144,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             }
             catch (Exception ex)
             {
-                await _window.ShowMessageAsync("Error", $"Failed to sync password: {ex.Message}",
+                await _dialogService.ShowMessageAsync("Error", $"Failed to sync password: {ex.Message}",
                     MessageDialogStyle.Affirmative,
                     new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
             }

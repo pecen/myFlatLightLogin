@@ -20,9 +20,16 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         private static readonly ILogger _logger = Log.ForContext<ChangePasswordViewModel>();
         private readonly NetworkConnectivityService _connectivityService;
         private readonly SyncService _syncService;
+        private readonly IDialogService _dialogService;
+
+        #region Commands
 
         public AsyncRelayCommand ChangePasswordCommand { get; set; }
         public RelayCommand CancelCommand { get; set; }
+
+        #endregion
+
+        #region Properties
 
         private string _currentPassword;
         public string CurrentPassword
@@ -48,9 +55,12 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public bool IsOnline => _connectivityService.IsOnline;
         public string ConnectionStatus => IsOnline ? "🟢 Online" : "🔴 Offline";
 
-        public ChangePasswordViewModel(INavigationService navigationService)
+        #endregion
+
+        public ChangePasswordViewModel(INavigationService navigationService, IDialogService dialogService)
         {
             Navigation = navigationService;
+            _dialogService = dialogService;
 
             // Initialize network connectivity service
             _connectivityService = new NetworkConnectivityService();
@@ -81,14 +91,12 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         private async Task ChangePasswordAsync()
         {
-            var window = (MetroWindow)Application.Current.MainWindow;
-
             _logger.Information("========== PASSWORD CHANGE ATTEMPT STARTED ==========");
 
             // Show offline warning if applicable
             if (!IsOnline)
             {
-                var offlineWarning = await ShowOfflineWarningAsync(window);
+                var offlineWarning = await ShowOfflineWarningAsync();
                 if (!offlineWarning)
                 {
                     // User cancelled
@@ -103,8 +111,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
             if (userId == 0 || string.IsNullOrEmpty(userEmail))
             {
-                _logger.Warning("Password change attempted with no logged-in user");
-                await window.ShowMessageAsync("Error", "No user is currently logged in.",
+                _logger.Warning("Password change attempted with no logged-in user");                                                                                                                                                                                                            
+                await _dialogService.ShowMessageAsync("Error", "No user is currently logged in.",
                     MessageDialogStyle.Affirmative,
                     new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
                 return;
@@ -126,7 +134,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     var validationErrors = string.Join("\n", passwordEdit.BrokenRulesCollection);
                     _logger.Warning("Password change validation failed: {Errors}", validationErrors);
 
-                    await window.ShowMessageAsync("Validation Error",
+                    await _dialogService.ShowMessageAsync("Validation Error",
                        $"Please correct the following errors:\n\n{validationErrors}",
                        MessageDialogStyle.Affirmative,
                        new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
@@ -141,7 +149,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 {
                     _logger.Information("Password changed successfully for user: {Email}", userEmail);
 
-                    await window.ShowMessageAsync("Success", result.Message,
+                    await _dialogService.ShowMessageAsync("Success", result.Message,
                         MessageDialogStyle.Affirmative,
                         new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
 
@@ -153,7 +161,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 {
                     _logger.Warning("Password change failed: {Message}", result.Message);
 
-                    await window.ShowMessageAsync("Error", result.Message,
+                    await _dialogService.ShowMessageAsync("Error", result.Message,
                         MessageDialogStyle.Affirmative,
                         new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
                 }
@@ -162,7 +170,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             {
                 _logger.Error(ex, "Password change failed with exception");
 
-                await window.ShowMessageAsync("Error", $"Failed to change password: {ex.Message}",
+                await _dialogService.ShowMessageAsync("Error", $"Failed to change password: {ex.Message}",
                     MessageDialogStyle.Affirmative,
                     new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
             }
@@ -172,7 +180,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             }
         }
 
-        private async Task<bool> ShowOfflineWarningAsync(MetroWindow window)
+        private async Task<bool> ShowOfflineWarningAsync()
         {
             var settings = new MetroDialogSettings
             {
@@ -183,7 +191,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 DefaultButtonFocus = MessageDialogResult.Negative
             };
 
-            var result = await window.ShowMessageAsync(
+            var result = await _dialogService.ShowMessageAsync(
                 "Offline Password Change",
                 "You are currently offline.\n\n" +
                 "If you change your password now, you will need to remember your OLD password " +

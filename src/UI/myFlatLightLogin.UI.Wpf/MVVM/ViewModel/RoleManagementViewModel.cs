@@ -1,13 +1,16 @@
-using myFlatLightLogin.UI.Common.MVVM;
+using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
 using myFlatLightLogin.Core.Services;
-using myFlatLightLogin.UI.Common.Services;
 using myFlatLightLogin.Library;
+using myFlatLightLogin.UI.Common.MVVM;
+using myFlatLightLogin.UI.Common.Services;
 using Serilog;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
@@ -16,6 +19,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
     /// </summary>
     public class RoleManagementViewModel : ViewModelBase
     {
+        private readonly IDialogService _dialogService;
         private static readonly ILogger _logger = Log.ForContext<RoleManagementViewModel>();
 
         #region Properties
@@ -27,8 +31,9 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             set => SetProperty(ref _roles, value);
         }
 
-        private RoleInfo _selectedRole;
-        public RoleInfo SelectedRole
+        // Make _selectedRole nullable to avoid CS8618
+        private RoleInfo? _selectedRole = null;
+        public RoleInfo? SelectedRole
         {
             get => _selectedRole;
             set
@@ -50,21 +55,22 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             set => SetProperty(ref _editRoleId, value);
         }
 
-        private string _editRoleName;
+        // Initialize _editRoleName, _editRoleDescription, _statusMessage to empty string
+        private string _editRoleName = string.Empty;
         public string EditRoleName
         {
             get => _editRoleName;
             set => SetProperty(ref _editRoleName, value);
         }
 
-        private string _editRoleDescription;
+        private string _editRoleDescription = string.Empty;
         public string EditRoleDescription
         {
             get => _editRoleDescription;
             set => SetProperty(ref _editRoleDescription, value);
         }
 
-        private string _statusMessage;
+        private string _statusMessage = string.Empty;
         public string StatusMessage
         {
             get => _statusMessage;
@@ -92,8 +98,9 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         #endregion
 
-        public RoleManagementViewModel(INavigationService navigationService)
+        public RoleManagementViewModel(INavigationService navigationService, IDialogService dialogService)
         {
+            _dialogService = dialogService;
             Navigation = navigationService;
 
             LoadRolesCommand = new AsyncRelayCommand(LoadRolesAsync, () => !IsLoading);
@@ -150,7 +157,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             {
                 StatusMessage = $"Error loading roles: {ex.Message}";
                 _logger.Error(ex, "Error loading roles");
-                MessageBox.Show($"Error loading roles: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                await _dialogService.ShowMessageAsync("Error", $"Error loading roles: {ex.Message}",
+                    MessageDialogStyle.Affirmative,
+                    new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
             }
             finally
             {
@@ -183,7 +193,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                 StatusMessage = "Default roles seeded successfully!";
                 _logger.Information("Default roles seeded successfully");
-                MessageBox.Show("Default roles (User and Admin) have been created successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                await _dialogService.ShowMessageAsync("Success", "Default roles (User and Admin) have been created successfully!",
+                    MessageDialogStyle.Affirmative,
+                    new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
 
                 // Reload roles
                 await LoadRolesAsync();
@@ -192,7 +205,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             {
                 StatusMessage = $"Error seeding roles: {ex.Message}";
                 _logger.Error(ex, "Error seeding roles");
-                MessageBox.Show($"Error seeding roles: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                await _dialogService.ShowMessageAsync("Error", $"Error seeding roles: {ex.Message}",
+                    MessageDialogStyle.Affirmative,
+                    new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
             }
             finally
             {
@@ -221,7 +237,11 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 {
                     var validationErrors = string.Join("\n", newRole.BrokenRulesCollection);
                     _logger.Warning("Role validation failed: {Errors}", validationErrors);
-                    MessageBox.Show($"Please correct the following errors:\n\n{validationErrors}", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                    await _dialogService.ShowMessageAsync("Validation Error", $"Please correct the following errors:\n\n{validationErrors}",
+                        MessageDialogStyle.Affirmative,
+                        new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
+
                     return;
                 }
 
@@ -230,7 +250,11 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                 StatusMessage = $"Role '{EditRoleName}' added successfully!";
                 _logger.Information($"Role '{EditRoleName}' added successfully");
-                MessageBox.Show($"Role '{EditRoleName}' has been added successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                await _dialogService.ShowMessageAsync("Success", $"Role '{EditRoleName}' has been added successfully!",
+                    MessageDialogStyle.Affirmative,
+                    new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
+
                 ClearForm();
                 await LoadRolesAsync();
             }
@@ -238,7 +262,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             {
                 StatusMessage = $"Error adding role: {ex.Message}";
                 _logger.Error(ex, "Error adding role");
-                MessageBox.Show($"Error adding role: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                await _dialogService.ShowMessageAsync("Error", $"Error adding role: {ex.Message}",
+                    MessageDialogStyle.Affirmative,
+                    new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
             }
             finally
             {
@@ -273,7 +300,11 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 {
                     var validationErrors = string.Join("\n", roleEdit.BrokenRulesCollection);
                     _logger.Warning("Role validation failed: {Errors}", validationErrors);
-                    MessageBox.Show($"Please correct the following errors:\n\n{validationErrors}", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                    await _dialogService.ShowMessageAsync("Validation Error", $"Please correct the following errors:\n\n{validationErrors}",
+                        MessageDialogStyle.Affirmative,
+                        new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
+
                     return;
                 }
 
@@ -282,7 +313,11 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                 StatusMessage = $"Role '{EditRoleName}' updated successfully!";
                 _logger.Information($"Role '{EditRoleName}' updated successfully");
-                MessageBox.Show($"Role '{EditRoleName}' has been updated successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                await _dialogService.ShowMessageAsync("Success", $"Role '{EditRoleName}' has been updated successfully!",
+                    MessageDialogStyle.Affirmative,
+                    new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
+
                 ClearForm();
                 await LoadRolesAsync();
             }
@@ -290,7 +325,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             {
                 StatusMessage = $"Error updating role: {ex.Message}";
                 _logger.Error(ex, "Error updating role");
-                MessageBox.Show($"Error updating role: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                await _dialogService.ShowMessageAsync("Error", $"Error updating role: {ex.Message}",
+                    MessageDialogStyle.Affirmative,
+                    new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
             }
             finally
             {
@@ -307,18 +345,18 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             {
                 if (SelectedRole == null)
                 {
-                    MessageBox.Show("Please select a role to delete.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    await _dialogService.ShowMessageAsync("Validation Error", "Please select a role to delete.",
+                        MessageDialogStyle.Affirmative,
+                        new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
+
                     return;
                 }
 
-                var result = MessageBox.Show(
-                    $"Are you sure you want to delete role '{SelectedRole.Name}'?",
-                    "Confirm Delete",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question);
-
-                if (result != MessageBoxResult.Yes)
-                    return;
+                var result = await _dialogService.ShowMessageAsync("Confirm Delete", $"Are you sure you want to delete role '{SelectedRole.Name}'?",
+                    MessageDialogStyle.AffirmativeAndNegative,
+                    new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
+                
+                if (result != MessageDialogResult.Affirmative) return;
 
                 IsLoading = true;
                 StatusMessage = "Deleting role...";
@@ -329,7 +367,11 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                 StatusMessage = $"Role '{SelectedRole.Name}' deleted successfully!";
                 _logger.Information($"Role '{SelectedRole.Name}' deleted successfully");
-                MessageBox.Show($"Role '{SelectedRole.Name}' has been deleted successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                await _dialogService.ShowMessageAsync("Success", $"Role '{SelectedRole.Name}' has been deleted successfully!",
+                    MessageDialogStyle.Affirmative,
+                    new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
+
                 ClearForm();
                 await LoadRolesAsync();
             }
@@ -337,7 +379,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             {
                 StatusMessage = $"Error deleting role: {ex.Message}";
                 _logger.Error(ex, "Error deleting role");
-                MessageBox.Show($"Error deleting role: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                await _dialogService.ShowMessageAsync("Error", $"Error deleting role: {ex.Message}",
+                    MessageDialogStyle.Affirmative,
+                    new MetroDialogSettings { AnimateShow = true, AnimateHide = true });
             }
             finally
             {

@@ -52,6 +52,7 @@ namespace FlatLightLogin
             services.AddSingleton<RoleManagementViewModel>();
             services.AddSingleton<ChangePasswordViewModel>();
 
+            services.AddSingleton<IDialogService, MahAppsDialogService>();
             services.AddSingleton<INavigationService, NavigationService>();
 
             services.AddSingleton<Func<Type, ViewModelBase>>(serviceProvider =>
@@ -182,7 +183,7 @@ namespace FlatLightLogin
         /// <summary>
         /// Handles connectivity changes and automatically triggers sync when connection is restored.
         /// </summary>
-        private async void OnConnectivityChanged(object sender, bool isOnline)
+        private async void OnConnectivityChanged(object? sender, bool isOnline)
         {
             Log.Information("Connectivity changed: IsOnline = {IsOnline}", isOnline);
 

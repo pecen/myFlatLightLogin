@@ -21,6 +21,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         private static readonly ILogger _logger = Log.ForContext<LoginViewModel>();
         private readonly NetworkConnectivityService _connectivityService;
         private readonly SyncService _syncService;
+        private readonly IDialogService _dialogService;
         private UserPrincipal? _currentPrincipal;
 
         #region Properties
@@ -83,9 +84,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         #region Constructor
 
-        public LoginViewModel(INavigationService navigationService)
+        public LoginViewModel(INavigationService navigationService, IDialogService dialogService)
         {
             Navigation = navigationService;
+            _dialogService = dialogService;
 
             // Initialize network connectivity service
             _connectivityService = new NetworkConnectivityService();
@@ -121,8 +123,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// </summary>
         private async Task LoginAsync()
         {
-            var window = (MetroWindow)Application.Current.MainWindow;
-
             try
             {
                 IsLoading = true;
@@ -182,7 +182,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
                     _logger.Information("Display name: {DisplayName}, Login mode: {LoginMode}", displayName, loginMode);
 
-                    await window.ShowMessageAsync("Login Successful",
+                    await _dialogService.ShowMessageAsync("Login Successful",
                         $"Successfully logged in as {identity.Email ?? "Unknown"}\n\nMode: {loginMode.ToUpper()}",
                         MessageDialogStyle.Affirmative,
                         new MetroDialogSettings
@@ -210,7 +210,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                         ? "Invalid email or password."
                         : "Invalid email or password, or user not found in offline cache.";
 
-                    await window.ShowMessageAsync("Login failed",
+                    await _dialogService.ShowMessageAsync("Login failed",
                         message,
                         MessageDialogStyle.Affirmative,
                         new MetroDialogSettings
@@ -229,7 +229,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 StatusMessage = "Login failed. Please check your credentials.";
                 _logger.Warning(secEx, "Authentication failed - invalid credentials");
 
-                await window.ShowMessageAsync("Login failed",
+                await _dialogService.ShowMessageAsync("Login failed",
                     "Invalid email or password.",
                     MessageDialogStyle.Affirmative,
                     new MetroDialogSettings
@@ -259,7 +259,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 StatusMessage = $"Error: {errorMessage}";
                 _logger.Error(ex, "Login failed with exception");
 
-                await window.ShowMessageAsync("Login Error",
+                await _dialogService.ShowMessageAsync("Login Error",
                     errorMessage,
                     MessageDialogStyle.Affirmative,
                     new MetroDialogSettings
@@ -277,7 +277,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 if (errorMessage.Contains("Invalid email or password", StringComparison.OrdinalIgnoreCase) ||
                     errorMessage.Contains("invalid credentials", StringComparison.OrdinalIgnoreCase))
                 {
-                    await window.ShowMessageAsync("Login Failed",
+                    await _dialogService.ShowMessageAsync("Login Failed",
                         "Invalid email or password. Please check your credentials and try again.",
                         MessageDialogStyle.Affirmative,
                         new MetroDialogSettings
@@ -290,7 +290,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 else
                 {
                     // Generic error for other failures
-                    await window.ShowMessageAsync("Login Error",
+                    await _dialogService.ShowMessageAsync("Login Error",
                         "An error occurred during login. Please try again.",
                         MessageDialogStyle.Affirmative,
                         new MetroDialogSettings

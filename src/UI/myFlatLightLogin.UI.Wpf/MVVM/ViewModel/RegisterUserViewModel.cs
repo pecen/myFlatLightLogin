@@ -19,6 +19,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
     {
         private static readonly ILogger _logger = Log.ForContext<RegisterUserViewModel>();
         private readonly NetworkConnectivityService _connectivityService;
+        private readonly IDialogService _dialogService;
 
         #region Properties
 
@@ -101,9 +102,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         #region Constructor
 
-        public RegisterUserViewModel(INavigationService navigationService)
+        public RegisterUserViewModel(INavigationService navigationService, IDialogService dialogService)
         {
             Navigation = navigationService;
+            _dialogService = dialogService;
 
             // Initialize network connectivity service
             _connectivityService = new NetworkConnectivityService();
@@ -136,8 +138,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// </summary>
         private async Task RegisterUserAsync()
         {
-            var window = (MetroWindow)Application.Current.MainWindow;
-
             try
             {
                 IsLoading = true;
@@ -171,7 +171,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     var validationErrors = string.Join("\n", userEdit.BrokenRulesCollection);
                     _logger.Warning("Registration validation failed: {Errors}", validationErrors);
 
-                    await window.ShowMessageAsync("Registration Error",
+                    await _dialogService.ShowMessageAsync("Registration Error",
                        $"Please correct the following errors:\n\n{validationErrors}",
                        MessageDialogStyle.Affirmative,
                        new MetroDialogSettings
@@ -206,7 +206,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     message += "\n\nNote: Your account will be synced to the cloud when connection is restored.";
                 }
 
-                await window.ShowMessageAsync(title,
+                await _dialogService.ShowMessageAsync(title,
                    message,
                    MessageDialogStyle.Affirmative,
                    new MetroDialogSettings
@@ -228,7 +228,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 string errorMessage = dpEx.InnerException?.Message ?? dpEx.Message;
                 StatusMessage = $"Error: {errorMessage}";
 
-                await window.ShowMessageAsync("Registration Error",
+                await _dialogService.ShowMessageAsync("Registration Error",
                    $"Registration failed: {errorMessage}",
                    MessageDialogStyle.Affirmative,
                    new MetroDialogSettings
@@ -244,7 +244,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 _logger.Error(ex, "Registration failed with exception");
                 StatusMessage = $"Error: {ex.Message}";
 
-                await window.ShowMessageAsync("Registration Error",
+                await _dialogService.ShowMessageAsync("Registration Error",
                    ex.Message,
                    MessageDialogStyle.Affirmative,
                    new MetroDialogSettings
