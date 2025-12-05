@@ -222,10 +222,29 @@ namespace myFlatLightLogin.Core.Services
                     }
                     catch (Exception ex)
                     {
-                        // Log error but continue with other users
-                        _logger.Error(ex, "Failed to sync user {Email}", user.Email);
-                        failureCount++;
-                        result.ErrorMessage += $"Failed to sync user {user.Email}: {ex.Message}; ";
+                        // Check if this is an EMAIL_EXISTS error (user already registered in Firebase)
+                        if (ex.Message.Contains("EMAIL_EXISTS", StringComparison.OrdinalIgnoreCase) ||
+                            ex.Message.Contains("An account with this email already exists", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // This is a reconciliation issue - the user exists in Firebase but local record has no FirebaseUid
+                            _logger.Warning("User {Email} already exists in Firebase but local record has no FirebaseUid. " +
+                                "This indicates a data synchronization issue. The user should log in to reconcile their account.",
+                                user.Email);
+
+                            // Mark as synced to prevent repeated failed attempts
+                            // The next time the user logs in online, their FirebaseUid will be updated
+                            _sqliteUserDal.MarkAsSynced(user.Id);
+                            _logger.Information("Marked user {Email} as synced to prevent repeated sync attempts", user.Email);
+
+                            successCount++;
+                        }
+                        else
+                        {
+                            // Log error but continue with other users
+                            _logger.Error(ex, "Failed to sync user {Email}", user.Email);
+                            failureCount++;
+                            result.ErrorMessage += $"Failed to sync user {user.Email}: {ex.Message}; ";
+                        }
                     }
                 }
 
