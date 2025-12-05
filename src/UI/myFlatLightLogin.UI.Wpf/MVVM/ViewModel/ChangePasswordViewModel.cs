@@ -57,16 +57,14 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         #endregion
 
-        public ChangePasswordViewModel(INavigationService navigationService, IDialogService dialogService)
+        public ChangePasswordViewModel(INavigationService navigationService, IDialogService dialogService, NetworkConnectivityService connectivityService, SyncService syncService)
         {
             Navigation = navigationService;
-            _dialogService = dialogService;
+            _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
-            // Initialize network connectivity service
-            _connectivityService = new NetworkConnectivityService();
-
-            // Initialize sync service
-            _syncService = new SyncService(_connectivityService);
+            // Inject singleton services from DI container
+            _connectivityService = connectivityService ?? throw new ArgumentNullException(nameof(connectivityService));
+            _syncService = syncService ?? throw new ArgumentNullException(nameof(syncService));
 
             ChangePasswordCommand = new AsyncRelayCommand(ChangePasswordAsync, CanChangePassword);
             CancelCommand = new RelayCommand(o => Navigation.NavigateTo<HomeViewModel>());

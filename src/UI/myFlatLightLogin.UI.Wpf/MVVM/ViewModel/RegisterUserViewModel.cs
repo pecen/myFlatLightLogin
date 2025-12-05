@@ -102,13 +102,14 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         #region Constructor
 
-        public RegisterUserViewModel(INavigationService navigationService, IDialogService dialogService)
+        public RegisterUserViewModel(INavigationService navigationService, IDialogService dialogService, NetworkConnectivityService connectivityService)
         {
             Navigation = navigationService;
-            _dialogService = dialogService;
+            _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
-            // Initialize network connectivity service
-            _connectivityService = new NetworkConnectivityService();
+            // Inject singleton service from DI container
+            _connectivityService = connectivityService ?? throw new ArgumentNullException(nameof(connectivityService));
+
             IsOnline = _connectivityService.IsOnline;
 
             // Listen for connectivity changes
