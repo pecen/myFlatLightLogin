@@ -4,6 +4,7 @@ using myFlatLightLogin.UI.Common.MVVM;
 using myFlatLightLogin.Core.Services;
 using myFlatLightLogin.UI.Common.Services;
 using myFlatLightLogin.Library;
+using myFlatLightLogin.Dal.Dto;
 using Serilog;
 using System;
 using System.Threading.Tasks;
@@ -13,13 +14,15 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
     /// <summary>
     /// ViewModel for the Register User view.
-    /// Handles user registration with offline/online support using BLL's UserEdit.
+    /// Handles user registration with offline/online support using HybridUserDal.
+    /// Uses BLL's UserEdit for validation only.
     /// </summary>
     public class RegisterUserViewModel : ViewModelBase, IAuthenticateConfirmUser
     {
         private static readonly ILogger _logger = Log.ForContext<RegisterUserViewModel>();
         private readonly NetworkConnectivityService _connectivityService;
         private readonly IDialogService _dialogService;
+        private readonly HybridUserDal _hybridUserDal;
 
         #region Properties
 
@@ -102,13 +105,14 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         #region Constructor
 
-        public RegisterUserViewModel(INavigationService navigationService, IDialogService dialogService, NetworkConnectivityService connectivityService)
+        public RegisterUserViewModel(INavigationService navigationService, IDialogService dialogService, NetworkConnectivityService connectivityService, HybridUserDal hybridUserDal)
         {
             Navigation = navigationService;
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
-            // Inject singleton service from DI container
+            // Inject singleton services from DI container
             _connectivityService = connectivityService ?? throw new ArgumentNullException(nameof(connectivityService));
+            _hybridUserDal = hybridUserDal ?? throw new ArgumentNullException(nameof(hybridUserDal));
 
             IsOnline = _connectivityService.IsOnline;
 
@@ -135,7 +139,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         #region Methods
 
         /// <summary>
-        /// Registers a new user using BLL's UserEdit for validation and business rules.
+        /// Registers a new user using HybridUserDal (with UserEdit validation).
+        /// Handles both online (Firebase) and offline (SQLite) registration.
         /// </summary>
         private async Task RegisterUserAsync()
         {
@@ -185,24 +190,50 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     return;
                 }
 
-                // Save the user (this will call Insert in the Data Access region)
-                // NOTE: This uses IUserDal.Insert through DalFactory
-                // TODO: Enhance to support full HybridUserDal.RegisterAsync functionality
-                var savedUser = await userEdit.SaveAsync();
+                // Create UserDto from validated data
+                var userDto = new UserDto
+                {
+                    Name = Name,
+                    Lastname = Lastname,
+                    Email = Email,
+                    Username = Email,
+                    Password = Password,
+                    Role = UserRole.User // Will be set to Admin if first user by HybridUserDal
+                };
 
-                _logger.Information("Registration successful for: {Email}", Email);
+                // Register using HybridUserDal (handles both online and offline scenarios)
+                var registrationResult = await _hybridUserDal.RegisterAsync(userDto);
+
+                if (!registrationResult.Success)
+                {
+                    _logger.Warning("Registration failed: {Message}", registrationResult.Message);
+
+                    await _dialogService.ShowMessageAsync("Registration Error",
+                       registrationResult.Message,
+                       MessageDialogStyle.Affirmative,
+                       new MetroDialogSettings
+                       {
+                           AffirmativeButtonText = "Continue",
+                           AnimateShow = true,
+                           AnimateHide = true
+                       });
+
+                    return;
+                }
+
+                _logger.Information("Registration successful for: {Email}, Mode: {Mode}", Email, registrationResult.Mode);
 
                 IsAuthenticated = true;
                 StatusMessage = "Registration successful!";
 
-                string mode = IsOnline ? "online" : "offline";
-                string title = IsOnline
+                string mode = registrationResult.Mode;
+                string title = mode == "Firebase"
                     ? "Registration Successful"
                     : "Registration Successful (Offline)";
 
-                string message = $"Account created successfully!\n\nEmail: {Email}\n\nYou can now sign in with your credentials.";
+                string message = $"Account created successfully!\n\nEmail: {Email}\n\nMode: {mode.ToUpper()}\n\nYou can now sign in with your credentials.";
 
-                if (!IsOnline)
+                if (mode == "SQLite")
                 {
                     message += "\n\nNote: Your account will be synced to the cloud when connection is restored.";
                 }
@@ -220,24 +251,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 // Clear the form before navigating back to login
                 ClearForm();
                 Navigation.NavigateTo<LoginViewModel>();
-            }
-            catch (Csla.DataPortalException dpEx)
-            {
-                IsAuthenticated = false;
-                _logger.Error(dpEx, "Registration failed with DataPortal exception");
-
-                string errorMessage = dpEx.InnerException?.Message ?? dpEx.Message;
-                StatusMessage = $"Error: {errorMessage}";
-
-                await _dialogService.ShowMessageAsync("Registration Error",
-                   $"Registration failed: {errorMessage}",
-                   MessageDialogStyle.Affirmative,
-                   new MetroDialogSettings
-                   {
-                       AffirmativeButtonText = "Continue",
-                       AnimateShow = true,
-                       AnimateHide = true
-                   });
             }
             catch (Exception ex)
             {
