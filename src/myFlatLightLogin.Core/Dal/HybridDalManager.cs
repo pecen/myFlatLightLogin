@@ -1,4 +1,5 @@
 using myFlatLightLogin.Core.Infrastructure;
+using myFlatLightLogin.Core.Services;
 using myFlatLightLogin.Dal;
 using System;
 
@@ -32,8 +33,11 @@ namespace myFlatLightLogin.Core.Dal
             // For now, fall back to Firebase or SQLite RoleDal
             if (interfaceType == typeof(IRoleDal))
             {
-                // Use Firebase RoleDal for now (could be made hybrid in the future)
-                return new DalFirebase.RoleDal() as T;
+                // Get current user's Firebase auth token for authenticated access
+                var authToken = CurrentUserService.Instance.CurrentUserInfo?.FirebaseAuthToken;
+
+                // Use Firebase RoleDal with auth token (could be made hybrid in the future)
+                return new DalFirebase.RoleDal(authToken) as T;
             }
 
             throw new NotImplementedException($"No provider registered for {interfaceType.Name}");
