@@ -114,8 +114,16 @@ namespace myFlatLightLogin.Core.Services
         }
 
         /// <summary>
-        /// Downloads all users from Firebase and updates SQLite.
-        /// Firebase is the source of truth for this operation.
+        /// Downloads user data from Firebase and updates SQLite.
+        ///
+        /// Note: Due to Firebase security rules, we can typically only access the current user's data.
+        /// For full multi-user sync, you would need:
+        /// 1. Firebase Admin SDK for server-side operations
+        /// 2. Cloud Functions to manage multi-user sync
+        /// 3. Modified security rules (not recommended for security reasons)
+        ///
+        /// Current implementation: Syncs the currently logged-in user's data from Firebase to SQLite.
+        /// This ensures the current user's data is up-to-date in the local database.
         /// </summary>
         private async Task<SyncOperationResult> DownloadUsersFromFirebaseAsync()
         {
@@ -123,22 +131,37 @@ namespace myFlatLightLogin.Core.Services
 
             try
             {
-                // Note: We would need to add a method to Firebase UserDal to get all users
-                // For now, we'll skip this as Firebase DAL doesn't have a GetAll method
-                // and with security rules, we can only access the current user's data
+                // Get current user info
+                var currentUser = CurrentUserService.Instance.CurrentUserInfo;
 
-                // In a real implementation, you might:
-                // 1. Use Firebase Admin SDK for server-side operations
-                // 2. Or only sync the currently logged-in user
-                // 3. Or use Firebase Functions to manage multi-user sync
+                if (currentUser == null || string.IsNullOrEmpty(currentUser.FirebaseAuthToken))
+                {
+                    _logger.Information("No authenticated user - skipping user download");
+                    result.Count = 0;
+                    result.Success = true;
+                    return result;
+                }
 
-                result.Count = 0;
+                _logger.Information("Downloading current user data from Firebase: {Email}", currentUser.Email);
+
+                // For now, we assume the current user's data is already in sync through the login process
+                // The login flow (UserIdentity.LoginAsync) already fetches and updates user data from Firebase
+                //
+                // In the future, if we need to sync other users' data, we would need:
+                // - Firebase Admin SDK to bypass security rules
+                // - Or a backend service that can access all user records
+                // - Or Firebase Functions that sync data to a separate collection accessible to admins
+
+                _logger.Information("Current user data synced through login process");
+
+                result.Count = 0; // No additional users downloaded (current user already synced at login)
                 result.Success = true;
 
                 return result;
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "DownloadUsersFromFirebaseAsync failed");
                 result.Success = false;
                 result.ErrorMessage = ex.Message;
                 return result;

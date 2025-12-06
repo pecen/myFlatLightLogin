@@ -20,6 +20,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
     public class RoleManagementViewModel : ViewModelBase
     {
         private readonly IDialogService _dialogService;
+        private readonly SyncService _syncService;
+        private readonly NetworkConnectivityService _connectivityService;
         private static readonly ILogger _logger = Log.ForContext<RoleManagementViewModel>();
 
         #region Properties
@@ -98,9 +100,12 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         #endregion
 
-        public RoleManagementViewModel(INavigationService navigationService, IDialogService dialogService)
+        public RoleManagementViewModel(INavigationService navigationService, IDialogService dialogService,
+            SyncService syncService, NetworkConnectivityService connectivityService)
         {
             _dialogService = dialogService;
+            _syncService = syncService;
+            _connectivityService = connectivityService;
             Navigation = navigationService;
 
             LoadRolesCommand = new AsyncRelayCommand(LoadRolesAsync, () => !IsLoading);
@@ -119,6 +124,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         /// <summary>
         /// Loads all roles using BLL's RoleList.
+        /// First syncs roles from Firebase if online, then loads from local database.
         /// </summary>
         private async Task LoadRolesAsync()
         {
@@ -128,7 +134,41 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 StatusMessage = "Loading roles...";
                 _logger.Information("Loading roles using BLL...");
 
-                // Use BLL's RoleList to fetch all roles
+                // Sync roles from Firebase before loading (if online)
+                if (_connectivityService.IsOnline)
+                {
+                    try
+                    {
+                        StatusMessage = "Syncing roles from Firebase...";
+                        _logger.Information("Online - syncing roles from Firebase before loading");
+
+                        // Trigger full sync which includes role download
+                        var syncResult = await _syncService.SyncAsync();
+
+                        if (syncResult.Success)
+                        {
+                            _logger.Information("Role sync completed. Downloaded: {Downloaded}, Uploaded: {Uploaded}",
+                                syncResult.RolesDownloaded, syncResult.RolesUploaded);
+                        }
+                        else
+                        {
+                            _logger.Warning("Role sync failed: {ErrorMessage}", syncResult.ErrorMessage);
+                        }
+                    }
+                    catch (Exception syncEx)
+                    {
+                        // Log but don't fail - we can still load from local database
+                        _logger.Warning(syncEx, "Failed to sync roles from Firebase, will load from local database");
+                    }
+                }
+                else
+                {
+                    _logger.Information("Offline - loading roles from local database only");
+                }
+
+                StatusMessage = "Loading roles...";
+
+                // Use BLL's RoleList to fetch all roles (from local database after sync)
                 var roleList = await RoleList.GetRolesAsync();
 
                 _logger.Information($"Retrieved {roleList?.Count ?? 0} roles from BLL");
