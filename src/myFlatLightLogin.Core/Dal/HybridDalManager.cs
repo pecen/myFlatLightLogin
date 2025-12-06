@@ -29,15 +29,11 @@ namespace myFlatLightLogin.Core.Dal
                 return ServiceLocator.HybridUserDal as T;
             }
 
-            // For IRoleDal, we could return a hybrid role DAL if needed
-            // For now, fall back to Firebase or SQLite RoleDal
+            // Return HybridRoleDal for IRoleDal requests
             if (interfaceType == typeof(IRoleDal))
             {
-                // Get current user's Firebase auth token for authenticated access
-                var authToken = CurrentUserService.Instance.CurrentUserInfo?.FirebaseAuthToken;
-
-                // Use Firebase RoleDal with auth token (could be made hybrid in the future)
-                return new DalFirebase.RoleDal(authToken) as T;
+                // Resolve HybridRoleDal from ServiceLocator (writes to both Firebase and SQLite)
+                return ServiceLocator.HybridRoleDal as T;
             }
 
             throw new NotImplementedException($"No provider registered for {interfaceType.Name}");

@@ -16,6 +16,7 @@ namespace myFlatLightLogin.Core.Infrastructure
         private static NetworkConnectivityService? _connectivityService;
         private static SyncService? _syncService;
         private static HybridUserDal? _hybridUserDal;
+        private static HybridRoleDal? _hybridRoleDal;
 
         /// <summary>
         /// Gets the singleton NetworkConnectivityService instance.
@@ -57,17 +58,32 @@ namespace myFlatLightLogin.Core.Infrastructure
         }
 
         /// <summary>
+        /// Gets the singleton HybridRoleDal instance.
+        /// </summary>
+        public static HybridRoleDal HybridRoleDal
+        {
+            get
+            {
+                if (_hybridRoleDal == null)
+                    throw new InvalidOperationException("ServiceLocator not initialized. Call Initialize() first.");
+                return _hybridRoleDal;
+            }
+        }
+
+        /// <summary>
         /// Initializes the service locator with singleton instances.
         /// This should be called once at application startup (composition root).
         /// </summary>
         public static void Initialize(
             NetworkConnectivityService connectivityService,
             SyncService syncService,
-            HybridUserDal hybridUserDal)
+            HybridUserDal hybridUserDal,
+            HybridRoleDal hybridRoleDal)
         {
             _connectivityService = connectivityService ?? throw new ArgumentNullException(nameof(connectivityService));
             _syncService = syncService ?? throw new ArgumentNullException(nameof(syncService));
             _hybridUserDal = hybridUserDal ?? throw new ArgumentNullException(nameof(hybridUserDal));
+            _hybridRoleDal = hybridRoleDal ?? throw new ArgumentNullException(nameof(hybridRoleDal));
         }
 
         /// <summary>
@@ -78,6 +94,7 @@ namespace myFlatLightLogin.Core.Infrastructure
             _connectivityService = null;
             _syncService = null;
             _hybridUserDal = null;
+            _hybridRoleDal = null;
         }
     }
 }
