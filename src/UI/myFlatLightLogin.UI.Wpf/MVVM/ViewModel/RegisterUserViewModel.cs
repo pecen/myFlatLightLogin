@@ -4,6 +4,7 @@ using myFlatLightLogin.UI.Common.MVVM;
 using myFlatLightLogin.Core.Services;
 using myFlatLightLogin.UI.Common.Services;
 using myFlatLightLogin.Library;
+using myFlatLightLogin.Dal;
 using myFlatLightLogin.Dal.Dto;
 using Serilog;
 using System;
@@ -226,14 +227,14 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 IsAuthenticated = true;
                 StatusMessage = "Registration successful!";
 
-                string mode = registrationResult.Mode;
-                string title = mode == "Firebase"
+                var mode = registrationResult.Mode;
+                string title = mode == RegistrationMode.Firebase
                     ? "Registration Successful"
                     : "Registration Successful (Offline)";
 
-                string message = $"Account created successfully!\n\nEmail: {Email}\n\nMode: {mode.ToUpper()}\n\nYou can now sign in with your credentials.";
+                string message = $"Account created successfully!\n\nEmail: {Email}\n\nMode: {mode.ToString().ToUpper()}\n\nYou can now sign in with your credentials.";
 
-                if (mode == "SQLite")
+                if (mode == RegistrationMode.SQLiteOffline)
                 {
                     message += "\n\nNote: Your account will be synced to the cloud when connection is restored.";
                 }
