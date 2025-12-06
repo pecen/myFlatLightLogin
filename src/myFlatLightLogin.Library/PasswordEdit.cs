@@ -2,7 +2,7 @@ using Csla;
 using Csla.Core;
 using Csla.Rules;
 using Csla.Rules.CommonRules;
-using myFlatLightLogin.Core.Services;
+using myFlatLightLogin.Core.Infrastructure;
 using myFlatLightLogin.Dal;
 using myFlatLightLogin.Dal.Dto;
 using System;
@@ -177,8 +177,9 @@ namespace myFlatLightLogin.Library
         /// <summary>
         /// Changes the password for the user.
         /// This method validates old password and updates to new password.
+        /// Infrastructure services are resolved internally - UI should NOT pass them.
         /// </summary>
-        public async Task<PasswordChangeResult> ChangePasswordAsync(NetworkConnectivityService connectivityService, SyncService syncService)
+        public async Task<PasswordChangeResult> ChangePasswordAsync()
         {
             // Validate business rules
             if (!IsValid)
@@ -188,8 +189,9 @@ namespace myFlatLightLogin.Library
 
             try
             {
-                // Use HybridUserDal for password change
-                var hybridDal = new HybridUserDal(connectivityService, syncService);
+                // Use HybridUserDal from ServiceLocator (resolved at composition root)
+                // This keeps UI completely decoupled from infrastructure concerns
+                var hybridDal = ServiceLocator.HybridUserDal;
                 var result = await hybridDal.ChangePasswordAsync(UserId, OldPassword, NewPassword);
 
                 return result;

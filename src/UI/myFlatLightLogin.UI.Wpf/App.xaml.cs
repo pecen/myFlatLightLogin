@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using myFlatLightLogin.UI.Common.MVVM;
 using myFlatLightLogin.Core.Services;
+using myFlatLightLogin.Core.Infrastructure;
 using myFlatLightLogin.UI.Common.Services;
 using myFlatLightLogin.DalFirebase;
 using myFlatLightLogin.UI.Wpf.MVVM.View;
@@ -64,6 +65,10 @@ namespace FlatLightLogin
             _connectivityService = _serviceProvider.GetRequiredService<NetworkConnectivityService>();
             _syncService = _serviceProvider.GetRequiredService<SyncService>();
             _hybridUserDal = _serviceProvider.GetRequiredService<HybridUserDal>();
+
+            // Initialize ServiceLocator for BLL layer to access infrastructure services
+            // This provides proper separation - BLL doesn't need services passed from UI
+            ServiceLocator.Initialize(_connectivityService, _syncService, _hybridUserDal);
 
             // Subscribe to connectivity changes for automatic sync
             _connectivityService.ConnectivityChanged += OnConnectivityChanged;

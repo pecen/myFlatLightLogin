@@ -18,8 +18,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
     public class ChangePasswordViewModel : ViewModelBase
     {
         private static readonly ILogger _logger = Log.ForContext<ChangePasswordViewModel>();
-        private readonly NetworkConnectivityService _connectivityService;
-        private readonly SyncService _syncService;
         private readonly IDialogService _dialogService;
 
         #region Commands
@@ -52,32 +50,17 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             set => SetProperty(ref _confirmPassword, value);
         }
 
-        public bool IsOnline => _connectivityService.IsOnline;
-        public string ConnectionStatus => IsOnline ? "🟢 Online" : "🔴 Offline";
+        // Note: IsOnline removed - BLL handles online/offline logic internally
 
         #endregion
 
-        public ChangePasswordViewModel(INavigationService navigationService, IDialogService dialogService, NetworkConnectivityService connectivityService, SyncService syncService)
+        public ChangePasswordViewModel(INavigationService navigationService, IDialogService dialogService)
         {
             Navigation = navigationService;
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
-            // Inject singleton services from DI container
-            _connectivityService = connectivityService ?? throw new ArgumentNullException(nameof(connectivityService));
-            _syncService = syncService ?? throw new ArgumentNullException(nameof(syncService));
-
             ChangePasswordCommand = new AsyncRelayCommand(ChangePasswordAsync, CanChangePassword);
             CancelCommand = new RelayCommand(o => Navigation.NavigateTo<HomeViewModel>());
-
-            // Subscribe to connectivity changes to update UI
-            _connectivityService.ConnectivityChanged += (sender, isOnline) =>
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    OnPropertyChanged(nameof(IsOnline));
-                    OnPropertyChanged(nameof(ConnectionStatus));
-                });
-            };
         }
 
         private bool CanChangePassword()
@@ -90,18 +73,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         private async Task ChangePasswordAsync()
         {
             _logger.Information("========== PASSWORD CHANGE ATTEMPT STARTED ==========");
-
-            // Show offline warning if applicable
-            if (!IsOnline)
-            {
-                var offlineWarning = await ShowOfflineWarningAsync();
-                if (!offlineWarning)
-                {
-                    // User cancelled
-                    _logger.Information("Password change cancelled by user (offline warning)");
-                    return;
-                }
-            }
 
             // Get current user
             var userId = CurrentUserService.Instance.GetUserId();
@@ -141,7 +112,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 }
 
                 // Change password using BLL
-                var result = await passwordEdit.ChangePasswordAsync(_connectivityService, _syncService);
+                // BLL handles online/offline logic internally - UI doesn't need to know!
+                var result = await passwordEdit.ChangePasswordAsync();
 
                 if (result.Success)
                 {
@@ -176,30 +148,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             {
                 _logger.Information("========== PASSWORD CHANGE ATTEMPT COMPLETED ==========");
             }
-        }
-
-        private async Task<bool> ShowOfflineWarningAsync()
-        {
-            var settings = new MetroDialogSettings
-            {
-                AffirmativeButtonText = "Change Password Anyway",
-                NegativeButtonText = "Cancel",
-                AnimateShow = true,
-                AnimateHide = true,
-                DefaultButtonFocus = MessageDialogResult.Negative
-            };
-
-            var result = await _dialogService.ShowMessageAsync(
-                "Offline Password Change",
-                "You are currently offline.\n\n" +
-                "If you change your password now, you will need to remember your OLD password " +
-                "when you come back online to sync with the Cloud storage.\n\n" +
-                "Recommendation: Wait until you're online to change your password.\n\n" +
-                "Do you want to proceed?",
-                MessageDialogStyle.AffirmativeAndNegative,
-                settings);
-
-            return result == MessageDialogResult.Affirmative;
         }
 
         public void ClearForm()

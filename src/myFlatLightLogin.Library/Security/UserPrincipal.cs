@@ -1,6 +1,5 @@
 using Csla;
 using Csla.Security;
-using myFlatLightLogin.Core.Services;
 using System;
 using System.Security.Principal;
 using System.Threading.Tasks;
@@ -31,10 +30,11 @@ namespace myFlatLightLogin.Library.Security
         /// <summary>
         /// Authenticates a user and returns a UserPrincipal.
         /// This is the main entry point for login.
+        /// Infrastructure services are resolved internally - UI should NOT pass them.
         /// </summary>
-        public static async Task<UserPrincipal> LoginAsync(string email, string password, NetworkConnectivityService connectivityService, SyncService syncService)
+        public static async Task<UserPrincipal> LoginAsync(string email, string password)
         {
-            var identity = await UserIdentity.LoginAsync(email, password, connectivityService, syncService);
+            var identity = await UserIdentity.LoginAsync(email, password);
             var principal = new UserPrincipal(identity);
 
             return principal;

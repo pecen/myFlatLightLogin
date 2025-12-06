@@ -19,8 +19,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
     public class LoginViewModel : ViewModelBase, IAuthenticateUser
     {
         private static readonly ILogger _logger = Log.ForContext<LoginViewModel>();
-        private readonly NetworkConnectivityService _connectivityService;
-        private readonly SyncService _syncService;
         private readonly IDialogService _dialogService;
         private UserPrincipal? _currentPrincipal;
 
@@ -58,18 +56,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             set => SetProperty(ref _statusMessage, value);
         }
 
-        private bool _isOnline;
-        public bool IsOnline
-        {
-            get => _isOnline;
-            set
-            {
-                SetProperty(ref _isOnline, value);
-                OnPropertyChanged(nameof(ConnectionStatus));
-            }
-        }
-
-        public string ConnectionStatus => IsOnline ? "🟢 Online" : "🔴 Offline";
+        // Note: IsOnline removed - UI should not track infrastructure state
+        // Connection status is handled internally by BLL
 
         public bool IsAuthenticated { get; private set; }
 
@@ -84,19 +72,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         #region Constructor
 
-        public LoginViewModel(INavigationService navigationService, IDialogService dialogService, NetworkConnectivityService connectivityService, SyncService syncService)
+        public LoginViewModel(INavigationService navigationService, IDialogService dialogService)
         {
             Navigation = navigationService;
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
-
-            // Inject singleton services from DI container
-            _connectivityService = connectivityService ?? throw new ArgumentNullException(nameof(connectivityService));
-            _syncService = syncService ?? throw new ArgumentNullException(nameof(syncService));
-
-            IsOnline = _connectivityService.IsOnline;
-
-            // Listen for connectivity changes
-            _connectivityService.ConnectivityChanged += OnConnectivityChanged;
 
             // Initialize commands
             NavigateToRegisterUserCommand = new RelayCommand(
@@ -129,22 +108,11 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 _logger.Information("========== LOGIN ATTEMPT STARTED ==========");
                 _logger.Information("Email: {Email}", Email);
 
-                // Check FRESH connectivity status (don't trust cached value)
-                bool wasOnlineAtStart = _connectivityService.CheckConnectivity();
-                _logger.Information("Fresh connectivity check: {IsOnline}", wasOnlineAtStart);
-                _logger.Debug("Cached IsOnline property: {CachedIsOnline}", _connectivityService.IsOnline);
+                StatusMessage = "Signing in...";
 
-                if (wasOnlineAtStart)
-                {
-                    StatusMessage = "Signing in with the Cloud storage...";
-                }
-                else
-                {
-                    StatusMessage = "Signing in offline...";
-                }
-
-                // Authenticate using BLL UserPrincipal (handles Firebase and SQLite through HybridUserDal)
-                _currentPrincipal = await UserPrincipal.LoginAsync(Email, Password, _connectivityService, _syncService);
+                // Authenticate using BLL UserPrincipal
+                // BLL handles online/offline logic internally - UI doesn't need to know!
+                _currentPrincipal = await UserPrincipal.LoginAsync(Email, Password);
 
                 _logger.Information("Authentication result: {Result}",
                     _currentPrincipal?.Identity?.IsAuthenticated == true ? "SUCCESS" : "FAILED");
@@ -171,13 +139,9 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     CurrentUserService.Instance.SetCurrentUserInfo(currentUserInfo);
                     _logger.Information("Current user info set in CurrentUserService with role: {Role}", identity.Role);
 
-                    // Check connectivity AGAIN with fresh check (don't trust cached value)
-                    bool isCurrentlyOnline = _connectivityService.CheckConnectivity();
-                    _logger.Information("Fresh connectivity check after auth: {IsOnline}", isCurrentlyOnline);
-
                     string loginMode = identity.IsOnline ? "online" : "offline";
                     string displayName = identity.FirstName ?? identity.Email ?? "Unknown User";
-                    StatusMessage = $"Welcome back, {displayName}! (Logged in {loginMode})";
+                    StatusMessage = $"Welcome back, {displayName}!";
 
                     _logger.Information("Display name: {DisplayName}, Login mode: {LoginMode}", displayName, loginMode);
 
@@ -205,12 +169,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     IsAuthenticated = false;
                     StatusMessage = "Login failed. Please check your credentials.";
 
-                    string message = wasOnlineAtStart
-                        ? "Invalid email or password."
-                        : "Invalid email or password, or user not found in offline cache.";
-
                     await _dialogService.ShowMessageAsync("Login failed",
-                        message,
+                        "Invalid email or password.",
                         MessageDialogStyle.Affirmative,
                         new MetroDialogSettings
                         {
@@ -329,23 +289,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             Password = string.Empty;
             StatusMessage = string.Empty;
             // Note: Password visibility is managed by TogglePwdBox control and auto-resets when cleared
-        }
-
-        /// <summary>
-        /// Handles connectivity changes.
-        /// </summary>
-        private void OnConnectivityChanged(object sender, bool isOnline)
-        {
-            IsOnline = isOnline;
-
-            if (isOnline)
-            {
-                StatusMessage = "Connection restored! You can now sign in with the Cloud storage.";
-            }
-            else
-            {
-                StatusMessage = "Offline mode. You can still sign in with cached credentials.";
-            }
         }
 
         // TODO: Refactor password sync dialog to work with BLL

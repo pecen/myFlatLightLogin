@@ -1,7 +1,7 @@
 using Csla;
 using Csla.Core;
 using Csla.Security;
-using myFlatLightLogin.Core.Services;
+using myFlatLightLogin.Core.Infrastructure;
 using myFlatLightLogin.Dal.Dto;
 using System;
 using System.Security.Principal;
@@ -110,15 +110,14 @@ namespace myFlatLightLogin.Library.Security
         /// <summary>
         /// Creates an authenticated UserIdentity from login credentials.
         /// This is the main authentication entry point.
+        /// Infrastructure services are resolved internally - UI should NOT pass them.
         /// </summary>
-        public static async Task<UserIdentity> LoginAsync(string email, string password, NetworkConnectivityService connectivityService, SyncService syncService)
+        public static async Task<UserIdentity> LoginAsync(string email, string password)
         {
             return await DataPortal.FetchAsync<UserIdentity>(new LoginCredentials
             {
                 Email = email,
-                Password = password,
-                ConnectivityService = connectivityService,
-                SyncService = syncService
+                Password = password
             });
         }
 
@@ -149,15 +148,14 @@ namespace myFlatLightLogin.Library.Security
         {
             public string? Email { get; set; }
             public string? Password { get; set; }
-            public NetworkConnectivityService? ConnectivityService { get; set; }
-            public SyncService? SyncService { get; set; }
         }
 
         [Fetch]
         private async Task Fetch(LoginCredentials credentials)
         {
-            // Use HybridUserDal for authentication
-            var hybridDal = new HybridUserDal(credentials.ConnectivityService, credentials.SyncService);
+            // Use HybridUserDal from ServiceLocator (resolved at composition root)
+            // This keeps UI completely decoupled from infrastructure concerns
+            var hybridDal = ServiceLocator.HybridUserDal;
 
             var user = await hybridDal.SignInAsync(credentials.Email, credentials.Password);
 
