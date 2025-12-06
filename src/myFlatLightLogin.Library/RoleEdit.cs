@@ -164,6 +164,10 @@ namespace myFlatLightLogin.Library
 
                 if (!success)
                     throw new Exception("Failed to insert role");
+
+                // Load the auto-generated ID back from the DTO
+                // (SQLite RoleDal updates dto.Id with the auto-generated value)
+                Id = dto.Id;
             }
         }
 
