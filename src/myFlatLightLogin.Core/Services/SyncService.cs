@@ -345,11 +345,19 @@ namespace myFlatLightLogin.Core.Services
                         }
                         else
                         {
-                            // Existing role - update in SQLite
-                            _logger.Information("Updating existing role in SQLite: {RoleName} (ID: {RoleId})",
-                                firebaseRole.Name, firebaseRole.Id);
-                            _sqliteRoleDal.Update(firebaseRole);
-                            syncedCount++;
+                            // Existing role - check if data has changed before updating
+                            if (RolesAreDifferent(firebaseRole, existingRole))
+                            {
+                                _logger.Information("Updating existing role in SQLite: {RoleName} (ID: {RoleId})",
+                                    firebaseRole.Name, firebaseRole.Id);
+                                _sqliteRoleDal.Update(firebaseRole);
+                                syncedCount++;
+                            }
+                            else
+                            {
+                                _logger.Debug("Role {RoleName} (ID: {RoleId}) unchanged - skipping update",
+                                    firebaseRole.Name, firebaseRole.Id);
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -430,11 +438,19 @@ namespace myFlatLightLogin.Core.Services
                         }
                         else
                         {
-                            // Existing role - update in Firebase
-                            _logger.Information("Updating existing role in Firebase: {RoleName} (ID: {RoleId})",
-                                sqliteRole.Name, sqliteRole.Id);
-                            await Task.Run(() => authenticatedRoleDal.Update(sqliteRole));
-                            syncedCount++;
+                            // Existing role - check if data has changed before updating
+                            if (RolesAreDifferent(sqliteRole, firebaseRole))
+                            {
+                                _logger.Information("Updating existing role in Firebase: {RoleName} (ID: {RoleId})",
+                                    sqliteRole.Name, sqliteRole.Id);
+                                await Task.Run(() => authenticatedRoleDal.Update(sqliteRole));
+                                syncedCount++;
+                            }
+                            else
+                            {
+                                _logger.Debug("Role {RoleName} (ID: {RoleId}) unchanged - skipping update",
+                                    sqliteRole.Name, sqliteRole.Id);
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -493,6 +509,20 @@ namespace myFlatLightLogin.Core.Services
                 Current = current,
                 Total = total
             });
+        }
+
+        /// <summary>
+        /// Compares two roles to determine if they have different data.
+        /// Used to avoid unnecessary updates during sync.
+        /// </summary>
+        private bool RolesAreDifferent(RoleDto role1, RoleDto role2)
+        {
+            if (role1 == null && role2 == null) return false;
+            if (role1 == null || role2 == null) return true;
+
+            return role1.Id != role2.Id ||
+                   role1.Name != role2.Name ||
+                   role1.Description != role2.Description;
         }
 
         /// <summary>
