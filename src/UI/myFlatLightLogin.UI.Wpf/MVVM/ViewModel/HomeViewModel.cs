@@ -1,5 +1,6 @@
-using myFlatLightLogin.Core.MVVM;
+using myFlatLightLogin.UI.Common.MVVM;
 using myFlatLightLogin.Core.Services;
+using myFlatLightLogin.UI.Common.Services;
 using myFlatLightLogin.Dal.Dto;
 
 namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
@@ -40,7 +41,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 o => Navigation.NavigateTo<ChangePasswordViewModel>());
 
             // Subscribe to user changes to update welcome text
-            CurrentUserService.Instance.OnUserChanged += OnUserChanged;
+            CurrentUserService.Instance.OnUserInfoChanged += OnUserInfoChanged;
 
             // Set initial welcome text and role check
             UpdateWelcomeText();
@@ -50,7 +51,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// <summary>
         /// Updates the welcome text when the current user changes.
         /// </summary>
-        private void OnUserChanged(object? sender, Dal.Dto.UserDto? user)
+        private void OnUserInfoChanged(object? sender, CurrentUserInfo? userInfo)
         {
             UpdateWelcomeText();
             UpdateUserRole();
@@ -70,8 +71,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// </summary>
         private void UpdateUserRole()
         {
-            var currentUser = CurrentUserService.Instance.CurrentUser;
-            IsUserAdmin = currentUser?.Role == UserRole.Admin;
+            IsUserAdmin = CurrentUserService.Instance.IsAdmin;
         }
     }
 }

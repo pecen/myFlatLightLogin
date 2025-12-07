@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace myFlatLightLogin.Core.MVVM
+namespace myFlatLightLogin.UI.Common.MVVM
 {
     public class RelayCommand2 : ICommand
     {

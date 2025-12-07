@@ -1,5 +1,5 @@
 <UserControl
-    x:Class="myFlatLightLogin.Core.Controls.TogglePwdBox"
+    x:Class="myFlatLightLogin.UI.Common.Controls.TogglePwdBox"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks"

@@ -191,6 +191,10 @@ namespace myFlatLightLogin.Core.Services
                             existingUser = _sqliteDal.FindByEmail(email);
                             if (existingUser != null)
                             {
+                                // Mark as synced since this data came from Firebase
+                                _sqliteDal.MarkAsSynced(existingUser.Id);
+                                _logger.Information("User marked as synced (ID: {UserId})", existingUser.Id);
+
                                 // Return the SQLite user with correct ID, but preserve Firebase data
                                 existingUser.FirebaseUid = user.FirebaseUid;
                                 existingUser.FirebaseAuthToken = user.FirebaseAuthToken;
@@ -222,6 +226,10 @@ namespace myFlatLightLogin.Core.Services
                             existingUser.Role = user.Role;
                             _sqliteDal.Update(existingUser);
                             _logger.Information("Cache updated successfully");
+
+                            // Mark as synced since this data came from Firebase
+                            _sqliteDal.MarkAsSynced(existingUser.Id);
+                            _logger.Information("User marked as synced (ID: {UserId})", existingUser.Id);
 
                             // Re-fetch from database to get the hashed password
                             // This ensures the in-memory object matches what's stored in SQLite
@@ -624,6 +632,17 @@ namespace myFlatLightLogin.Core.Services
             catch (Exception ex)
             {
                 _logger.Error(ex, "Error changing password online for user ID: {UserId}", userId);
+
+                // Check if this is an authentication error (password mismatch)
+                if (ex.Message.Contains("INVALID_LOGIN_CREDENTIALS") ||
+                    ex.Message.Contains("INVALID_PASSWORD") ||
+                    ex.Message.Contains("Authentication error"))
+                {
+                    return PasswordChangeResult.Failure(
+                        "Current password is incorrect for your Firebase account. " +
+                        "If you logged in offline, you may need to log out and log in online first to sync your password.");
+                }
+
                 return PasswordChangeResult.Failure($"Failed to change password: {ex.Message}");
             }
         }

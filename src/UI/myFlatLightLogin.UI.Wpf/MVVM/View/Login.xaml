@@ -2,7 +2,7 @@
     x:Class="myFlatLightLogin.UI.Wpf.MVVM.View.Login"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="clr-namespace:myFlatLightLogin.Core.Controls;assembly=myFlatLightLogin.Core"
+    xmlns:controls="clr-namespace:myFlatLightLogin.UI.Common.Controls;assembly=myFlatLightLogin.UI.Common"
     xmlns:converter="clr-namespace:myFlatLightLogin.UI.Wpf.Converter"
     xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks"

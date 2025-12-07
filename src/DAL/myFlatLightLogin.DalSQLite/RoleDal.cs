@@ -115,6 +115,11 @@ namespace myFlatLightLogin.DalSQLite
             {
                 var role = ConvertToModel(roleDto);
                 int rowsAffected = conn.Insert(role);
+
+                // Update the DTO with the auto-generated ID from SQLite
+                // This is critical so Firebase gets the correct ID
+                roleDto.Id = role.Id;
+
                 return rowsAffected > 0;
             }
         }

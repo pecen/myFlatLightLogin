@@ -1,6 +1,6 @@
-﻿using myFlatLightLogin.Core.Services;
+﻿using myFlatLightLogin.UI.Common.Services;
 
-namespace myFlatLightLogin.Core.MVVM
+namespace myFlatLightLogin.UI.Common.MVVM
 {
     public class ViewModelBase : BindableBase
     {

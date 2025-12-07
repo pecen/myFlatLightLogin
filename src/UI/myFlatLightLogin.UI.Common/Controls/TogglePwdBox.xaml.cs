@@ -2,7 +2,7 @@ using MahApps.Metro.IconPacks;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace myFlatLightLogin.Core.Controls
+namespace myFlatLightLogin.UI.Common.Controls
 {
     /// <summary>
     /// A reusable password input control with show/hide toggle functionality.

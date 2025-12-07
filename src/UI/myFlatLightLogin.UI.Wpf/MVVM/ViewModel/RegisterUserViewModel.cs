@@ -1,8 +1,12 @@
 using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
-using myFlatLightLogin.Core.MVVM;
+using myFlatLightLogin.UI.Common.MVVM;
 using myFlatLightLogin.Core.Services;
+using myFlatLightLogin.UI.Common.Services;
+using myFlatLightLogin.Library;
+using myFlatLightLogin.Dal;
 using myFlatLightLogin.Dal.Dto;
+using Serilog;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
@@ -11,12 +15,13 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 {
     /// <summary>
     /// ViewModel for the Register User view.
-    /// Handles user registration with offline/online support using HybridUserDal.
+    /// Handles user registration with offline/online support using BLL's UserEdit.
+    /// BLL handles all data access through proper layering.
     /// </summary>
     public class RegisterUserViewModel : ViewModelBase, IAuthenticateConfirmUser
     {
-        private readonly HybridUserDal _hybridDal;
-        private readonly NetworkConnectivityService _connectivityService;
+        private static readonly ILogger _logger = Log.ForContext<RegisterUserViewModel>();
+        private readonly IDialogService _dialogService;
 
         #region Properties
 
@@ -73,18 +78,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             set => SetProperty(ref _statusMessage, value);
         }
 
-        private bool _isOnline;
-        public bool IsOnline
-        {
-            get => _isOnline;
-            set
-            {
-                SetProperty(ref _isOnline, value);
-                OnPropertyChanged(nameof(ConnectionStatus));
-            }
-        }
-
-        public string ConnectionStatus => IsOnline ? "🟢 Online" : "🔴 Offline";
+        // Note: IsOnline removed - BLL handles online/offline logic internally
 
         public bool IsAuthenticated { get; private set; }
 
@@ -99,22 +93,10 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         #region Constructor
 
-        public RegisterUserViewModel(INavigationService navigationService)
+        public RegisterUserViewModel(INavigationService navigationService, IDialogService dialogService)
         {
             Navigation = navigationService;
-
-            // Initialize network connectivity service
-            _connectivityService = new NetworkConnectivityService();
-            IsOnline = _connectivityService.IsOnline;
-
-            // Listen for connectivity changes
-            _connectivityService.ConnectivityChanged += OnConnectivityChanged;
-
-            // Initialize sync service
-            var syncService = new SyncService(_connectivityService);
-
-            // Initialize Hybrid DAL (manages Firebase and SQLite)
-            _hybridDal = new HybridUserDal(_connectivityService, syncService);
+            _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
             // Initialize commands
             NavigateToLoginCommand = new RelayCommand(
@@ -136,27 +118,39 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         #region Methods
 
         /// <summary>
-        /// Registers a new user with Firebase (online) or SQLite (offline).
+        /// Registers a new user using BLL's UserEdit.
+        /// BLL handles both online (Firebase) and offline (SQLite) registration internally.
         /// </summary>
         private async Task RegisterUserAsync()
         {
-            var window = (MetroWindow)Application.Current.MainWindow;
-
             try
             {
                 IsLoading = true;
 
-                // Validate passwords match
-                if (Password != ConfirmPassword)
-                {
-                    //MessageBox.Show(
-                    //    "Passwords do not match. Please try again.",
-                    //    "Registration Error",
-                    //    MessageBoxButton.OK,
-                    //    MessageBoxImage.Warning);
+                _logger.Information("========== REGISTRATION ATTEMPT STARTED ==========");
+                _logger.Information("Email: {Email}", Email);
 
-                    await window.ShowMessageAsync("Registration Error",
-                       "Passwords do not match. Please try again.",
+                StatusMessage = "Creating account...";
+
+                // Create a new UserEdit business object for validation and registration
+                var userEdit = await UserEdit.NewUserAsync();
+
+                // Set properties from form
+                userEdit.Name = Name;
+                userEdit.LastName = Lastname;
+                userEdit.UserName = Email;
+                userEdit.Email = Email;
+                userEdit.Password = Password;
+                userEdit.ConfirmPassword = ConfirmPassword;
+
+                // Validate using BLL business rules
+                if (!userEdit.IsValid)
+                {
+                    var validationErrors = string.Join("\n", userEdit.BrokenRulesCollection);
+                    _logger.Warning("Registration validation failed: {Errors}", validationErrors);
+
+                    await _dialogService.ShowMessageAsync("Registration Error",
+                       $"Please correct the following errors:\n\n{validationErrors}",
                        MessageDialogStyle.Affirmative,
                        new MetroDialogSettings
                        {
@@ -168,81 +162,36 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                     return;
                 }
 
-                if (IsOnline)
-                {
-                    StatusMessage = "Creating account with the Cloud storage...";
-                }
-                else
-                {
-                    StatusMessage = "Creating account offline (will sync when connected)...";
-                }
+                // Save using BLL - this goes through CSLA DataPortal -> HybridDalManager -> HybridUserDal
+                // BLL handles online/offline logic internally - UI doesn't need to know!
+                var savedUser = await userEdit.SaveAsync();
 
-                // Create user DTO
-                var newUser = new UserDto
-                {
-                    Name = Name,
-                    Lastname = Lastname,
-                    Email = Email,
-                    Username = Email,
-                    Password = Password
-                };
+                _logger.Information("Registration successful for: {Email}", Email);
 
-                // Register using HybridDAL (tries Firebase first, falls back to SQLite)
-                var result = await _hybridDal.RegisterAsync(newUser);
+                IsAuthenticated = true;
+                StatusMessage = "Registration successful!";
 
-                if (result.Success)
-                {
-                    IsAuthenticated = true;
-                    StatusMessage = result.Message;
+                await _dialogService.ShowMessageAsync("Registration Successful",
+                   $"Account created successfully!\n\nEmail: {Email}\n\nYou can now sign in with your credentials.",
+                   MessageDialogStyle.Affirmative,
+                   new MetroDialogSettings
+                   {
+                       AffirmativeButtonText = "Continue",
+                       AnimateShow = true,
+                       AnimateHide = true
+                   });
 
-                    string title = result.Mode == Dal.RegistrationMode.Firebase
-                        ? "Registration Successful"
-                        : "Registration Successful (Offline)";
-
-                    string message = $"{result.Message}\n\nEmail: {Email}\n\nYou can now sign in with this user name.";
-
-                    await window.ShowMessageAsync(title,
-                       message,
-                       MessageDialogStyle.Affirmative,
-                       new MetroDialogSettings
-                       {
-                           AffirmativeButtonText = "Continue",
-                           AnimateShow = true,
-                           AnimateHide = true
-                       });
-
-                    // Clear the form before navigating back to login
-                    ClearForm();
-                    Navigation.NavigateTo<LoginViewModel>();
-                }
-                else
-                {
-                    IsAuthenticated = false;
-                    StatusMessage = result.Message;
-
-                    await window.ShowMessageAsync("Registration Failed",
-                       result.Message,
-                       MessageDialogStyle.Affirmative,
-                       new MetroDialogSettings
-                       {
-                           AffirmativeButtonText = "Continue",
-                           AnimateShow = true,
-                           AnimateHide = true
-                       });
-                }
+                // Clear the form before navigating back to login
+                ClearForm();
+                Navigation.NavigateTo<LoginViewModel>();
             }
             catch (Exception ex)
             {
                 IsAuthenticated = false;
+                _logger.Error(ex, "Registration failed with exception");
                 StatusMessage = $"Error: {ex.Message}";
 
-                //MessageBox.Show(
-                //    ex.Message,
-                //    "Registration Error",
-                //    MessageBoxButton.OK,
-                //    MessageBoxImage.Error);
-
-                await window.ShowMessageAsync("Registration Error",
+                await _dialogService.ShowMessageAsync("Registration Error",
                    ex.Message,
                    MessageDialogStyle.Affirmative,
                    new MetroDialogSettings
@@ -255,6 +204,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             finally
             {
                 IsLoading = false;
+                _logger.Information("========== REGISTRATION ATTEMPT COMPLETED ==========");
             }
         }
 
@@ -284,23 +234,6 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             ConfirmPassword = string.Empty;
             StatusMessage = string.Empty;
             // Note: Password visibility is managed by TogglePwdBox control and auto-resets when cleared
-        }
-
-        /// <summary>
-        /// Handles connectivity changes.
-        /// </summary>
-        private void OnConnectivityChanged(object? sender, bool isOnline)
-        {
-            IsOnline = isOnline;
-
-            if (isOnline)
-            {
-                StatusMessage = "Connection restored! You can now register with the Cloud storage.";
-            }
-            else
-            {
-                StatusMessage = "Offline mode. You can still register (will sync later).";
-            }
         }
 
         #endregion

@@ -6,23 +6,28 @@ namespace myFlatLightLogin.Dal
     public class DalFactory
     {
         private static readonly string _dalManager = "DalManager";
-        private static Type _dalType;
+        private static Type? _dalType;
 
         public static IDalManager GetManager()
         {
-            string dalTypeName = ConfigurationManager.AppSettings[_dalManager];
+            string? dalTypeName = ConfigurationManager.AppSettings[_dalManager];
+
+            if (string.IsNullOrEmpty(dalTypeName))
+                throw new NullReferenceException(_dalManager);
 
             if (_dalType == null || _dalType.FullName != dalTypeName.Split(',')[0])
             {
-                if (!string.IsNullOrEmpty(dalTypeName))
-                    _dalType = Type.GetType(dalTypeName);
-                else
-                    throw new NullReferenceException(_dalManager);
+                _dalType = Type.GetType(dalTypeName);
                 if (_dalType == null)
                     throw new ArgumentException(string.Format("Type {0} could not be found", dalTypeName));
             }
 
-            return (IDalManager)Activator.CreateInstance(_dalType);
+            object? instance = Activator.CreateInstance(_dalType);
+
+            if (instance is not IDalManager dalManager)
+                throw new InvalidCastException($"Instance of type {_dalType.FullName} could not be cast to IDalManager.");
+
+            return dalManager;
         }
     }
 }

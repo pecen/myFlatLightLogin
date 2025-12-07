@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using myFlatLightLogin.Core.MVVM;
+using myFlatLightLogin.UI.Common.MVVM;
 using myFlatLightLogin.Core.Services;
+using myFlatLightLogin.Core.Infrastructure;
+using myFlatLightLogin.UI.Common.Services;
 using myFlatLightLogin.DalFirebase;
 using myFlatLightLogin.UI.Wpf.MVVM.View;
 using myFlatLightLogin.UI.Wpf.MVVM.ViewModel;
@@ -21,6 +23,7 @@ namespace FlatLightLogin
         private NetworkConnectivityService _connectivityService;
         private SyncService _syncService;
         private HybridUserDal _hybridUserDal;
+        private HybridRoleDal _hybridRoleDal;
 
         /// <summary>
         /// Public access to the service provider for manual dependency resolution.
@@ -38,6 +41,7 @@ namespace FlatLightLogin
             services.AddSingleton<NetworkConnectivityService>();
             services.AddSingleton<SyncService>();
             services.AddSingleton<HybridUserDal>();
+            services.AddSingleton<HybridRoleDal>();
 
             services.AddSingleton(provider => new MainWindow
             {
@@ -51,6 +55,7 @@ namespace FlatLightLogin
             services.AddSingleton<RoleManagementViewModel>();
             services.AddSingleton<ChangePasswordViewModel>();
 
+            services.AddSingleton<IDialogService, MahAppsDialogService>();
             services.AddSingleton<INavigationService, NavigationService>();
 
             services.AddSingleton<Func<Type, ViewModelBase>>(serviceProvider =>
@@ -62,6 +67,11 @@ namespace FlatLightLogin
             _connectivityService = _serviceProvider.GetRequiredService<NetworkConnectivityService>();
             _syncService = _serviceProvider.GetRequiredService<SyncService>();
             _hybridUserDal = _serviceProvider.GetRequiredService<HybridUserDal>();
+            _hybridRoleDal = _serviceProvider.GetRequiredService<HybridRoleDal>();
+
+            // Initialize ServiceLocator for BLL layer to access infrastructure services
+            // This provides proper separation - BLL doesn't need services passed from UI
+            ServiceLocator.Initialize(_connectivityService, _syncService, _hybridUserDal, _hybridRoleDal);
 
             // Subscribe to connectivity changes for automatic sync
             _connectivityService.ConnectivityChanged += OnConnectivityChanged;
@@ -181,7 +191,7 @@ namespace FlatLightLogin
         /// <summary>
         /// Handles connectivity changes and automatically triggers sync when connection is restored.
         /// </summary>
-        private async void OnConnectivityChanged(object sender, bool isOnline)
+        private async void OnConnectivityChanged(object? sender, bool isOnline)
         {
             Log.Information("Connectivity changed: IsOnline = {IsOnline}", isOnline);
 

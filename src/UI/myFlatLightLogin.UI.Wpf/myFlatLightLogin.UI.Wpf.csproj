@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Csla" Version="5.5.4" />
     <PackageReference Include="MahApps.Metro" Version="2.4.10" />
     <PackageReference Include="MahApps.Metro.IconPacks.Material" Version="4.11.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
@@ -24,8 +25,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\DAL\myFlatLightLogin.DalFirebase\myFlatLightLogin.DalFirebase.csproj" />
+    <ProjectReference Include="..\..\DAL\myFlatLightLogin.DalSQLite\myFlatLightLogin.DalSQLite.csproj" />
     <ProjectReference Include="..\..\DAL\myFlatLightLogin.Dal\myFlatLightLogin.Dal.csproj" />
     <ProjectReference Include="..\..\myFlatLightLogin.Core\myFlatLightLogin.Core.csproj" />
+    <ProjectReference Include="..\..\myFlatLightLogin.Library\myFlatLightLogin.Library.csproj" />
+    <ProjectReference Include="..\myFlatLightLogin.UI.Common\myFlatLightLogin.UI.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
