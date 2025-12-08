@@ -103,13 +103,13 @@ namespace myFlatLightLogin.UI.Common.MVVM
     /// Relay command that supports async operations for MVVM pattern.
     /// Prevents concurrent executions and provides progress feedback.
     /// </summary>
-    public class AsyncRelayCommand : ICommand
+    public class RelayCommandAsync : ICommand
     {
         private readonly Func<Task> _execute;
         private readonly Func<bool>? _canExecute;
         private bool _isExecuting;
 
-        public AsyncRelayCommand(Func<Task> execute, Func<bool>? canExecute = null)
+        public RelayCommandAsync(Func<Task> execute, Func<bool>? canExecute = null)
         {
             _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute;

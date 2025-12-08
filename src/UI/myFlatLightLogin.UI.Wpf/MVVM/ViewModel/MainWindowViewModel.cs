@@ -35,9 +35,9 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public RelayCommand LogoutCommand { get; set; }
         public RelayCommand LoginLogoutCommand { get; set; }
         public RelayCommand NavigateToRegisterUserCommand { get; set; }
-        public AsyncRelayCommand OpenLogsFolderCommand { get; set; }
-        public AsyncRelayCommand ViewCurrentLogCommand { get; set; }
-        public AsyncRelayCommand SyncNowCommand { get; set; }
+        public RelayCommandAsync OpenLogsFolderCommand { get; set; }
+        public RelayCommandAsync ViewCurrentLogCommand { get; set; }
+        public RelayCommandAsync SyncNowCommand { get; set; }
 
         #endregion
 
@@ -155,9 +155,9 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             });
 
             // Admin-only commands for log access
-            OpenLogsFolderCommand = new AsyncRelayCommand(OpenLogsFolderAsync, () => IsUserAdministrator);
-            ViewCurrentLogCommand = new AsyncRelayCommand(ViewCurrentLogAsync, () => IsUserAdministrator);
-            SyncNowCommand = new AsyncRelayCommand(SyncNowAsync, () => IsUserAdministrator && !IsSyncing);
+            OpenLogsFolderCommand = new RelayCommandAsync(OpenLogsFolderAsync, () => IsUserAdministrator);
+            ViewCurrentLogCommand = new RelayCommandAsync(ViewCurrentLogAsync, () => IsUserAdministrator);
+            SyncNowCommand = new RelayCommandAsync(SyncNowAsync, () => IsUserAdministrator && !IsSyncing);
 
             // Subscribe to sync events
             _syncService.SyncStarted += OnSyncStarted;

@@ -67,7 +67,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             set
             {
                 SetProperty(ref _isLoading, value);
-                ((AsyncRelayCommand)RegisterUserCommand)?.RaiseCanExecuteChanged();
+                ((RelayCommandAsync)RegisterUserCommand)?.RaiseCanExecuteChanged();
             }
         }
 
@@ -87,7 +87,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         #region Commands
 
         public RelayCommand NavigateToLoginCommand { get; set; }
-        public AsyncRelayCommand RegisterUserCommand { get; set; }
+        public RelayCommandAsync RegisterUserCommand { get; set; }
 
         #endregion
 
@@ -107,7 +107,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 },
                 o => true);
 
-            RegisterUserCommand = new AsyncRelayCommand(RegisterUserAsync, CanRegister);
+            RegisterUserCommand = new RelayCommandAsync(RegisterUserAsync, CanRegister);
 
             // Clear form when view loads (in case returning from another view)
             ClearForm();

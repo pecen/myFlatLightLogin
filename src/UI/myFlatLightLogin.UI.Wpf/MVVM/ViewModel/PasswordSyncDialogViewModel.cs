@@ -56,7 +56,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         public string? UserEmail { get; }
         public bool DialogResult => _dialogResult;
 
-        public AsyncRelayCommand SyncPasswordCommand { get; }
+        public RelayCommandAsync SyncPasswordCommand { get; }
         public RelayCommand SkipCommand { get; }
 
         #endregion
@@ -68,7 +68,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             _dialogService = dialogService;
             UserEmail = user.Email;
 
-            SyncPasswordCommand = new AsyncRelayCommand(SyncPasswordAsync, CanSyncPassword);
+            SyncPasswordCommand = new RelayCommandAsync(SyncPasswordAsync, CanSyncPassword);
             SkipCommand = new RelayCommand(o => SkipSync());
         }
 

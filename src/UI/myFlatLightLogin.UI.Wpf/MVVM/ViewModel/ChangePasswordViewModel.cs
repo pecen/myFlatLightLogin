@@ -22,7 +22,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         #region Commands
 
-        public AsyncRelayCommand ChangePasswordCommand { get; set; }
+        public RelayCommandAsync ChangePasswordCommand { get; set; }
         public RelayCommand CancelCommand { get; set; }
 
         #endregion
@@ -59,7 +59,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             Navigation = navigationService;
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
-            ChangePasswordCommand = new AsyncRelayCommand(ChangePasswordAsync, CanChangePassword);
+            ChangePasswordCommand = new RelayCommandAsync(ChangePasswordAsync, CanChangePassword);
             CancelCommand = new RelayCommand(o => Navigation.NavigateTo<HomeViewModel>());
         }
 

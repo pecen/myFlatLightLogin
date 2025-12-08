@@ -90,11 +90,11 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
         #region Commands
 
-        public AsyncRelayCommand LoadRolesCommand { get; }
-        public AsyncRelayCommand SeedDefaultRolesCommand { get; }
-        public AsyncRelayCommand AddRoleCommand { get; }
-        public AsyncRelayCommand UpdateRoleCommand { get; }
-        public AsyncRelayCommand DeleteRoleCommand { get; }
+        public RelayCommandAsync LoadRolesCommand { get; }
+        public RelayCommandAsync SeedDefaultRolesCommand { get; }
+        public RelayCommandAsync AddRoleCommand { get; }
+        public RelayCommandAsync UpdateRoleCommand { get; }
+        public RelayCommandAsync DeleteRoleCommand { get; }
         public RelayCommand ClearFormCommand { get; }
         public RelayCommand BackCommand { get; }
 
@@ -108,11 +108,11 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             _connectivityService = connectivityService;
             Navigation = navigationService;
 
-            LoadRolesCommand = new AsyncRelayCommand(LoadRolesAsync, () => !IsLoading);
-            SeedDefaultRolesCommand = new AsyncRelayCommand(SeedDefaultRolesAsync, () => !IsLoading);
-            AddRoleCommand = new AsyncRelayCommand(AddRoleAsync, () => !IsLoading);
-            UpdateRoleCommand = new AsyncRelayCommand(UpdateRoleAsync, () => !IsLoading && SelectedRole != null);
-            DeleteRoleCommand = new AsyncRelayCommand(DeleteRoleAsync, () => !IsLoading && SelectedRole != null);
+            LoadRolesCommand = new RelayCommandAsync(LoadRolesAsync, () => !IsLoading);
+            SeedDefaultRolesCommand = new RelayCommandAsync(SeedDefaultRolesAsync, () => !IsLoading);
+            AddRoleCommand = new RelayCommandAsync(AddRoleAsync, () => !IsLoading);
+            UpdateRoleCommand = new RelayCommandAsync(UpdateRoleAsync, () => !IsLoading && SelectedRole != null);
+            DeleteRoleCommand = new RelayCommandAsync(DeleteRoleAsync, () => !IsLoading && SelectedRole != null);
             ClearFormCommand = new RelayCommand(o => ClearForm(), o => true);
             BackCommand = new RelayCommand(o => Navigation.NavigateTo<HomeViewModel>(), o => true);
 
