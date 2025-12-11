@@ -60,7 +60,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
             ChangePasswordCommand = new RelayCommandAsync(ChangePasswordAsync, CanChangePassword);
-            CancelCommand = new RelayCommand(o => Navigation.NavigateTo<HomeViewModel>());
+            CancelCommand = new RelayCommand(Navigation.NavigateTo<HomeViewModel>);
         }
 
         private bool CanChangePassword()

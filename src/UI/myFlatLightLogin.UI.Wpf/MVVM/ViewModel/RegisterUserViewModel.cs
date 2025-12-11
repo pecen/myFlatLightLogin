@@ -100,12 +100,12 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
             // Initialize commands
             NavigateToLoginCommand = new RelayCommand(
-                o =>
+                () =>
                 {
                     ClearForm();
                     Navigation.NavigateTo<LoginViewModel>();
                 },
-                o => true);
+                () => true);
 
             RegisterUserCommand = new RelayCommandAsync(RegisterUserAsync, CanRegister);
 

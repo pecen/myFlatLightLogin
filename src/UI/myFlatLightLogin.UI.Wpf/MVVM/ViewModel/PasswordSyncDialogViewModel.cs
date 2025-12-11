@@ -69,7 +69,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             UserEmail = user.Email;
 
             SyncPasswordCommand = new RelayCommandAsync(SyncPasswordAsync, CanSyncPassword);
-            SkipCommand = new RelayCommand(o => SkipSync());
+            SkipCommand = new RelayCommand(SkipSync);
         }
 
         private bool CanSyncPassword()

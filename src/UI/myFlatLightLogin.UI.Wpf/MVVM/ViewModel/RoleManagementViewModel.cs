@@ -113,8 +113,8 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
             AddRoleCommand = new RelayCommandAsync(AddRoleAsync, () => !IsLoading);
             UpdateRoleCommand = new RelayCommandAsync(UpdateRoleAsync, () => !IsLoading && SelectedRole != null);
             DeleteRoleCommand = new RelayCommandAsync(DeleteRoleAsync, () => !IsLoading && SelectedRole != null);
-            ClearFormCommand = new RelayCommand(o => ClearForm(), o => true);
-            BackCommand = new RelayCommand(o => Navigation.NavigateTo<HomeViewModel>(), o => true);
+            ClearFormCommand = new RelayCommand(ClearForm, () => true);
+            BackCommand = new RelayCommand(Navigation.NavigateTo<HomeViewModel>, () => true);
 
             // Load roles on initialization
             _ = LoadRolesAsync();

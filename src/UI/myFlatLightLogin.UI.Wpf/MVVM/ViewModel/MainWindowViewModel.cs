@@ -114,13 +114,13 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
 
             Navigation.NavigateTo<LoginViewModel>();
 
-            MoveWindowCommand = new RelayCommand(o => { Application.Current.MainWindow.DragMove(); });
+            MoveWindowCommand = new RelayCommand(Application.Current.MainWindow.DragMove);
 
             // By using Application.Current.MainWindow.Close() instead of Application.Current.ShutDown()
             // we can utilize the extra MahApp popup that shows and asks if we really want to quit.
-            ShutdownWindowCommand = new RelayCommand(o => { Application.Current.MainWindow.Close(); });
+            ShutdownWindowCommand = new RelayCommand(Application.Current.MainWindow.Close);
 
-            ResizeWindowCommand = new RelayCommand(o =>
+            ResizeWindowCommand = new RelayCommand(() =>
             {
                 if (Application.Current.MainWindow.WindowState == WindowState.Maximized)
                 {
@@ -132,16 +132,16 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
                 }
             });
 
-            NavigateToLoginCommand = new RelayCommand(o =>
+            NavigateToLoginCommand = new RelayCommand(() =>
             {
                 _loginViewModel.ClearForm();
                 Navigation.NavigateTo<LoginViewModel>();
-            }, o => true);
+            }, () => true);
 
-            LogoutCommand = new RelayCommand(o => Logout());
+            LogoutCommand = new RelayCommand(Logout);
 
             // Combined Login/Logout command that switches behavior based on login state
-            LoginLogoutCommand = new RelayCommand(o =>
+            LoginLogoutCommand = new RelayCommand(() =>
             {
                 if (IsUserLoggedIn)
                 {
@@ -406,7 +406,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// <summary>
         /// Event handler for sync started.
         /// </summary>
-        private void OnSyncStarted(object sender, EventArgs e)
+        private void OnSyncStarted(object? sender, EventArgs e)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -419,7 +419,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// <summary>
         /// Event handler for sync completed.
         /// </summary>
-        private void OnSyncCompleted(object sender, SyncCompletedEventArgs e)
+        private void OnSyncCompleted(object? sender, SyncCompletedEventArgs e)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -432,7 +432,7 @@ namespace myFlatLightLogin.UI.Wpf.MVVM.ViewModel
         /// <summary>
         /// Event handler for sync progress updates.
         /// </summary>
-        private void OnSyncProgress(object sender, SyncProgressEventArgs e)
+        private void OnSyncProgress(object? sender, SyncProgressEventArgs e)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
