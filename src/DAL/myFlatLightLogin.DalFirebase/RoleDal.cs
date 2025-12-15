@@ -125,6 +125,13 @@ namespace myFlatLightLogin.DalFirebase
                     Description = "Administrator with elevated permissions (e.g., view logs, manage users)"
                 };
 
+                var guestRole = new FirebaseRole
+                {
+                    Id = 3,
+                    Name = "Guest",
+                    Description = "Guest user who is not registered in the system, with limited permissions."
+                };
+
                 // Store roles using ID as the key
                 await _dbClient
                     .Child("roles")
@@ -135,6 +142,11 @@ namespace myFlatLightLogin.DalFirebase
                     .Child("roles")
                     .Child("2")
                     .PutAsync(adminRole);
+
+                await _dbClient
+                    .Child("roles")
+                    .Child("3")
+                    .PutAsync(guestRole);
             }
             catch (Exception ex)
             {
