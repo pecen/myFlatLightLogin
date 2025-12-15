@@ -14,6 +14,7 @@ namespace myFlatLightLogin.Dal
         /// Seeds default roles if they don't exist.
         /// </summary>
         Task InitializeAsync();
+
         /// <summary>
         /// Gets a role by its ID.
         /// </summary>

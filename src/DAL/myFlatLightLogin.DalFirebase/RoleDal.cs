@@ -92,12 +92,12 @@ namespace myFlatLightLogin.DalFirebase
                 }
                 else
                 {
-                    _logger.Debug("Found {RoleCount} existing roles in Firebase", existingRoles.Count());
+                    _logger.Debug($"Found {existingRoles.Count()} existing roles in Firebase");
                 }
             }
             catch (Exception ex)
             {
-                _logger.Error("Firebase role initialization error: {ErrorMessage}", ex.Message);
+                _logger.Error($"Firebase role initialization error: {ex.Message}");
                 throw;
             }
         }
