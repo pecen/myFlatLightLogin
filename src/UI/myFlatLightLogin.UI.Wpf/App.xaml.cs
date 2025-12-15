@@ -35,6 +35,10 @@ namespace FlatLightLogin
             // Configure Serilog
             ConfigureSerilog();
 
+            // Register global exception handlers
+            AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+            DispatcherUnhandledException += OnDispatcherUnhandledException;
+
             IServiceCollection services = new ServiceCollection();
 
             // Register core services as singletons
@@ -171,6 +175,39 @@ namespace FlatLightLogin
             mainWindow.Show();
 
             base.OnStartup(e);
+        }
+
+        private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            if (e.ExceptionObject is Exception ex)
+            {
+#if DEBUG
+                // DEBUG MODE: Log full exception details for development
+                Log.Fatal(ex, "Unhandled exception on non-UI thread");
+#else
+				// RELEASE MODE: Log only exception type and message
+				Log.Fatal("Unhandled exception on non-UI thread: {ExceptionType} - {Error}", ex.GetType().Name, ex.Message);
+#endif
+            }
+            else
+            {
+                Log.Fatal("Unhandled non-exception object: {ExceptionObject}", e.ExceptionObject);
+            }
+        }
+
+        private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        {
+#if DEBUG
+            // DEBUG MODE: Log full exception details for development
+            Log.Error(e.Exception, "Unhandled exception on UI thread");
+#else
+			// RELEASE MODE: Log only exception type and message
+			Log.Error("Unhandled exception on UI thread: {ExceptionType} - {Error}", e.Exception.GetType().Name, e.Exception.Message);
+#endif
+
+            // Set to true to prevent the application from crashing
+            // Set to false to allow the default crash behavior
+            e.Handled = false;
         }
 
         protected override void OnExit(ExitEventArgs e)
