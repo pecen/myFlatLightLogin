@@ -6,7 +6,6 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace myFlatLightLogin.DalFirebase
@@ -19,8 +18,7 @@ namespace myFlatLightLogin.DalFirebase
     {
         private static readonly ILogger _logger = Log.ForContext<RoleDal>();
         private FirebaseClient _dbClient;
-        private readonly SemaphoreSlim _initLock = new SemaphoreSlim(1, 1);
-        private bool _isInitialized = false;
+        private readonly Lazy<Task> _initializationTask;
         private readonly string _authToken;
 
         /// <summary>
@@ -46,8 +44,10 @@ namespace myFlatLightLogin.DalFirebase
                 _dbClient = new FirebaseClient(FirebaseConfig.DatabaseUrl);
             }
 
-            // Note: Roles are initialized lazily on first access to avoid blocking the constructor
-            // You can also call InitializeAsync() explicitly from async context
+            // Lazy initialization of roles on first access.
+            // The constructor remains non-blocking; the roles are seeded/checked on first awaited call to EnsureInitializedAsync().
+            // You can also call InitializeAsync() explicitly for eager initialization at startup.
+            _initializationTask = new Lazy<Task>(InitializeRolesAsync, LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
         /// <summary>
@@ -62,25 +62,12 @@ namespace myFlatLightLogin.DalFirebase
 
         /// <summary>
         /// Ensures roles are initialized (lazy initialization with thread safety).
+        /// The first caller will start InitializeRolesAsync(); subsequent callers await the same task.
         /// </summary>
-        private async Task EnsureInitializedAsync()
+        private Task EnsureInitializedAsync()
         {
-            if (_isInitialized)
-                return;
-
-            await _initLock.WaitAsync();
-            try
-            {
-                if (!_isInitialized)
-                {
-                    await InitializeRolesAsync();
-                    _isInitialized = true;
-                }
-            }
-            finally
-            {
-                _initLock.Release();
-            }
+            // Return the Lazy task; the first caller will start InitializeRolesAsync().
+            return _initializationTask.Value;
         }
 
         /// <summary>
