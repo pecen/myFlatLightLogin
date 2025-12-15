@@ -3,6 +3,7 @@ using myFlatLightLogin.Dal.Dto;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using FirebaseRoleDal = myFlatLightLogin.DalFirebase.RoleDal;
 using SQLiteRoleDal = myFlatLightLogin.DalSQLite.RoleDal;
 
@@ -42,6 +43,41 @@ namespace myFlatLightLogin.Core.Services
         /// Gets whether the system is currently online.
         /// </summary>
         public bool IsOnline => _connectivityService.IsOnline;
+
+        /// <summary>
+        /// Initializes the role data stores asynchronously.
+        /// Initializes SQLite (local cache) first, then Firebase (remote) if online.
+        /// </summary>
+        public async Task InitializeAsync()
+        {
+            _logger.Information("Initializing role providers...");
+
+            // Always initialize SQLite first (local cache)
+            await _sqliteDal.InitializeAsync();
+
+            // If online, also initialize Firebase
+            if (_connectivityService.IsOnline)
+            {
+                try
+                {
+                    _logger.Debug("Online - initializing remote role provider...");
+                    var firebaseDal = GetFirebaseDal();
+                    await firebaseDal.InitializeAsync();
+                }
+                catch (Exception ex)
+                {
+                    // Firebase initialization failed, but SQLite succeeded
+                    // Log warning but don't fail - app can work offline
+                    _logger.Warning("Remote role provider initialization failed: {ErrorMessage}", ex.Message);
+                }
+            }
+            else
+            {
+                _logger.Debug("Offline - skipping remote role provider initialization");
+            }
+
+            _logger.Information("Role providers initialized successfully");
+        }
 
         #region IRoleDal Implementation
 

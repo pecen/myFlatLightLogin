@@ -2,6 +2,7 @@ using Firebase.Database;
 using Firebase.Database.Query;
 using myFlatLightLogin.Dal;
 using myFlatLightLogin.Dal.Dto;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,7 @@ namespace myFlatLightLogin.DalFirebase
     /// </summary>
     public class RoleDal : IRoleDal
     {
+        private static readonly ILogger _logger = Log.ForContext<RoleDal>();
         private FirebaseClient _dbClient;
         private readonly SemaphoreSlim _initLock = new SemaphoreSlim(1, 1);
         private bool _isInitialized = false;
@@ -53,7 +55,9 @@ namespace myFlatLightLogin.DalFirebase
         /// </summary>
         public async Task InitializeAsync()
         {
+            _logger.Information("Initializing Firebase Realtime Database roles...");
             await EnsureInitializedAsync();
+            _logger.Information("Firebase Realtime Database roles initialized successfully");
         }
 
         /// <summary>
@@ -86,6 +90,8 @@ namespace myFlatLightLogin.DalFirebase
         {
             try
             {
+                _logger.Debug("Checking Firebase for existing roles...");
+
                 // Check if roles exist
                 var existingRoles = await _dbClient
                     .Child("roles")
@@ -94,13 +100,18 @@ namespace myFlatLightLogin.DalFirebase
                 // If no roles exist, seed default roles
                 if (existingRoles == null || !existingRoles.Any())
                 {
+                    _logger.Information("No roles found in Firebase, seeding default roles...");
                     await SeedDefaultRolesAsync();
+                }
+                else
+                {
+                    _logger.Debug("Found {RoleCount} existing roles in Firebase", existingRoles.Count());
                 }
             }
             catch (Exception ex)
             {
-                // Log or handle initialization error
-                Console.WriteLine($"Role initialization error: {ex.Message}");
+                _logger.Error("Firebase role initialization error: {ErrorMessage}", ex.Message);
+                throw;
             }
         }
 
@@ -125,19 +136,24 @@ namespace myFlatLightLogin.DalFirebase
                     Description = "Administrator with elevated permissions (e.g., view logs, manage users)"
                 };
 
+                _logger.Debug("Seeding 'User' role to Firebase...");
                 // Store roles using ID as the key
                 await _dbClient
                     .Child("roles")
                     .Child("1")
                     .PutAsync(userRole);
 
+                _logger.Debug("Seeding 'Admin' role to Firebase...");
                 await _dbClient
                     .Child("roles")
                     .Child("2")
                     .PutAsync(adminRole);
+
+                _logger.Information("Default roles seeded to Firebase successfully");
             }
             catch (Exception ex)
             {
+                _logger.Error("Failed to seed default roles to Firebase: {ErrorMessage}", ex.Message);
                 throw new Exception($"Failed to seed default roles: {ex.Message}", ex);
             }
         }

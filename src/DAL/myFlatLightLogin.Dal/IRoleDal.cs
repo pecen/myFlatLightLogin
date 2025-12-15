@@ -1,5 +1,6 @@
 using myFlatLightLogin.Dal.Dto;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace myFlatLightLogin.Dal
 {
@@ -8,6 +9,11 @@ namespace myFlatLightLogin.Dal
     /// </summary>
     public interface IRoleDal
     {
+        /// <summary>
+        /// Initializes the role data store asynchronously.
+        /// Seeds default roles if they don't exist.
+        /// </summary>
+        Task InitializeAsync();
         /// <summary>
         /// Gets a role by its ID.
         /// </summary>

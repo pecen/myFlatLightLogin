@@ -1,11 +1,13 @@
 using myFlatLightLogin.Dal;
 using myFlatLightLogin.Dal.Dto;
 using myFlatLightLogin.DalSQLite.Model;
+using Serilog;
 using SQLite;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace myFlatLightLogin.DalSQLite
 {
@@ -14,6 +16,7 @@ namespace myFlatLightLogin.DalSQLite
     /// </summary>
     public class RoleDal : IRoleDal
     {
+        private static readonly ILogger _logger = Log.ForContext<RoleDal>();
         private readonly string _dbPath;
 
         public RoleDal()
@@ -23,10 +26,31 @@ namespace myFlatLightLogin.DalSQLite
         }
 
         /// <summary>
+        /// Initializes the SQLite role data store asynchronously.
+        /// Seeds default roles if they don't exist.
+        /// </summary>
+        public Task InitializeAsync()
+        {
+            _logger.Information("Initializing SQLite roles database at {DbPath}...", _dbPath);
+
+            // SQLite initialization is already done synchronously in constructor,
+            // but we provide this method for interface compliance and explicit initialization
+            using (var conn = new SQLiteConnection(_dbPath))
+            {
+                var roleCount = conn.Table<Role>().Count();
+                _logger.Information("SQLite roles initialized successfully. Found {RoleCount} roles", roleCount);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
         /// Initializes the database and seeds default roles if needed.
         /// </summary>
         private void InitializeDatabase()
         {
+            _logger.Debug("Creating SQLite roles table if not exists...");
+
             using (var conn = new SQLiteConnection(_dbPath))
             {
                 conn.CreateTable<Role>();
@@ -34,6 +58,7 @@ namespace myFlatLightLogin.DalSQLite
                 // Seed default roles if table is empty
                 if (conn.Table<Role>().Count() == 0)
                 {
+                    _logger.Information("No roles found in SQLite, seeding default roles...");
                     SeedDefaultRoles(conn);
                 }
             }
@@ -66,9 +91,14 @@ namespace myFlatLightLogin.DalSQLite
                 Description = "Guest user with limited permissions (read-only access)"
             };
 
+            _logger.Debug("Seeding 'User' role to SQLite...");
             conn.Insert(userRole);
+            _logger.Debug("Seeding 'Admin' role to SQLite...");
             conn.Insert(adminRole);
+            _logger.Debug("Seeding 'Guest' role to SQLite...");
             conn.Insert(guestRole);
+
+            _logger.Information("Default roles seeded to SQLite successfully");
         }
 
         /// <summary>

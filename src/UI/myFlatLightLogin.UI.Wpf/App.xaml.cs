@@ -3,7 +3,6 @@ using myFlatLightLogin.UI.Common.MVVM;
 using myFlatLightLogin.Core.Services;
 using myFlatLightLogin.Core.Infrastructure;
 using myFlatLightLogin.UI.Common.Services;
-using myFlatLightLogin.DalFirebase;
 using myFlatLightLogin.UI.Wpf.MVVM.View;
 using myFlatLightLogin.UI.Wpf.MVVM.ViewModel;
 using Serilog;
@@ -112,22 +111,21 @@ namespace FlatLightLogin
         {
             Log.Information("OnStartup called");
 
-            // Initialize Firebase Roles asynchronously (seeds default roles if they don't exist)
+            // Initialize Roles asynchronously (seeds default roles if they don't exist)
             // This runs in the background to avoid blocking the UI thread
             _ = Task.Run(async () =>
             {
                 try
                 {
-                    Log.Information("Initializing Firebase Roles...");
-                    var roleDal = new RoleDal();
-                    await roleDal.InitializeAsync();
-                    Log.Information("Firebase Roles initialized successfully");
+                    Log.Information("Initializing Roles...");
+                    await _hybridRoleDal.InitializeAsync();
+                    Log.Information("Roles initialized successfully");
                 }
                 catch (Exception ex)
                 {
                     // Log error but don't prevent app startup
-                    // Role initialization may fail if Firebase is not configured
-                    Log.Warning($"Failed to initialize Firebase Roles: {ex.Message}");
+                    // Role initialization may fail if data store is not configured
+                    Log.Warning("Failed to initialize Roles: {ErrorMessage}", ex.Message);
                 }
             });
 
